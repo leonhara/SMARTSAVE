@@ -1,37 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="smartsave.controller.LoginController"
-      fx:id="loginPane"
-      alignment="CENTER" spacing="20.0"
-      prefWidth="600" prefHeight="400">
+<VBox fx:id="loginPane" alignment="CENTER" prefHeight="400" prefWidth="600" spacing="20.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controller.LoginController">
 
     <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
+        <Insets bottom="20" left="20" right="20" top="20" />
     </padding>
 
-    <Label fx:id="titleLabel" text="SmartSave"/>
-    <Label fx:id="subtitleLabel" text="Inicia sesión para continuar"/>
+    <Label fx:id="titleLabel" text="SmartS1ave" />
+    <Label fx:id="subtitleLabel" text="Inicia sesión para continuar" />
 
-    <GridPane vgap="10" hgap="10" alignment="CENTER">
-        <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-        <TextField fx:id="emailField" promptText="Ingresa tu email"
-                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+    <GridPane alignment="CENTER" hgap="10" vgap="10">
+        <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <TextField fx:id="emailField" promptText="Ingresa tu email" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-        <Label text="Contraseña:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <PasswordField fx:id="passwordField" promptText="Ingresa tu contraseña"
-                       GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <Label text="Contraseña:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <PasswordField fx:id="passwordField" promptText="Ingresa tu contraseña" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <columnConstraints>
+         <ColumnConstraints />
+         <ColumnConstraints />
+      </columnConstraints>
+      <rowConstraints>
+         <RowConstraints />
+         <RowConstraints />
+      </rowConstraints>
     </GridPane>
 
-    <Button fx:id="loginButton" text="Iniciar Sesión" onAction="#handleLoginButtonAction"/>
+    <Button fx:id="loginButton" onAction="#handleLoginButtonAction" text="Iniciar Sesión" />
 
     <HBox alignment="CENTER" spacing="5">
-        <Label text="¿No tienes cuenta?"/>
-        <Hyperlink text="Regístrate" onAction="#handleRegistroLinkAction"/>
+        <Label text="¿No tienes cuenta?" />
+        <Hyperlink onAction="#handleRegistroLinkAction" text="Regístrate" />
     </HBox>
 </VBox>

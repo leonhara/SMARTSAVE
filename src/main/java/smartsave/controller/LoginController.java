@@ -4,68 +4,84 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import smartsave.util.AppStyles;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
-    @FXML
-    private VBox loginPane;
+    @FXML private BorderPane mainPane;
+    @FXML private HBox titleBar;
+    @FXML private VBox loginPane;
+    @FXML private Label titleLabel;
+    @FXML private Label subtitleLabel;
+    @FXML private TextField emailField;
+    @FXML private PasswordField passwordField;
+    @FXML private Button loginButton;
+    @FXML private Button minimizeButton;
+    @FXML private Button maximizeButton;
+    @FXML private Button closeButton;
 
-    @FXML
-    private Label titleLabel;
-
-    @FXML
-    private Label subtitleLabel;
-
-    @FXML
-    private TextField emailField;
-
-    @FXML
-    private PasswordField passwordField;
-
-    @FXML
-    private Button loginButton;
+    // Variables para permitir el arrastre de la ventana
+    private double xOffset = 0;
+    private double yOffset = 0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Aplicar estilos usando Java
+        // Aplicar estilos usando la clase de utilidad
         applyStyles();
+
+        // Configurar el arrastre de la ventana
+        setupDraggableWindow();
     }
 
     private void applyStyles() {
-        // Estilo para el fondo
-        loginPane.setStyle("-fx-background-color: #f4f4f4;");
+        // Aplicar estilos usando la clase AppStyles
+        AppStyles.applyMainPaneStyle(mainPane);
+        AppStyles.applyTitleBarStyle(titleBar);
+        AppStyles.applyContentPaneStyle(loginPane);
+        AppStyles.applyWindowButtonStyle(minimizeButton);
+        AppStyles.applyWindowButtonStyle(maximizeButton);
+        AppStyles.applyWindowButtonStyle(closeButton);
+        AppStyles.applyTitleStyle(titleLabel);
+        AppStyles.applySubtitleStyle(subtitleLabel);
+        AppStyles.applyPrimaryButtonStyle(loginButton);
+        AppStyles.applyTextFieldStyle(emailField);
+        AppStyles.applyTextFieldStyle(passwordField);
+    }
 
-        // Estilo para el título
-        titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
-        titleLabel.setTextFill(Color.web("#2c3e50"));
+    private void setupDraggableWindow() {
+        titleBar.setOnMousePressed(event -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
 
-        // Estilo para el subtítulo
-        subtitleLabel.setFont(Font.font("Segoe UI", 16));
-        subtitleLabel.setTextFill(Color.web("#7f8c8d"));
+        titleBar.setOnMouseDragged(event -> {
+            Stage stage = (Stage) titleBar.getScene().getWindow();
+            stage.setX(event.getScreenX() - xOffset);
+            stage.setY(event.getScreenY() - yOffset);
+        });
+    }
 
-        // Estilo para el botón de login
-        loginButton.setStyle(
-                "-fx-background-color: #3498db; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-font-weight: bold; " +
-                        "-fx-padding: 10 20; " +
-                        "-fx-background-radius: 5;"
-        );
+    @FXML
+    private void handleMinimizeAction(ActionEvent event) {
+        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+        stage.setIconified(true);
+    }
 
-        // Estilos para los campos de texto
-        String textFieldStyle =
-                "-fx-padding: 8; " +
-                        "-fx-background-radius: 4;";
+    @FXML
+    private void handleMaximizeAction(ActionEvent event) {
+        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+        stage.setMaximized(!stage.isMaximized());
+    }
 
-        emailField.setStyle(textFieldStyle);
-        passwordField.setStyle(textFieldStyle);
+    @FXML
+    private void handleCloseAction(ActionEvent event) {
+        Stage stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
+        stage.close();
     }
 
     @FXML
