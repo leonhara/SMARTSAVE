@@ -18,141 +18,136 @@ import javafx.scene.text.FontWeight;
 
 public class AppStyles {
 
-    // Colores base del estilo Aero
-    private static final Color AERO_BLUE_LIGHT = Color.rgb(155, 205, 255, 0.7);
-    private static final Color AERO_BLUE = Color.rgb(102, 152, 219, 0.7);
-    private static final Color AERO_BLUE_DARK = Color.rgb(55, 110, 220, 0.7);
-    private static final Color GLASS_WHITE = Color.rgb(255, 255, 255, 0.25);
-    private static final Color GLASS_BORDER = Color.rgb(255, 255, 255, 0.7);
-    private static final Color TEXT_WHITE = Color.rgb(240, 240, 240, 1.0);
+    // Colores base para simular Windows 7 Aero en Windows 11
+    private static final Color AERO_BLUE_TITLE = Color.rgb(80, 150, 220, 1.0);
+    private static final Color AERO_SIMULATION = Color.rgb(225, 238, 255, 0.85);
+    private static final Color AERO_BORDER = Color.rgb(200, 220, 255, 1.0);
+    private static final Color TEXT_WHITE = Color.rgb(255, 255, 255, 1.0);
     private static final Color TEXT_DARK = Color.rgb(30, 50, 70, 1.0);
 
     // Fuentes
     private static final String SEGOE_UI = "Segoe UI";
 
     /**
-     * Aplica el estilo de ventana tipo Aero (Frutiger Aero) al panel principal
+     * Aplica el estilo de ventana tipo Windows 7 Aero simulado para Windows 11
      */
     public static void applyMainPaneStyle(BorderPane pane) {
-        // Fondo semitransparente con efecto de vidrio
+        // Simulación de Aero Glass en Windows 11
         Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(190, 235, 255, 0.35)),
-                new Stop(1, Color.rgb(220, 240, 255, 0.25))
+                new Stop(0, Color.rgb(230, 240, 255, 1.0)),
+                new Stop(1, Color.rgb(210, 230, 250, 1.0))
         };
         LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
 
         pane.setBackground(new Background(new BackgroundFill(
                 gradient,
-                new CornerRadii(8),
+                new CornerRadii(10),
                 null
         )));
 
-        // Borde brillante característico de Aero
+        // Borde brillante característico de Windows 7
         pane.setBorder(new Border(new BorderStroke(
-                GLASS_BORDER,
+                Color.rgb(255, 255, 255, 0.9),
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(8),
-                new BorderWidths(1)
+                new CornerRadii(10),
+                new BorderWidths(1.5)
         )));
 
         // Sombra para efecto flotante
         DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.rgb(0, 0, 0, 0.5));
-        shadow.setRadius(10);
-        shadow.setSpread(0.1);
+        shadow.setColor(Color.rgb(0, 0, 0, 0.4));
+        shadow.setRadius(15);
+        shadow.setSpread(0.05);
         pane.setEffect(shadow);
     }
 
     /**
-     * Aplica estilo Aero a la barra de título
+     * Aplica estilo Windows 7 a la barra de título (simulado para Windows 11)
      */
     public static void applyTitleBarStyle(HBox titleBar) {
-        // Gradiente azul característico de Aero para la barra de título
+        // Gradiente azul característico de Windows 7 para la barra de título
         Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(130, 180, 255, 0.85)),
-                new Stop(0.5, Color.rgb(80, 130, 230, 0.8)),
-                new Stop(1, Color.rgb(60, 100, 200, 0.85))
+                new Stop(0, Color.rgb(120, 180, 255, 1.0)),
+                new Stop(0.5, Color.rgb(90, 160, 220, 1.0)),
+                new Stop(1, Color.rgb(70, 150, 215, 1.0))
         };
         LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
 
         titleBar.setBackground(new Background(new BackgroundFill(
                 gradient,
-                new CornerRadii(8, 8, 0, 0, false),
+                new CornerRadii(10, 10, 0, 0, false),
                 null
         )));
 
         // Borde superior e izquierdo/derecho más brillante
         titleBar.setBorder(new Border(new BorderStroke(
-                GLASS_BORDER,
+                Color.rgb(255, 255, 255, 0.9),
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(8, 8, 0, 0, false),
+                new CornerRadii(10, 10, 0, 0, false),
                 new BorderWidths(1, 1, 0, 1)
         )));
 
-        // Efecto reflejo suave característico de Aero
+        // Reflejo menos intenso para que sea visible en Windows 11
         Reflection reflection = new Reflection();
-        reflection.setFraction(0.3);
+        reflection.setFraction(0.2);
         reflection.setTopOpacity(0.5);
         reflection.setBottomOpacity(0);
         titleBar.setEffect(reflection);
 
-        // Altura de la barra de título
+        // Altura de la barra de título igual a Windows 7
         titleBar.setPrefHeight(30);
         titleBar.setMinHeight(30);
         titleBar.setMaxHeight(30);
 
         // Padding
-        titleBar.setPadding(new javafx.geometry.Insets(4, 8, 4, 8));
+        titleBar.setPadding(new javafx.geometry.Insets(5, 10, 5, 10));
     }
 
     /**
-     * Aplica estilo Aero al panel de contenido
+     * Aplica estilo Windows 7 al panel de contenido (adaptado para Windows 11)
      */
     public static void applyContentPaneStyle(VBox contentPane) {
-        // Fondo de cristal semitransparente
-        Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(245, 250, 255, 0.5)),
-                new Stop(1, Color.rgb(225, 240, 255, 0.4))
-        };
-        LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
-
+        // Fondo de cristal simulado
         contentPane.setBackground(new Background(new BackgroundFill(
-                gradient,
-                new CornerRadii(0, 0, 8, 8, false),
+                Color.rgb(245, 250, 255, 0.9),
+                new CornerRadii(0, 0, 10, 10, false),
                 null
         )));
 
-        // Borde suave
+        // Borde suave estilo Windows 7
         contentPane.setBorder(new Border(new BorderStroke(
-                GLASS_BORDER,
+                AERO_BORDER,
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(0, 0, 8, 8, false),
+                new CornerRadii(0, 0, 10, 10, false),
                 new BorderWidths(0, 1, 1, 1)
         )));
 
         // Efecto de brillo interior sutil
         InnerShadow innerGlow = new InnerShadow();
-        innerGlow.setColor(Color.rgb(255, 255, 255, 0.5));
-        innerGlow.setRadius(2);
+        innerGlow.setColor(Color.rgb(255, 255, 255, 0.7));
+        innerGlow.setRadius(1);
         innerGlow.setChoke(0.1);
         innerGlow.setBlurType(BlurType.ONE_PASS_BOX);
         contentPane.setEffect(innerGlow);
+
+        // Padding
+        contentPane.setPadding(new javafx.geometry.Insets(20));
     }
 
     /**
-     * Aplica estilo Aero a los botones de la barra de título (minimizar, maximizar, cerrar)
+     * Aplica estilo Windows 7 a los botones de la barra de título
      */
     public static void applyWindowButtonStyle(Button button) {
         button.setFont(Font.font(SEGOE_UI, FontWeight.BOLD, 10));
         button.setStyle(
-                "-fx-background-color: rgba(255, 255, 255, 0.0); " +
+                "-fx-background-color: transparent; " +
                         "-fx-text-fill: rgba(255, 255, 255, 0.9); " +
                         "-fx-padding: 2 8; " +
                         "-fx-cursor: hand;"
         );
 
         button.setOnMouseEntered(e -> button.setStyle(
-                "-fx-background-color: rgba(255, 255, 255, 0.3); " +
+                "-fx-background-color: rgba(220, 240, 255, 0.3); " +
                         "-fx-text-fill: white; " +
                         "-fx-padding: 2 8; " +
                         "-fx-background-radius: 3; " +
@@ -160,61 +155,61 @@ public class AppStyles {
         ));
 
         button.setOnMouseExited(e -> button.setStyle(
-                "-fx-background-color: rgba(255, 255, 255, 0.0); " +
+                "-fx-background-color: transparent; " +
                         "-fx-text-fill: rgba(255, 255, 255, 0.9); " +
                         "-fx-padding: 2 8; " +
                         "-fx-cursor: hand;"
         ));
 
-        // Ajustar tamaño
+        // Ajustar tamaño exacto de Windows 7
         button.setMinSize(20, 20);
         button.setPrefSize(20, 20);
     }
 
     /**
-     * Aplica estilo al título principal con estilo Aero
+     * Aplica estilo al título principal como Windows 7
      */
     public static void applyTitleStyle(Label label) {
-        label.setFont(Font.font(SEGOE_UI, FontWeight.BOLD, 22));
-        label.setTextFill(AERO_BLUE_DARK);
+        label.setFont(Font.font(SEGOE_UI, FontWeight.BOLD, 20));
+        label.setTextFill(TEXT_DARK);
 
-        // Efecto de sombra para el texto
+        // Efecto de sombra para el texto como en Windows 7
         DropShadow textShadow = new DropShadow();
         textShadow.setColor(Color.rgb(255, 255, 255, 0.8));
         textShadow.setRadius(1);
         textShadow.setOffsetY(1);
         textShadow.setOffsetX(0);
-        textShadow.setSpread(0.3);
+        textShadow.setSpread(0.2);
         label.setEffect(textShadow);
     }
 
     /**
-     * Aplica estilo al subtítulo con estilo Aero
+     * Aplica estilo al subtítulo como Windows 7
      */
     public static void applySubtitleStyle(Label label) {
-        label.setFont(Font.font(SEGOE_UI, FontWeight.NORMAL, 14));
+        label.setFont(Font.font(SEGOE_UI, FontWeight.NORMAL, 13));
         label.setTextFill(TEXT_DARK);
 
         // Efecto de sombra sutil para el texto
         DropShadow textShadow = new DropShadow();
-        textShadow.setColor(Color.rgb(255, 255, 255, 0.5));
-        textShadow.setRadius(1);
-        textShadow.setOffsetY(1);
+        textShadow.setColor(Color.rgb(255, 255, 255, 0.7));
+        textShadow.setRadius(0.5);
+        textShadow.setOffsetY(0.5);
         textShadow.setSpread(0.1);
         label.setEffect(textShadow);
     }
 
     /**
-     * Aplica estilo a botones de acción principal con efecto de cristal Aero
+     * Aplica estilo a botones principales como en Windows 7
      */
     public static void applyPrimaryButtonStyle(Button button) {
-        button.setFont(Font.font(SEGOE_UI, FontWeight.BOLD, 12));
+        button.setFont(Font.font(SEGOE_UI, FontWeight.NORMAL, 12));
 
-        // Crear efecto de cristal azul característico de Aero
+        // Crear efecto de cristal azul característico de Windows 7
         Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(180, 210, 255, 0.9)),
-                new Stop(0.5, Color.rgb(130, 180, 240, 0.85)),
-                new Stop(1, Color.rgb(100, 160, 230, 0.9))
+                new Stop(0, Color.rgb(240, 250, 255, 0.95)),
+                new Stop(0.5, Color.rgb(210, 230, 250, 0.9)),
+                new Stop(1, Color.rgb(190, 215, 245, 0.95))
         };
 
         LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
@@ -222,161 +217,149 @@ public class AppStyles {
         // Fondo con gradiente
         button.setBackground(new Background(new BackgroundFill(
                 gradient,
-                new CornerRadii(5),
+                new CornerRadii(3),
                 null
         )));
 
-        // Borde brillante
+        // Borde estilo Windows 7
         button.setBorder(new Border(new BorderStroke(
-                Color.rgb(200, 230, 255, 0.9),
+                Color.rgb(170, 190, 210, 0.9),
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(5),
+                new CornerRadii(3),
                 new BorderWidths(1)
         )));
 
-        // Texto con sombra
-        button.setTextFill(Color.WHITE);
+        // Texto como en Windows 7
+        button.setTextFill(TEXT_DARK);
         DropShadow textEffect = new DropShadow();
-        textEffect.setColor(Color.rgb(0, 0, 0, 0.3));
-        textEffect.setRadius(1);
-        textEffect.setOffsetY(1);
+        textEffect.setColor(Color.rgb(255, 255, 255, 0.8));
+        textEffect.setRadius(0.5);
+        textEffect.setOffsetY(0.5);
         button.setEffect(textEffect);
 
         // Padding
-        button.setPadding(new javafx.geometry.Insets(6, 14, 6, 14));
+        button.setPadding(new javafx.geometry.Insets(5, 12, 5, 12));
 
         // Efecto hover
         button.setOnMouseEntered(e -> {
             Stop[] hoverStops = new Stop[] {
-                    new Stop(0, Color.rgb(200, 225, 255, 0.95)),
-                    new Stop(0.5, Color.rgb(150, 195, 245, 0.9)),
-                    new Stop(1, Color.rgb(120, 180, 240, 0.95))
+                    new Stop(0, Color.rgb(250, 252, 255, 0.95)),
+                    new Stop(0.5, Color.rgb(220, 240, 255, 0.9)),
+                    new Stop(1, Color.rgb(200, 225, 250, 0.95))
             };
 
             LinearGradient hoverGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, hoverStops);
 
             button.setBackground(new Background(new BackgroundFill(
                     hoverGradient,
-                    new CornerRadii(5),
+                    new CornerRadii(3),
                     null
             )));
 
             button.setBorder(new Border(new BorderStroke(
-                    Color.rgb(220, 240, 255, 0.95),
+                    Color.rgb(140, 180, 210, 0.95),
                     BorderStrokeStyle.SOLID,
-                    new CornerRadii(5),
+                    new CornerRadii(3),
                     new BorderWidths(1)
             )));
-
-            // Aumentar sombra
-            DropShadow hoverEffect = new DropShadow();
-            hoverEffect.setColor(Color.rgb(0, 0, 0, 0.4));
-            hoverEffect.setRadius(2);
-            hoverEffect.setOffsetY(1);
-            button.setEffect(hoverEffect);
         });
 
         button.setOnMouseExited(e -> {
             button.setBackground(new Background(new BackgroundFill(
                     gradient,
-                    new CornerRadii(5),
+                    new CornerRadii(3),
                     null
             )));
 
             button.setBorder(new Border(new BorderStroke(
-                    Color.rgb(200, 230, 255, 0.9),
+                    Color.rgb(170, 190, 210, 0.9),
                     BorderStrokeStyle.SOLID,
-                    new CornerRadii(5),
+                    new CornerRadii(3),
                     new BorderWidths(1)
             )));
-
-            // Restaurar sombra original
-            DropShadow originalEffect = new DropShadow();
-            originalEffect.setColor(Color.rgb(0, 0, 0, 0.3));
-            originalEffect.setRadius(1);
-            originalEffect.setOffsetY(1);
-            button.setEffect(originalEffect);
         });
 
         // Efecto al presionar
         button.setOnMousePressed(e -> {
             Stop[] pressedStops = new Stop[] {
-                    new Stop(0, Color.rgb(100, 160, 230, 0.9)),
-                    new Stop(0.5, Color.rgb(130, 180, 240, 0.85)),
-                    new Stop(1, Color.rgb(150, 200, 250, 0.9))
+                    new Stop(0, Color.rgb(190, 210, 240, 0.9)),
+                    new Stop(0.5, Color.rgb(210, 230, 250, 0.85)),
+                    new Stop(1, Color.rgb(220, 240, 255, 0.9))
             };
 
             LinearGradient pressedGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, pressedStops);
 
             button.setBackground(new Background(new BackgroundFill(
                     pressedGradient,
-                    new CornerRadii(5),
+                    new CornerRadii(3),
                     null
             )));
 
-            // Quitar sombra temporalmente
-            button.setEffect(null);
+            button.setBorder(new Border(new BorderStroke(
+                    Color.rgb(130, 170, 200, 0.95),
+                    BorderStrokeStyle.SOLID,
+                    new CornerRadii(3),
+                    new BorderWidths(1)
+            )));
         });
 
         button.setOnMouseReleased(e -> {
             if (button.isHover()) {
-                // Restaurar efecto hover
                 Stop[] hoverStops = new Stop[] {
-                        new Stop(0, Color.rgb(200, 225, 255, 0.95)),
-                        new Stop(0.5, Color.rgb(150, 195, 245, 0.9)),
-                        new Stop(1, Color.rgb(120, 180, 240, 0.95))
+                        new Stop(0, Color.rgb(250, 252, 255, 0.95)),
+                        new Stop(0.5, Color.rgb(220, 240, 255, 0.9)),
+                        new Stop(1, Color.rgb(200, 225, 250, 0.95))
                 };
 
                 LinearGradient hoverGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, hoverStops);
 
                 button.setBackground(new Background(new BackgroundFill(
                         hoverGradient,
-                        new CornerRadii(5),
+                        new CornerRadii(3),
                         null
                 )));
 
-                // Restaurar sombra hover
-                DropShadow hoverEffect = new DropShadow();
-                hoverEffect.setColor(Color.rgb(0, 0, 0, 0.4));
-                hoverEffect.setRadius(2);
-                hoverEffect.setOffsetY(1);
-                button.setEffect(hoverEffect);
+                button.setBorder(new Border(new BorderStroke(
+                        Color.rgb(140, 180, 210, 0.95),
+                        BorderStrokeStyle.SOLID,
+                        new CornerRadii(3),
+                        new BorderWidths(1)
+                )));
             } else {
-                // Restaurar estilo normal
                 button.setBackground(new Background(new BackgroundFill(
                         gradient,
-                        new CornerRadii(5),
+                        new CornerRadii(3),
                         null
                 )));
 
-                // Restaurar sombra original
-                DropShadow originalEffect = new DropShadow();
-                originalEffect.setColor(Color.rgb(0, 0, 0, 0.3));
-                originalEffect.setRadius(1);
-                originalEffect.setOffsetY(1);
-                button.setEffect(originalEffect);
+                button.setBorder(new Border(new BorderStroke(
+                        Color.rgb(170, 190, 210, 0.9),
+                        BorderStrokeStyle.SOLID,
+                        new CornerRadii(3),
+                        new BorderWidths(1)
+                )));
             }
         });
     }
 
     /**
-     * Aplica estilo a los campos de texto con bordes redondeados y suave efecto Aero
+     * Aplica estilo a los campos de texto como en Windows 7
      */
     public static void applyTextFieldStyle(TextField textField) {
         textField.setFont(Font.font(SEGOE_UI, 12));
 
-        // Fondo ligeramente transparente
+        // Fondo blanco como en Windows 7
         textField.setBackground(new Background(new BackgroundFill(
-                Color.rgb(255, 255, 255, 0.7),
-                new CornerRadii(5),
+                Color.rgb(255, 255, 255, 1.0), // Blanco sólido
+                new CornerRadii(2),
                 null
         )));
 
-        // Borde azul claro
+        // Borde como en Windows 7
         textField.setBorder(new Border(new BorderStroke(
-                Color.rgb(150, 190, 230, 0.7),
+                Color.rgb(160, 180, 200, 0.8),
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(5),
+                new CornerRadii(2),
                 new BorderWidths(1)
         )));
 
@@ -389,32 +372,32 @@ public class AppStyles {
         textField.setEffect(innerShadow);
 
         // Padding
-        textField.setPadding(new javafx.geometry.Insets(6, 8, 6, 8));
+        textField.setPadding(new javafx.geometry.Insets(4, 6, 4, 6));
 
         // Efecto focus
         textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 // Cuando tiene foco
                 textField.setBorder(new Border(new BorderStroke(
-                        AERO_BLUE,
+                        Color.rgb(100, 160, 220, 0.8),
                         BorderStrokeStyle.SOLID,
-                        new CornerRadii(5),
+                        new CornerRadii(2),
                         new BorderWidths(1)
                 )));
 
-                // Sombra interior azulada
+                // Brillo interior azulado
                 InnerShadow focusShadow = new InnerShadow();
-                focusShadow.setColor(Color.rgb(100, 150, 230, 0.2));
-                focusShadow.setRadius(3);
+                focusShadow.setColor(Color.rgb(100, 150, 230, 0.15));
+                focusShadow.setRadius(2);
                 focusShadow.setOffsetX(0);
                 focusShadow.setOffsetY(1);
                 textField.setEffect(focusShadow);
             } else {
                 // Cuando pierde el foco
                 textField.setBorder(new Border(new BorderStroke(
-                        Color.rgb(150, 190, 230, 0.7),
+                        Color.rgb(160, 180, 200, 0.8),
                         BorderStrokeStyle.SOLID,
-                        new CornerRadii(5),
+                        new CornerRadii(2),
                         new BorderWidths(1)
                 )));
 
@@ -430,28 +413,28 @@ public class AppStyles {
     }
 
     /**
-     * Aplica estilo a hipervínculos con estilo Aero
+     * Aplica estilo a hipervínculos como en Windows 7
      */
     public static void applyHyperlinkStyle(Hyperlink hyperlink) {
         hyperlink.setFont(Font.font(SEGOE_UI, 12));
-        hyperlink.setTextFill(AERO_BLUE_DARK);
+        hyperlink.setTextFill(Color.rgb(40, 100, 170, 1.0)); // Azul de Windows 7
         hyperlink.setBorder(Border.EMPTY);
         hyperlink.setUnderline(false);
 
-        // Efecto al pasar el ratón
+        // Efecto al pasar el ratón como en Windows 7
         hyperlink.setOnMouseEntered(e -> {
-            hyperlink.setTextFill(AERO_BLUE_LIGHT);
+            hyperlink.setTextFill(Color.rgb(65, 120, 190, 1.0));
             hyperlink.setUnderline(true);
         });
 
         hyperlink.setOnMouseExited(e -> {
-            hyperlink.setTextFill(AERO_BLUE_DARK);
+            hyperlink.setTextFill(Color.rgb(40, 100, 170, 1.0));
             hyperlink.setUnderline(false);
         });
     }
 
     /**
-     * Aplica estilo a etiquetas normales
+     * Aplica estilo a etiquetas normales como en Windows 7
      */
     public static void applyLabelStyle(Label label) {
         label.setFont(Font.font(SEGOE_UI, 12));
@@ -460,8 +443,8 @@ public class AppStyles {
         // Sombra de texto muy sutil
         DropShadow labelShadow = new DropShadow();
         labelShadow.setColor(Color.rgb(255, 255, 255, 0.5));
-        labelShadow.setRadius(0.5);
-        labelShadow.setOffsetY(0.5);
+        labelShadow.setRadius(0.2);
+        labelShadow.setOffsetY(0.2);
         labelShadow.setSpread(0.1);
         label.setEffect(labelShadow);
     }

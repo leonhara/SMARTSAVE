@@ -15,16 +15,16 @@ public class SmartSaveApp extends Application {
         // Cargar la vista de login desde el archivo FXML
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
 
-        // Configurar la escena con transparencia total para efecto Aero
-        Scene scene = new Scene(root, 800, 600);
+        // Configurar la escena sin transparencia para Windows 11
+        Scene scene = new Scene(root);
+
+        // La siguiente línea puede causar problemas en Windows 11
+        // Cámbiala a un color sólido si sigues viendo problemas
         scene.setFill(Color.TRANSPARENT);
 
-        // Aplicar CSS global para estilo Aero (opcional)
-        scene.getStylesheets().add(getClass().getResource("/css/aero-theme.css").toExternalForm());
-
-        // Configurar el escenario con transparencia para permitir efecto Aero
-        primaryStage.initStyle(StageStyle.TRANSPARENT);
-        primaryStage.setTitle("SmartSave - Gestión Financiera y Nutricional");
+        // Usar UNDECORATED en lugar de TRANSPARENT para mejor compatibilidad
+        primaryStage.initStyle(StageStyle.UNDECORATED);
+        primaryStage.setTitle("SmartSave");
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(800);
         primaryStage.setMinHeight(600);
