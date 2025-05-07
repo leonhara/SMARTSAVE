@@ -32,16 +32,16 @@ public class AppStyles {
      * Aplica el estilo de ventana tipo Windows 7 Aero simulado para Windows 11
      */
     public static void applyMainPaneStyle(BorderPane pane) {
-        // Simulación de Aero Glass en Windows 11
+        // Simulación de Aero Glass en Windows 11 - Colores exactos de Windows 7
         Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(230, 240, 255, 1.0)),
+                new Stop(0, Color.rgb(226, 237, 254, 1.0)),
                 new Stop(1, Color.rgb(210, 230, 250, 1.0))
         };
         LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
 
         pane.setBackground(new Background(new BackgroundFill(
                 gradient,
-                new CornerRadii(10),
+                new CornerRadii(7),
                 null
         )));
 
@@ -49,14 +49,14 @@ public class AppStyles {
         pane.setBorder(new Border(new BorderStroke(
                 Color.rgb(255, 255, 255, 0.9),
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(10),
-                new BorderWidths(1.5)
+                new CornerRadii(7),
+                new BorderWidths(1)
         )));
 
         // Sombra para efecto flotante
         DropShadow shadow = new DropShadow();
         shadow.setColor(Color.rgb(0, 0, 0, 0.4));
-        shadow.setRadius(15);
+        shadow.setRadius(12);
         shadow.setSpread(0.05);
         pane.setEffect(shadow);
     }
@@ -65,17 +65,17 @@ public class AppStyles {
      * Aplica estilo Windows 7 a la barra de título (simulado para Windows 11)
      */
     public static void applyTitleBarStyle(HBox titleBar) {
-        // Gradiente azul característico de Windows 7 para la barra de título
+        // Gradiente azul característico de Windows 7 para la barra de título - COLORES AJUSTADOS
         Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(120, 180, 255, 1.0)),
-                new Stop(0.5, Color.rgb(90, 160, 220, 1.0)),
-                new Stop(1, Color.rgb(70, 150, 215, 1.0))
+                new Stop(0, Color.rgb(105, 162, 222, 1.0)),
+                new Stop(0.5, Color.rgb(80, 142, 210, 1.0)),
+                new Stop(1, Color.rgb(60, 127, 195, 1.0))
         };
         LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
 
         titleBar.setBackground(new Background(new BackgroundFill(
                 gradient,
-                new CornerRadii(10, 10, 0, 0, false),
+                new CornerRadii(7, 7, 0, 0, false),
                 null
         )));
 
@@ -83,7 +83,7 @@ public class AppStyles {
         titleBar.setBorder(new Border(new BorderStroke(
                 Color.rgb(255, 255, 255, 0.9),
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(10, 10, 0, 0, false),
+                new CornerRadii(7, 7, 0, 0, false),
                 new BorderWidths(1, 1, 0, 1)
         )));
 
@@ -100,7 +100,18 @@ public class AppStyles {
         titleBar.setMaxHeight(30);
 
         // Padding
-        titleBar.setPadding(new javafx.geometry.Insets(5, 10, 5, 10));
+        titleBar.setPadding(new javafx.geometry.Insets(5, 5, 5, 10));
+
+        // Asegurar que los botones estén alineados correctamente
+        for (javafx.scene.Node node : titleBar.getChildren()) {
+            if (node instanceof Label) {
+                HBox.setHgrow(node, javafx.scene.layout.Priority.ALWAYS);
+                ((Label) node).setMaxWidth(Double.MAX_VALUE);
+            } else if (node instanceof HBox) {
+                HBox.setHgrow(node, javafx.scene.layout.Priority.NEVER);
+                ((HBox) node).setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+            }
+        }
     }
 
     /**
@@ -110,7 +121,7 @@ public class AppStyles {
         // Fondo de cristal simulado
         contentPane.setBackground(new Background(new BackgroundFill(
                 Color.rgb(245, 250, 255, 0.9),
-                new CornerRadii(0, 0, 10, 10, false),
+                new CornerRadii(0, 0, 7, 7, false),
                 null
         )));
 
@@ -118,7 +129,7 @@ public class AppStyles {
         contentPane.setBorder(new Border(new BorderStroke(
                 AERO_BORDER,
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(0, 0, 10, 10, false),
+                new CornerRadii(0, 0, 7, 7, false),
                 new BorderWidths(0, 1, 1, 1)
         )));
 
@@ -139,31 +150,36 @@ public class AppStyles {
      */
     public static void applyWindowButtonStyle(Button button) {
         button.setFont(Font.font(SEGOE_UI, FontWeight.BOLD, 10));
+
+        // Mayor contraste y tamaño para los botones de la barra de título
         button.setStyle(
                 "-fx-background-color: transparent; " +
-                        "-fx-text-fill: rgba(255, 255, 255, 0.9); " +
-                        "-fx-padding: 2 8; " +
-                        "-fx-cursor: hand;"
+                        "-fx-text-fill: white; " +  // Texto más visible (blanco completo)
+                        "-fx-padding: 1 5; " +      // Padding reducido
+                        "-fx-cursor: hand; " +
+                        "-fx-font-size: 12px;"      // Fuente más grande
         );
 
         button.setOnMouseEntered(e -> button.setStyle(
-                "-fx-background-color: rgba(220, 240, 255, 0.3); " +
+                "-fx-background-color: rgba(255, 255, 255, 0.3); " +
                         "-fx-text-fill: white; " +
-                        "-fx-padding: 2 8; " +
+                        "-fx-padding: 1 5; " +
                         "-fx-background-radius: 3; " +
-                        "-fx-cursor: hand;"
+                        "-fx-cursor: hand; " +
+                        "-fx-font-size: 12px;"
         ));
 
         button.setOnMouseExited(e -> button.setStyle(
                 "-fx-background-color: transparent; " +
-                        "-fx-text-fill: rgba(255, 255, 255, 0.9); " +
-                        "-fx-padding: 2 8; " +
-                        "-fx-cursor: hand;"
+                        "-fx-text-fill: white; " +
+                        "-fx-padding: 1 5; " +
+                        "-fx-cursor: hand; " +
+                        "-fx-font-size: 12px;"
         ));
 
-        // Ajustar tamaño exacto de Windows 7
-        button.setMinSize(20, 20);
-        button.setPrefSize(20, 20);
+        // Ajustar tamaño para que sean más visibles
+        button.setMinSize(24, 18);
+        button.setPrefSize(24, 18);
     }
 
     /**
@@ -207,9 +223,9 @@ public class AppStyles {
 
         // Crear efecto de cristal azul característico de Windows 7
         Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(240, 250, 255, 0.95)),
-                new Stop(0.5, Color.rgb(210, 230, 250, 0.9)),
-                new Stop(1, Color.rgb(190, 215, 245, 0.95))
+                new Stop(0, Color.rgb(235, 244, 252, 1.0)),
+                new Stop(0.5, Color.rgb(210, 230, 250, 1.0)),
+                new Stop(1, Color.rgb(190, 215, 245, 1.0))
         };
 
         LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);

@@ -18,12 +18,11 @@ public class SmartSaveApp extends Application {
         // Configurar la escena sin transparencia para Windows 11
         Scene scene = new Scene(root);
 
-        // La siguiente línea puede causar problemas en Windows 11
-        // Cámbiala a un color sólido si sigues viendo problemas
+        // Configurar sin transparencia para mejor compatibilidad con Windows 11
         scene.setFill(Color.TRANSPARENT);
 
         // Usar UNDECORATED en lugar de TRANSPARENT para mejor compatibilidad
-        primaryStage.initStyle(StageStyle.UNDECORATED);
+        primaryStage.initStyle(StageStyle.TRANSPARENT);
         primaryStage.setTitle("SmartSave");
         primaryStage.setScene(scene);
         primaryStage.setMinWidth(800);

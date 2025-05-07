@@ -43,14 +43,14 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Configurar los textos de los botones de la barra de título
+        configureWindowButtons();
+
         // Aplicar estilos usando la clase de utilidad
         applyStyles();
 
         // Configurar el arrastre de la ventana
         setupDraggableWindow();
-
-        // Configurar los textos de los botones de la barra de título
-        configureWindowButtons();
 
         // Configurar validación de campos
         setupValidation();
@@ -61,9 +61,12 @@ public class LoginController implements Initializable {
         AppStyles.applyMainPaneStyle(mainPane);
         AppStyles.applyTitleBarStyle(titleBar);
         AppStyles.applyContentPaneStyle(loginPane);
+
+        // Este es el orden importante para los botones
         AppStyles.applyWindowButtonStyle(minimizeButton);
         AppStyles.applyWindowButtonStyle(maximizeButton);
         AppStyles.applyWindowButtonStyle(closeButton);
+
         AppStyles.applyTitleStyle(titleLabel);
         AppStyles.applySubtitleStyle(subtitleLabel);
         AppStyles.applyPrimaryButtonStyle(loginButton);
@@ -94,10 +97,15 @@ public class LoginController implements Initializable {
     }
 
     private void configureWindowButtons() {
-        // Configurar los símbolos de los botones de ventana al estilo Windows
+        // Configurar los símbolos de los botones de ventana al estilo Windows 7
         minimizeButton.setText("—");
         maximizeButton.setText("□");
         closeButton.setText("✕");
+
+        // Asegurar que los botones sean del tamaño correcto
+        minimizeButton.setMinWidth(25);
+        maximizeButton.setMinWidth(25);
+        closeButton.setMinWidth(25);
     }
 
     private void setupValidation() {
