@@ -137,7 +137,7 @@
                     <!-- Tarjeta: Balance Actual -->
                     <VBox fx:id="balanceCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
                         <padding>
-                            <Insets all="15" />
+                            <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Balance Actual" styleClass="card-title" />
                         <Label fx:id="balanceAmount" text="€1,250.75" styleClass="card-amount" />
@@ -147,7 +147,7 @@
                     <!-- Tarjeta: Gastos Mensuales -->
                     <VBox fx:id="expensesCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
                         <padding>
-                            <Insets all="15" />
+                            <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Gastos Mensuales" styleClass="card-title" />
                         <Label fx:id="expensesAmount" text="€750.25" styleClass="card-amount" />
@@ -157,7 +157,7 @@
                     <!-- Tarjeta: Ahorros -->
                     <VBox fx:id="savingsCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
                         <padding>
-                            <Insets all="15" />
+                            <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Ahorros" styleClass="card-title" />
                         <Label fx:id="savingsAmount" text="€2,500.00" styleClass="card-amount" />
@@ -167,7 +167,7 @@
                     <!-- Tarjeta: Nutrición -->
                     <VBox fx:id="nutritionCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
                         <padding>
-                            <Insets all="15" />
+                            <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Balance Nutricional" styleClass="card-title" />
                         <Label fx:id="nutritionScore" text="85/100" styleClass="card-amount" />
@@ -180,7 +180,7 @@
                     <!-- Gráfico de distribución de gastos -->
                     <VBox fx:id="expensesChartContainer" styleClass="chart-container" HBox.hgrow="ALWAYS">
                         <padding>
-                            <Insets all="15" />
+                            <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Distribución de Gastos" styleClass="section-title" />
                         <PieChart fx:id="expensesPieChart" prefHeight="300" legendVisible="true" labelsVisible="true" />
@@ -189,7 +189,7 @@
                     <!-- Gráfico de evolución mensual -->
                     <VBox fx:id="evolutionChartContainer" styleClass="chart-container" HBox.hgrow="ALWAYS">
                         <padding>
-                            <Insets all="15" />
+                            <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Evolución Mensual" styleClass="section-title" />
                         <LineChart fx:id="evolutionLineChart" prefHeight="300" legendVisible="true" createSymbols="false">
@@ -206,7 +206,7 @@
                 <!-- Transacciones Recientes -->
                 <VBox fx:id="recentTransactionsContainer" styleClass="content-container">
                     <padding>
-                        <Insets all="15" />
+                        <Insets top="15" right="15" bottom="15" left="15" />
                     </padding>
                     <HBox alignment="CENTER_LEFT" spacing="15">
                         <Label text="Transacciones Recientes" styleClass="section-title" />
@@ -228,7 +228,7 @@
                 <!-- Objetivos de Ahorro -->
                 <VBox fx:id="savingGoalsContainer" styleClass="content-container">
                     <padding>
-                        <Insets all="15" />
+                        <Insets top="15" right="15" bottom="15" left="15" />
                     </padding>
                     <HBox alignment="CENTER_LEFT" spacing="15">
                         <Label text="Objetivos de Ahorro" styleClass="section-title" />
@@ -240,7 +240,7 @@
                         <!-- Objetivo 1 -->
                         <VBox fx:id="goal1" styleClass="goal-card" prefWidth="200" prefHeight="150" alignment="CENTER">
                             <padding>
-                                <Insets all="10" />
+                                <Insets top="10" right="10" bottom="10" left="10" />
                             </padding>
                             <Label text="Viaje a Japón" styleClass="goal-title" />
                             <ProgressBar fx:id="goal1Progress" progress="0.65" prefWidth="180" />
@@ -251,7 +251,7 @@
                         <!-- Objetivo 2 -->
                         <VBox fx:id="goal2" styleClass="goal-card" prefWidth="200" prefHeight="150" alignment="CENTER">
                             <padding>
-                                <Insets all="10" />
+                                <Insets top="10" right="10" bottom="10" left="10" />
                             </padding>
                             <Label text="Laptop Nueva" styleClass="goal-title" />
                             <ProgressBar fx:id="goal2Progress" progress="0.8" prefWidth="180" />
@@ -262,7 +262,7 @@
                         <!-- Objetivo 3 -->
                         <VBox fx:id="goal3" styleClass="goal-card" prefWidth="200" prefHeight="150" alignment="CENTER">
                             <padding>
-                                <Insets all="10" />
+                                <Insets top="10" right="10" bottom="10" left="10" />
                             </padding>
                             <Label text="Fondo de Emergencia" styleClass="goal-title" />
                             <ProgressBar fx:id="goal3Progress" progress="0.35" prefWidth="180" />

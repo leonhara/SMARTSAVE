@@ -18,7 +18,11 @@ import javafx.scene.paint.Stop;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+// Eliminado el import java.awt.* que puede estar causando conflictos
 
 /**
  * Clase de estilos mejorada con tema oscuro y acentos neón
@@ -630,37 +634,28 @@ public class AppStyles {
                 )
         );
 
-        // Filas alternas
-        table.setRowFactory(tv -> {
-            TableRow<?> row = new TableRow<>();
-            row.setStyle("-fx-background-color: rgba(40, 40, 50, 0.5); -fx-text-fill: white;");
+        // CSS para filas alternadas y efectos de hover
+        String css = ".table-row-cell:odd { -fx-background-color: rgba(50, 50, 60, 0.5); -fx-text-fill: white; }" +
+                ".table-row-cell:even { -fx-background-color: rgba(40, 40, 50, 0.5); -fx-text-fill: white; }" +
+                ".table-row-cell:hover { -fx-background-color: rgba(80, 70, 120, 0.5); -fx-text-fill: white; }";
 
-            // Cambiar color para filas pares
-            row.itemProperty().addListener((obs, oldItem, newItem) -> {
-                if (row.getIndex() % 2 == 0) {
-                    row.setStyle("-fx-background-color: rgba(50, 50, 60, 0.5); -fx-text-fill: white;");
-                } else {
-                    row.setStyle("-fx-background-color: rgba(40, 40, 50, 0.5); -fx-text-fill: white;");
-                }
-            });
+        table.getStylesheets().add(createCSS(css));
+    }
 
-            // Efecto al hacer hover
-            row.setOnMouseEntered(event ->
-                    row.setStyle("-fx-background-color: rgba(80, 70, 120, 0.5); -fx-text-fill: white;")
-            );
-
-            row.setOnMouseExited(event -> {
-                if (row.getIndex() % 2 == 0) {
-                    row.setStyle("-fx-background-color: rgba(50, 50, 60, 0.5); -fx-text-fill: white;");
-                } else {
-                    row.setStyle("-fx-background-color: rgba(40, 40, 50, 0.5); -fx-text-fill: white;");
-                }
-            });
-
-            return row;
-        });
-    } // Cierre del método applyTableStyle
-
-// Aquí puedes añadir más métodos si los necesitas
-
-} // Cierre de la clase AppStyles
+    /**
+     * Método auxiliar para crear un stylesheet CSS desde una cadena
+     */
+    private static String createCSS(String css) {
+        try {
+            File temp = File.createTempFile("stylesTemp", ".css");
+            temp.deleteOnExit();
+            try (PrintWriter out = new PrintWriter(temp)) {
+                out.println(css);
+            }
+            return temp.toURI().toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+}
