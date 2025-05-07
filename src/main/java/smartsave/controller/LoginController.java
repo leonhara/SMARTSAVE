@@ -8,9 +8,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
 import javafx.stage.Stage;
@@ -57,21 +57,26 @@ public class LoginController implements Initializable {
     }
 
     private void applyStyles() {
-        // Aplicar estilos usando la clase AppStyles mejorada
+        // Aplicar estilos al tema oscuro con neón
         AppStyles.applyMainPaneStyle(mainPane);
         AppStyles.applyTitleBarStyle(titleBar);
         AppStyles.applyContentPaneStyle(loginPane);
 
-        // Este es el orden importante para los botones
+        // Aplicar estilos a los botones de la ventana
         AppStyles.applyWindowButtonStyle(minimizeButton);
         AppStyles.applyWindowButtonStyle(maximizeButton);
         AppStyles.applyWindowButtonStyle(closeButton);
 
+        // Aplicar estilos a las etiquetas
         AppStyles.applyTitleStyle(titleLabel);
         AppStyles.applySubtitleStyle(subtitleLabel);
-        AppStyles.applyPrimaryButtonStyle(loginButton);
+
+        // Aplicar estilos a los campos de entrada
         AppStyles.applyTextFieldStyle(emailField);
-        AppStyles.applyTextFieldStyle(passwordField);
+        AppStyles.applyPasswordFieldStyle(passwordField);
+
+        // Aplicar estilo al botón de inicio de sesión
+        AppStyles.applyPrimaryButtonStyle(loginButton);
 
         // Para las etiquetas adicionales
         if (emailLabel != null) AppStyles.applyLabelStyle(emailLabel);
@@ -97,32 +102,60 @@ public class LoginController implements Initializable {
     }
 
     private void configureWindowButtons() {
-        // Configurar los símbolos de los botones de ventana al estilo Windows 7
+        // Configurar los símbolos de los botones de ventana
         minimizeButton.setText("—");
         maximizeButton.setText("□");
         closeButton.setText("✕");
 
         // Asegurar que los botones sean del tamaño correcto
-        minimizeButton.setMinWidth(25);
-        maximizeButton.setMinWidth(25);
-        closeButton.setMinWidth(25);
+        minimizeButton.setMinWidth(30);
+        maximizeButton.setMinWidth(30);
+        closeButton.setMinWidth(30);
     }
 
     private void setupValidation() {
         // Validación simple en tiempo real
         emailField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$") && !newValue.isEmpty()) {
-                emailField.setStyle(emailField.getStyle() + "-fx-border-color: rgba(255, 80, 80, 0.7);");
+                // Resaltar con borde rojo cuando el email es inválido
+                emailField.setBorder(new Border(new BorderStroke(
+                        Color.rgb(255, 50, 50, 0.8),
+                        BorderStrokeStyle.SOLID,
+                        new CornerRadii(5),
+                        new BorderWidths(1.5)
+                )));
+
+                // Efecto de resplandor rojo
+                DropShadow errorShadow = new DropShadow();
+                errorShadow.setColor(Color.rgb(255, 0, 0, 0.5));
+                errorShadow.setRadius(10);
+                errorShadow.setSpread(0.1);
+                emailField.setEffect(errorShadow);
             } else {
+                // Restaurar estilo normal
                 AppStyles.applyTextFieldStyle(emailField);
             }
         });
 
         passwordField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.length() < 6 && !newValue.isEmpty()) {
-                passwordField.setStyle(passwordField.getStyle() + "-fx-border-color: rgba(255, 80, 80, 0.7);");
+                // Resaltar con borde rojo cuando la contraseña es demasiado corta
+                passwordField.setBorder(new Border(new BorderStroke(
+                        Color.rgb(255, 50, 50, 0.8),
+                        BorderStrokeStyle.SOLID,
+                        new CornerRadii(5),
+                        new BorderWidths(1.5)
+                )));
+
+                // Efecto de resplandor rojo
+                DropShadow errorShadow = new DropShadow();
+                errorShadow.setColor(Color.rgb(255, 0, 0, 0.5));
+                errorShadow.setRadius(10);
+                errorShadow.setSpread(0.1);
+                passwordField.setEffect(errorShadow);
             } else {
-                AppStyles.applyTextFieldStyle(passwordField);
+                // Restaurar estilo normal
+                AppStyles.applyPasswordFieldStyle(passwordField);
             }
         });
     }
@@ -204,7 +237,7 @@ public class LoginController implements Initializable {
 
         // Configurar la nueva escena
         Scene dashboardScene = new Scene(dashboardRoot);
-        dashboardScene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        dashboardScene.setFill(Color.TRANSPARENT);
 
         // Obtener el stage actual
         Stage currentStage = (Stage) loginButton.getScene().getWindow();
@@ -226,7 +259,7 @@ public class LoginController implements Initializable {
 
             // Configurar la nueva escena
             Scene registroScene = new Scene(registroRoot);
-            registroScene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+            registroScene.setFill(Color.TRANSPARENT);
 
             // Obtener el stage actual
             Stage currentStage = (Stage) registroLink.getScene().getWindow();
@@ -250,35 +283,88 @@ public class LoginController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
 
-        // Aplicar estilo Aero a la alerta
+        // Estilizar la alerta con el tema oscuro
         DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStyleClass().add("aero-alert");
 
-        // Configurar estilo manualmente (ya que no podemos usar CSS)
-        Stop[] stops = new Stop[] {
-                new Stop(0, Color.rgb(240, 240, 240, 0.9)),
-                new Stop(1, Color.rgb(220, 220, 220, 0.9))
-        };
-        LinearGradient gradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
-
+        // Fondo oscuro
         dialogPane.setBackground(new Background(new BackgroundFill(
-                gradient,
-                new CornerRadii(8),
+                Color.rgb(25, 25, 35, 0.95),
+                new CornerRadii(10),
                 null
         )));
 
+        // Borde con efecto neón
         dialogPane.setBorder(new Border(new BorderStroke(
-                Color.rgb(255, 255, 255, 0.8),
+                Color.rgb(255, 0, 255, 0.7),
                 BorderStrokeStyle.SOLID,
-                new CornerRadii(8),
-                new BorderWidths(1)
+                new CornerRadii(10),
+                new BorderWidths(1.5)
         )));
 
-        // Aplicar efecto de sombra
-        DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.rgb(0, 0, 0, 0.5));
-        shadow.setRadius(10);
-        dialogPane.setEffect(shadow);
+        // Color de texto
+        dialogPane.lookup(".content.label").setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+
+        // Botones con estilo neón
+        for (ButtonType buttonType : alert.getButtonTypes()) {
+            Button button = (Button) dialogPane.lookupButton(buttonType);
+
+            // Fondo oscuro
+            button.setBackground(new Background(new BackgroundFill(
+                    Color.rgb(40, 40, 50, 1.0),
+                    new CornerRadii(5),
+                    null
+            )));
+
+            // Borde neón
+            button.setBorder(new Border(new BorderStroke(
+                    Color.rgb(160, 100, 255, 0.8),
+                    BorderStrokeStyle.SOLID,
+                    new CornerRadii(5),
+                    new BorderWidths(1)
+            )));
+
+            // Texto claro
+            button.setTextFill(Color.WHITE);
+
+            // Efecto de brillo
+            Glow glow = new Glow();
+            glow.setLevel(0.3);
+            button.setEffect(glow);
+
+            // Eventos de hover
+            button.setOnMouseEntered(e -> {
+                button.setBackground(new Background(new BackgroundFill(
+                        Color.rgb(60, 60, 70, 1.0),
+                        new CornerRadii(5),
+                        null
+                )));
+
+                DropShadow shadow = new DropShadow();
+                shadow.setColor(Color.rgb(180, 100, 255, 0.8));
+                shadow.setRadius(15);
+                shadow.setSpread(0.2);
+                button.setEffect(shadow);
+            });
+
+            button.setOnMouseExited(e -> {
+                button.setBackground(new Background(new BackgroundFill(
+                        Color.rgb(40, 40, 50, 1.0),
+                        new CornerRadii(5),
+                        null
+                )));
+
+                Glow originalGlow = new Glow();
+                originalGlow.setLevel(0.3);
+                button.setEffect(originalGlow);
+            });
+        }
+
+        // Efecto de sombra para toda la alerta
+        DropShadow alertShadow = new DropShadow();
+        alertShadow.setColor(Color.rgb(0, 0, 0, 0.7));
+        alertShadow.setRadius(20);
+        alertShadow.setSpread(0.1);
+        dialogPane.setEffect(alertShadow);
 
         // Mostrar y esperar
         alert.showAndWait();
