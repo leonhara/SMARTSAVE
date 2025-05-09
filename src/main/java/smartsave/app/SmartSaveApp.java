@@ -11,43 +11,43 @@ import javafx.stage.StageStyle;
 public class SmartSaveApp extends Application {
 
     // Coordenadas para permitir el arrastre de la ventana
-    private double xOffset;
-    private double yOffset;
+    private double offsetX;
+    private double offsetY;
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage escenarioPrincipal) throws Exception {
         // Cargar la vista de login desde el archivo FXML
-        Parent root = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
+        Parent raiz = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
 
         // Configurar la escena con fondo transparente para el efecto de ventana personalizada
-        Scene scene = new Scene(root);
-        scene.setFill(Color.TRANSPARENT);
+        Scene escena = new Scene(raiz);
+        escena.setFill(Color.TRANSPARENT);
 
         // Configurar el estilo de la ventana sin decoración del sistema operativo
-        primaryStage.initStyle(StageStyle.TRANSPARENT);
-        primaryStage.setTitle("SmartSave");
-        primaryStage.setScene(scene);
-        primaryStage.setMinWidth(800);
-        primaryStage.setMinHeight(600);
+        escenarioPrincipal.initStyle(StageStyle.TRANSPARENT);
+        escenarioPrincipal.setTitle("SmartSave");
+        escenarioPrincipal.setScene(escena);
+        escenarioPrincipal.setMinWidth(800);
+        escenarioPrincipal.setMinHeight(600);
 
         // Permitir arrastrar la ventana desde cualquier parte
-        setupDraggableWindow(scene, primaryStage);
+        configurarVentanaArrastrable(escena, escenarioPrincipal);
 
-        primaryStage.show();
+        escenarioPrincipal.show();
     }
 
     /**
      * Configura los manejadores de eventos para permitir arrastrar la ventana
      */
-    private void setupDraggableWindow(Scene scene, Stage stage) {
-        scene.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
+    private void configurarVentanaArrastrable(Scene escena, Stage escenario) {
+        escena.setOnMousePressed(evento -> {
+            offsetX = evento.getSceneX();
+            offsetY = evento.getSceneY();
         });
 
-        scene.setOnMouseDragged(event -> {
-            stage.setX(event.getScreenX() - xOffset);
-            stage.setY(event.getScreenY() - yOffset);
+        escena.setOnMouseDragged(evento -> {
+            escenario.setX(evento.getScreenX() - offsetX);
+            escenario.setY(evento.getScreenY() - offsetY);
         });
     }
 

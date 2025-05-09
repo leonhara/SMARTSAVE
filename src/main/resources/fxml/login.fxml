@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controller.LoginController">
+<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controlador.LoginController">
     <top>
         <HBox fx:id="titleBar" alignment="CENTER_RIGHT" spacing="5">
             <padding>
@@ -39,7 +39,7 @@
 
             <!-- Icono de la aplicación (estilo similar a la imagen de referencia) -->
             <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
-                <Image url="@../images/app_icon.png" />
+                <Image url="@../imagenes/app_icon.png" />
             </ImageView>
 
             <Label fx:id="titleLabel" text="SmartSave" />
