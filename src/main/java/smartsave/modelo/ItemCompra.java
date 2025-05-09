@@ -1,0 +1,106 @@
+package smartsave.modelo;
+
+public class ItemCompra {
+    private Long id;
+    private Producto producto;
+    private int cantidad;
+    private boolean comprado;
+    private String notas;
+
+    // Constructores
+    public ItemCompra() {
+        this.cantidad = 1;
+        this.comprado = false;
+    }
+
+    public ItemCompra(Producto producto) {
+        this.producto = producto;
+        this.cantidad = 1;
+        this.comprado = false;
+    }
+
+    public ItemCompra(Producto producto, int cantidad) {
+        this.producto = producto;
+        this.cantidad = cantidad;
+        this.comprado = false;
+    }
+
+    // Getters y setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Producto getProducto() { return producto; }
+    public void setProducto(Producto producto) { this.producto = producto; }
+
+    public int getCantidad() { return cantidad; }
+    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+
+    public boolean isComprado() { return comprado; }
+    public void setComprado(boolean comprado) { this.comprado = comprado; }
+
+    public String getNotas() { return notas; }
+    public void setNotas(String notas) { this.notas = notas; }
+
+    // Métodos adicionales
+
+    /**
+     * Calcula el precio total del item (precio * cantidad)
+     * @return Precio total
+     */
+    public double getPrecioTotal() {
+        return producto.getPrecio() * cantidad;
+    }
+
+    /**
+     * Calcula las calorías totales del item (calorías * cantidad)
+     * @return Calorías totales
+     */
+    public double getCaloriasTotales() {
+        return producto.getInfoNutricional().getCalorias() * cantidad;
+    }
+
+    /**
+     * Calcula las proteínas totales del item (proteínas * cantidad)
+     * @return Proteínas totales
+     */
+    public double getProteinasTotales() {
+        return producto.getInfoNutricional().getProteinas() * cantidad;
+    }
+
+    /**
+     * Calcula los carbohidratos totales del item (carbohidratos * cantidad)
+     * @return Carbohidratos totales
+     */
+    public double getCarbohidratosTotales() {
+        return producto.getInfoNutricional().getCarbohidratos() * cantidad;
+    }
+
+    /**
+     * Calcula las grasas totales del item (grasas * cantidad)
+     * @return Grasas totales
+     */
+    public double getGrasasTotales() {
+        return producto.getInfoNutricional().getGrasas() * cantidad;
+    }
+
+    /**
+     * Incrementa la cantidad en 1
+     */
+    public void incrementarCantidad() {
+        this.cantidad++;
+    }
+
+    /**
+     * Decrementa la cantidad en 1, asegurando que no sea menor que 1
+     */
+    public void decrementarCantidad() {
+        if (this.cantidad > 1) {
+            this.cantidad--;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return cantidad + "x " + producto.getNombre() + " - " + String.format("%.2f€", getPrecioTotal());
+    }
+}

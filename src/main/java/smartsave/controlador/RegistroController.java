@@ -12,38 +12,47 @@ import javafx.scene.effect.Glow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import smartsave.utilidad.EstilosApp;
-import smartsave.servicio.UsuarioServicio;
 import smartsave.modelo.Usuario;
+import smartsave.servicio.UsuarioServicio;
+import smartsave.utilidad.EstilosApp;
+import smartsave.utilidad.ValidacionUtil;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class LoginController implements Initializable {
+public class RegistroController implements Initializable {
 
-    // Mantener referencias FXML con nombres originales
+    // Referencias FXML
     @FXML private BorderPane mainPane;
     @FXML private HBox titleBar;
-    @FXML private VBox loginPane;
+    @FXML private VBox registroPane;
     @FXML private Label titleLabel;
     @FXML private Label subtitleLabel;
+    @FXML private TextField nombreField;
+    @FXML private TextField apellidosField;
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
-    @FXML private Button loginButton;
+    @FXML private PasswordField confirmPasswordField;
+    @FXML private Button registroButton;
     @FXML private Button minimizeButton;
     @FXML private Button maximizeButton;
     @FXML private Button closeButton;
-    @FXML private Hyperlink registroLink;
+    @FXML private Hyperlink loginLink;
+
+    // Etiquetas para los campos
+    @FXML private Label nombreLabel;
+    @FXML private Label apellidosLabel;
     @FXML private Label emailLabel;
     @FXML private Label passwordLabel;
+    @FXML private Label confirmPasswordLabel;
+
+    // Servicio para operaciones con usuarios
+    private UsuarioServicio usuarioServicio = new UsuarioServicio();
 
     // Variables para permitir el arrastre de la ventana
     private double offsetX = 0;
     private double offsetY = 0;
-
-    // Servicio para operaciones con usuarios
-    private UsuarioServicio usuarioServicio = new UsuarioServicio();
 
     @Override
     public void initialize(URL ubicacion, ResourceBundle recursos) {
@@ -64,7 +73,7 @@ public class LoginController implements Initializable {
         // Aplicar estilos al tema oscuro con neón
         EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
         EstilosApp.aplicarEstiloBarraTitulo(titleBar);
-        EstilosApp.aplicarEstiloPanelContenido(loginPane);
+        EstilosApp.aplicarEstiloPanelContenido(registroPane);
 
         // Aplicar estilos a los botones de la ventana
         EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
@@ -76,33 +85,24 @@ public class LoginController implements Initializable {
         EstilosApp.aplicarEstiloSubtitulo(subtitleLabel);
 
         // Aplicar estilos a los campos de entrada
+        EstilosApp.aplicarEstiloCampoTexto(nombreField);
+        EstilosApp.aplicarEstiloCampoTexto(apellidosField);
         EstilosApp.aplicarEstiloCampoTexto(emailField);
         EstilosApp.aplicarEstiloCampoContraseña(passwordField);
+        EstilosApp.aplicarEstiloCampoContraseña(confirmPasswordField);
 
-        // Aplicar estilo al botón de inicio de sesión
-        EstilosApp.aplicarEstiloBotonPrimario(loginButton);
+        // Aplicar estilo al botón de registro
+        EstilosApp.aplicarEstiloBotonPrimario(registroButton);
 
         // Para las etiquetas adicionales
-        if (emailLabel != null) EstilosApp.aplicarEstiloEtiqueta(emailLabel);
-        if (passwordLabel != null) EstilosApp.aplicarEstiloEtiqueta(passwordLabel);
+        EstilosApp.aplicarEstiloEtiqueta(nombreLabel);
+        EstilosApp.aplicarEstiloEtiqueta(apellidosLabel);
+        EstilosApp.aplicarEstiloEtiqueta(emailLabel);
+        EstilosApp.aplicarEstiloEtiqueta(passwordLabel);
+        EstilosApp.aplicarEstiloEtiqueta(confirmPasswordLabel);
 
         // Para hipervínculos
-        if (registroLink != null) EstilosApp.aplicarEstiloHipervinculo(registroLink);
-
-        // Aplicar estilos a todas las etiquetas que no sean título o subtítulo
-        for (javafx.scene.Node nodo : mainPane.lookupAll("Label")) {
-            if (nodo instanceof Label && nodo != titleLabel && nodo != subtitleLabel
-                    && nodo != emailLabel && nodo != passwordLabel) {
-                EstilosApp.aplicarEstiloEtiqueta((Label) nodo);
-            }
-        }
-
-        // Aplicar estilos a todos los hipervínculos
-        for (javafx.scene.Node nodo : mainPane.lookupAll("Hyperlink")) {
-            if (nodo instanceof Hyperlink && nodo != registroLink) {
-                EstilosApp.aplicarEstiloHipervinculo((Hyperlink) nodo);
-            }
-        }
+        EstilosApp.aplicarEstiloHipervinculo(loginLink);
     }
 
     private void configurarBotonesVentana() {
@@ -118,9 +118,9 @@ public class LoginController implements Initializable {
     }
 
     private void configurarValidacion() {
-        // Validación simple en tiempo real
+        // Validación de email en tiempo real
         emailField.textProperty().addListener((observable, valorAnterior, valorNuevo) -> {
-            if (!valorNuevo.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$") && !valorNuevo.isEmpty()) {
+            if (!ValidacionUtil.esEmailValido(valorNuevo) && !valorNuevo.isEmpty()) {
                 // Resaltar con borde rojo cuando el email es inválido
                 emailField.setBorder(new Border(new BorderStroke(
                         Color.rgb(255, 50, 50, 0.8),
@@ -141,6 +141,7 @@ public class LoginController implements Initializable {
             }
         });
 
+        // Validación de contraseña en tiempo real
         passwordField.textProperty().addListener((observable, valorAnterior, valorNuevo) -> {
             if (valorNuevo.length() < 6 && !valorNuevo.isEmpty()) {
                 // Resaltar con borde rojo cuando la contraseña es demasiado corta
@@ -162,6 +163,29 @@ public class LoginController implements Initializable {
                 EstilosApp.aplicarEstiloCampoContraseña(passwordField);
             }
         });
+
+        // Validar que las contraseñas coincidan
+        confirmPasswordField.textProperty().addListener((observable, valorAnterior, valorNuevo) -> {
+            if (!valorNuevo.equals(passwordField.getText()) && !valorNuevo.isEmpty()) {
+                // Resaltar con borde rojo cuando las contraseñas no coinciden
+                confirmPasswordField.setBorder(new Border(new BorderStroke(
+                        Color.rgb(255, 50, 50, 0.8),
+                        BorderStrokeStyle.SOLID,
+                        new CornerRadii(5),
+                        new BorderWidths(1.5)
+                )));
+
+                // Efecto de resplandor rojo
+                DropShadow sombraError = new DropShadow();
+                sombraError.setColor(Color.rgb(255, 0, 0, 0.5));
+                sombraError.setRadius(10);
+                sombraError.setSpread(0.1);
+                confirmPasswordField.setEffect(sombraError);
+            } else {
+                // Restaurar estilo normal
+                EstilosApp.aplicarEstiloCampoContraseña(confirmPasswordField);
+            }
+        });
     }
 
     private void configurarVentanaArrastrable() {
@@ -177,7 +201,6 @@ public class LoginController implements Initializable {
         });
     }
 
-    // Mantener nombres de métodos de eventos FXML en inglés
     @FXML
     private void handleMinimizeAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
@@ -204,89 +227,92 @@ public class LoginController implements Initializable {
     }
 
     @FXML
-    private void handleLoginButtonAction(ActionEvent evento) {
+    private void handleRegistroButtonAction(ActionEvent evento) {
+        // Obtener valores de los campos
+        String nombre = nombreField.getText().trim();
+        String apellidos = apellidosField.getText().trim();
         String email = emailField.getText().trim();
         String contraseña = passwordField.getText();
+        String confirmarContraseña = confirmPasswordField.getText();
 
-        // Validación básica
-        if (email.isEmpty() || contraseña.isEmpty()) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Por favor, complete todos los campos.");
+        // Validar que no haya campos vacíos
+        if (nombre.isEmpty() || apellidos.isEmpty() || email.isEmpty() || contraseña.isEmpty()) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de validación", "Todos los campos son obligatorios.");
             return;
         }
 
-        if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Por favor, ingrese un email válido.");
+        // Validar formato de email
+        if (!ValidacionUtil.esEmailValido(email)) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de validación", "El email ingresado no es válido.");
             return;
         }
 
+        // Validar longitud mínima de contraseña
         if (contraseña.length() < 6) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error",
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de validación",
                     "La contraseña debe tener al menos 6 caracteres.");
             return;
         }
 
-        // Verificar credenciales usando el servicio
-        Usuario usuario = usuarioServicio.verificarCredenciales(email, contraseña);
+        // Validar que las contraseñas coincidan
+        if (!contraseña.equals(confirmarContraseña)) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de validación",
+                    "Las contraseñas no coinciden.");
+            return;
+        }
 
-        if (usuario != null) {
-            try {
-                // Login exitoso, abrir panel principal
-                abrirPanelPrincipal();
-            } catch (IOException e) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error",
-                        "Error al cargar la pantalla principal: " + e.getMessage());
+        try {
+            // Crear nuevo usuario (en un entorno real, se haría hash de la contraseña)
+            Usuario nuevoUsuario = new Usuario(email, nombre, apellidos, contraseña);
+
+            // Guardar usuario en la base de datos (simulado)
+            boolean registroExitoso = usuarioServicio.registrarUsuario(nuevoUsuario);
+
+            if (registroExitoso) {
+                // Mostrar mensaje de éxito
+                mostrarAlerta(Alert.AlertType.INFORMATION, "Registro exitoso",
+                        "Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.");
+
+                // Redirigir a la pantalla de login
+                irALogin();
+            } else {
+                mostrarAlerta(Alert.AlertType.ERROR, "Error de registro",
+                        "No se pudo completar el registro. El email ya está en uso.");
             }
-        } else {
-            // Credenciales incorrectas
-            mostrarAlerta(Alert.AlertType.ERROR, "Error",
-                    "Email o contraseña incorrectos. Por favor, intente nuevamente.");
+        } catch (Exception e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de sistema",
+                    "Ha ocurrido un error al procesar el registro: " + e.getMessage());
         }
     }
 
-    private void abrirPanelPrincipal() throws IOException {
-        // Cargar la vista del panel principal
-        FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
-        Parent raizPanel = cargador.load();
-
-        // Configurar la nueva escena
-        Scene escenaPanel = new Scene(raizPanel);
-        escenaPanel.setFill(Color.TRANSPARENT);
-
-        // Obtener el escenario actual
-        Stage escenarioActual = (Stage) loginButton.getScene().getWindow();
-
-        // Establecer la nueva escena
-        escenarioActual.setScene(escenaPanel);
-        escenarioActual.setTitle("SmartSave - Panel Principal");
-
-        // Centrar en pantalla (opcional)
-        escenarioActual.centerOnScreen();
+    @FXML
+    private void handleLoginLinkAction(ActionEvent evento) {
+        irALogin();
     }
 
-    @FXML
-    private void handleRegistroLinkAction(ActionEvent evento) {
+    private void irALogin() {
         try {
-            // Cargar la vista de registro
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/registro.fxml"));
-            Parent raizRegistro = cargador.load();
+            // Cargar la vista de login
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+            Parent raizLogin = cargador.load();
 
             // Configurar la nueva escena
-            Scene escenaRegistro = new Scene(raizRegistro);
-            escenaRegistro.setFill(Color.TRANSPARENT);
+            Scene escenaLogin = new Scene(raizLogin);
+            escenaLogin.setFill(Color.TRANSPARENT);
 
             // Obtener el escenario actual
-            Stage escenarioActual = (Stage) registroLink.getScene().getWindow();
+            Stage escenarioActual = (Stage) mainPane.getScene().getWindow();
 
             // Establecer la nueva escena
-            escenarioActual.setScene(escenaRegistro);
-            escenarioActual.setTitle("SmartSave - Registro de Usuario");
+            escenarioActual.setScene(escenaLogin);
+            escenarioActual.setTitle("SmartSave - Login");
 
-            // Centrar en pantalla (opcional)
+            // Centrar en pantalla
             escenarioActual.centerOnScreen();
 
         } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error",
-                    "Error al cargar la pantalla de registro: " + e.getMessage());
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación",
+                    "Error al cargar la pantalla de login: " + e.getMessage());
         }
     }
 

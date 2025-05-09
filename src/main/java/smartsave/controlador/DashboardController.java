@@ -247,23 +247,71 @@ public class DashboardController implements Initializable {
 
     @FXML
     private void handleTransactionsAction(ActionEvent evento) {
-        // Cambiar a la vista de transacciones
-        activarBoton(transactionsButton);
-        mostrarAlertaNoImplementado("Transacciones");
+        try {
+            // Cargar la vista de transacciones
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/transacciones.fxml"));
+            Parent raizTransacciones = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaTransacciones = new Scene(raizTransacciones);
+            escenaTransacciones.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) transactionsButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaTransacciones);
+            escenarioActual.setTitle("SmartSave - Gestión de Ingresos y Gastos");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de transacciones: " + e.getMessage());
+        }
     }
 
     @FXML
     private void handleNutritionAction(ActionEvent evento) {
-        // Cambiar a la vista de perfil nutricional
-        activarBoton(nutritionButton);
-        mostrarAlertaNoImplementado("Perfil Nutricional");
+        try {
+            // Cargar la vista de perfil nutricional
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/nutricion.fxml"));
+            Parent raizNutricion = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaNutricion = new Scene(raizNutricion);
+            escenaNutricion.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaNutricion);
+            escenarioActual.setTitle("SmartSave - Perfil Nutricional");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de perfil nutricional: " + e.getMessage());
+        }
     }
 
     @FXML
     private void handleShoppingAction(ActionEvent evento) {
-        // Cambiar a la vista de plan de compras
-        activarBoton(shoppingButton);
-        mostrarAlertaNoImplementado("Plan de Compras");
+        try {
+            // Cargar la vista de plan de compras
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/compras.fxml"));
+            Parent raizCompras = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaCompras = new Scene(raizCompras);
+            escenaCompras.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaCompras);
+            escenarioActual.setTitle("SmartSave - Plan de Compras");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de plan de compras: " + e.getMessage());
+        }
     }
 
     @FXML
