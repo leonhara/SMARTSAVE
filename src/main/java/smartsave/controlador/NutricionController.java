@@ -473,9 +473,25 @@ public class NutricionController implements Initializable {
 
     @FXML
     private void handleShoppingAction(ActionEvent evento) {
-        // Cambiar a la vista de plan de compras
-        activarBoton(shoppingButton);
-        mostrarAlertaNoImplementado("Plan de Compras");
+        try {
+            // Cargar la vista de plan de compras
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/compras.fxml"));
+            Parent raizCompras = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaCompras = new Scene(raizCompras);
+            escenaCompras.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaCompras);
+            escenarioActual.setTitle("SmartSave - Plan de Compras");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de plan de compras: " + e.getMessage());
+        }
     }
 
     @FXML

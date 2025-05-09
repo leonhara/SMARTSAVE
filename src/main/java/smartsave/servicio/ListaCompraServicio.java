@@ -247,11 +247,12 @@ public class ListaCompraServicio {
                 productosCategoria.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
             } else {
                 // En modo estándar, priorizar calidad nutricional
-                productosCategoria.sort(Comparator.comparing(p ->
-                        p.getInfoNutricional().getProteinas() +
-                                p.getInfoNutricional().getCarbohidratos() / 2 +
-                                p.getInfoNutricional().getGrasas() / 3
-                ).reversed());
+                productosCategoria.sort(Comparator.comparing(obj -> {
+                    Producto p = (Producto) obj;
+                    return p.getInfoNutricional().getProteinas() +
+                            p.getInfoNutricional().getCarbohidratos() / 2 +
+                            p.getInfoNutricional().getGrasas() / 3;
+                }).reversed());
             }
 
             // Añadir al menos un producto de cada categoría esencial
@@ -289,11 +290,12 @@ public class ListaCompraServicio {
             todosProductos.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
         } else {
             // Priorizar nutrición
-            todosProductos.sort(Comparator.comparing(p ->
-                    (p.getInfoNutricional().getProteinas() * 4) +
-                            (p.getInfoNutricional().getCarbohidratos() * 2) +
-                            (p.getInfoNutricional().getGrasas() * 3)
-            ).reversed());
+            todosProductos.sort(Comparator.comparing(obj -> {
+                Producto p = (Producto) obj;
+                return (p.getInfoNutricional().getProteinas() * 4) +
+                        (p.getInfoNutricional().getCarbohidratos() * 2) +
+                        (p.getInfoNutricional().getGrasas() * 3);
+            }).reversed());
         }
 
         // Añadir productos hasta alcanzar objetivos o agotar presupuesto

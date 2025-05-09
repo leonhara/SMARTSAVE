@@ -797,9 +797,25 @@ public class TransaccionesController implements Initializable {
 
     @FXML
     private void handleNutritionAction(ActionEvent evento) {
-        // Cambiar a la vista de perfil nutricional
-        activarBoton(nutritionButton);
-        mostrarAlertaNoImplementado("Perfil Nutricional");
+        try {
+            // Cargar la vista de perfil nutricional
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/nutricion.fxml"));
+            Parent raizNutricion = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaNutricion = new Scene(raizNutricion);
+            escenaNutricion.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaNutricion);
+            escenarioActual.setTitle("SmartSave - Perfil Nutricional");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de perfil nutricional: " + e.getMessage());
+        }
     }
 
     @FXML
