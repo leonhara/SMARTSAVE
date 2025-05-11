@@ -827,9 +827,25 @@ public class TransaccionesController implements Initializable {
 
     @FXML
     private void handleSavingsAction(ActionEvent evento) {
-        // Cambiar a la vista de modalidades de ahorro
-        activarBoton(savingsButton);
-        mostrarAlertaNoImplementado("Modalidades de Ahorro");
+        try {
+            // Cargar la vista de modalidades de ahorro
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/ahorro.fxml"));
+            Parent raizAhorro = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaAhorro = new Scene(raizAhorro);
+            escenaAhorro.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) savingsButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaAhorro);
+            escenarioActual.setTitle("SmartSave - Modalidades de Ahorro");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de modalidades de ahorro: " + e.getMessage());
+        }
     }
 
     @FXML

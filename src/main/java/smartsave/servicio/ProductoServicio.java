@@ -1,11 +1,9 @@
 package smartsave.servicio;
 
+import smartsave.modelo.ModalidadAhorro;
 import smartsave.modelo.Producto;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -225,5 +223,38 @@ public class ProductoServicio {
                 .sorted((p1, p2) -> Double.compare(p2.getRelacionCaloriasPrecio(), p1.getRelacionCaloriasPrecio()))
                 .limit(limite)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Filtra productos según una modalidad de ahorro
+     * @param productos Lista de productos a filtrar
+     * @param modalidad Modalidad de ahorro a aplicar
+     * @return Lista filtrada y ordenada según la modalidad
+     */
+    public List<Producto> filtrarSegunModalidad(List<Producto> productos, ModalidadAhorro modalidad) {
+        if (modalidad == null) {
+            return new ArrayList<>(productos);
+        }
+
+        List<Producto> productosFiltrados = new ArrayList<>(productos);
+
+        // Ordenar según prioridades de la modalidad
+        if ("Máximo".equals(modalidad.getNombre())) {
+            // Priorizar precio
+            productosFiltrados.sort(Comparator.comparing(Producto::getPrecio));
+        } else if ("Estándar".equals(modalidad.getNombre())) {
+            // Priorizar nutrición - CORREGIDO para usar tu sintaxis
+            productosFiltrados.sort(Comparator.comparing(obj -> {
+                Producto p = (Producto) obj;
+                return p.getInfoNutricional().getProteinas() +
+                        p.getInfoNutricional().getCarbohidratos() / 2 +
+                        p.getInfoNutricional().getGrasas() / 3;
+            }).reversed());
+        } else {
+            // Equilibrado - Balance entre precio y nutrición
+            productosFiltrados.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
+        }
+
+        return productosFiltrados;
     }
 }

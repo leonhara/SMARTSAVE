@@ -206,10 +206,21 @@ public class LoginController implements Initializable {
     @FXML
     private void handleLoginButtonAction(ActionEvent evento) {
         String email = emailField.getText().trim();
-        String contraseña = passwordField.getText();
+        String contrasena = passwordField.getText();
+
+        // Acceso rápido para desarrollo
+        if ("1".equals(email) && "1".equals(contrasena)) {
+            try {
+                abrirPanelPrincipal();
+                return;
+            } catch (IOException e) {
+                mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al cargar el panel principal: " + e.getMessage());
+                return;
+            }
+        }
 
         // Validación básica
-        if (email.isEmpty() || contraseña.isEmpty()) {
+        if (email.isEmpty() || contrasena.isEmpty()) {
             mostrarAlerta(Alert.AlertType.ERROR, "Error", "Por favor, complete todos los campos.");
             return;
         }
@@ -219,14 +230,14 @@ public class LoginController implements Initializable {
             return;
         }
 
-        if (contraseña.length() < 6) {
+        if (contrasena.length() < 6) {
             mostrarAlerta(Alert.AlertType.ERROR, "Error",
                     "La contraseña debe tener al menos 6 caracteres.");
             return;
         }
 
         // Verificar credenciales usando el servicio
-        Usuario usuario = usuarioServicio.verificarCredenciales(email, contraseña);
+        Usuario usuario = usuarioServicio.verificarCredenciales(email, contrasena);
 
         if (usuario != null) {
             try {

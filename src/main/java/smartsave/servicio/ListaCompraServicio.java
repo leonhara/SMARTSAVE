@@ -173,6 +173,10 @@ public class ListaCompraServicio {
      * @param presupuestoMaximo Presupuesto máximo
      * @return Lista de compra generada automáticamente
      */
+    // Añadir como campo de clase en ListaCompraServicio
+    private UsuarioServicio usuarioServicio = new UsuarioServicio();
+
+    // Reemplazar el metodo generarListaOptimizada con esta versión actualizada
     public ListaCompra generarListaOptimizada(Long usuarioId, String nombre, String modalidadAhorro, double presupuestoMaximo) {
         // Crear la lista vacía
         ListaCompra lista = crearListaCompra(usuarioId, nombre, modalidadAhorro, presupuestoMaximo);
@@ -189,19 +193,7 @@ public class ListaCompraServicio {
         int caloriasDiarias = perfil.getCaloriasDiarias();
 
         // Aplicar factor según modalidad de ahorro
-        double factorPresupuesto;
-        switch (modalidadAhorro) {
-            case "Máximo":
-                factorPresupuesto = 0.7; // 70% del presupuesto para ahorrar más
-                break;
-            case "Equilibrado":
-                factorPresupuesto = 0.85; // 85% del presupuesto
-                break;
-            case "Estándar":
-            default:
-                factorPresupuesto = 1.0; // 100% del presupuesto
-                break;
-        }
+        double factorPresupuesto = usuarioServicio.obtenerFactorPresupuestoUsuario(usuarioId);
 
         double presupuestoAjustado = presupuestoMaximo * factorPresupuesto;
 
@@ -230,6 +222,12 @@ public class ListaCompraServicio {
                 "Carnes", "Lácteos", "Frutas", "Verduras", "Cereales", "Legumbres"
         );
 
+        // Obtener prioridades según modalidad
+        ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
+        ModalidadAhorro modalidadObj = modalidadServicio.obtenerModalidadPorNombre(modalidadAhorro);
+        int prioridadPrecio = modalidadObj != null ? modalidadObj.getPrioridadPrecio() : 6; // Default: equilibrado
+        int prioridadNutricion = modalidadObj != null ? modalidadObj.getPrioridadNutricion() : 7; // Default: equilibrado
+
         // Priorizar categorías según necesidades
         for (String categoria : categoriasEsenciales) {
             List<Producto> productosCategoria = productosPorCategoria.getOrDefault(categoria, new ArrayList<>());
@@ -238,21 +236,21 @@ public class ListaCompraServicio {
                 continue;
             }
 
-            // Ordenar productos según la modalidad de ahorro
-            if ("Máximo".equals(modalidadAhorro)) {
-                // En modo máximo ahorro, priorizar precio
+            // Ordenar productos según las prioridades de la modalidad de ahorro
+            if (prioridadPrecio > prioridadNutricion) {
+                // Priorizar precio (modalidad máximo ahorro o similar)
                 productosCategoria.sort(Comparator.comparing(Producto::getPrecio));
-            } else if ("Equilibrado".equals(modalidadAhorro)) {
-                // En modo equilibrado, priorizar relación nutrición/precio
-                productosCategoria.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
-            } else {
-                // En modo estándar, priorizar calidad nutricional
+            } else if (prioridadPrecio < prioridadNutricion) {
+                // Priorizar nutrición (modalidad estándar o similar)
                 productosCategoria.sort(Comparator.comparing(obj -> {
                     Producto p = (Producto) obj;
                     return p.getInfoNutricional().getProteinas() +
                             p.getInfoNutricional().getCarbohidratos() / 2 +
                             p.getInfoNutricional().getGrasas() / 3;
                 }).reversed());
+            } else {
+                // Balance entre precio y nutrición (modalidad equilibrada)
+                productosCategoria.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
             }
 
             // Añadir al menos un producto de cada categoría esencial
@@ -281,14 +279,11 @@ public class ListaCompraServicio {
         // mientras respetamos el presupuesto
         List<Producto> todosProductos = new ArrayList<>(productosCompatibles);
 
-        // Ordenar según prioridad nutricional y precio
-        if ("Máximo".equals(modalidadAhorro)) {
+        // Ordenar según prioridades de modalidad
+        if (prioridadPrecio > prioridadNutricion) {
             // Priorizar precio pero asegurando algo de nutrición
             todosProductos.sort(Comparator.comparing(p -> p.getPrecio() / (p.getInfoNutricional().getProteinas() + 1)));
-        } else if ("Equilibrado".equals(modalidadAhorro)) {
-            // Balance entre nutrición y precio
-            todosProductos.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
-        } else {
+        } else if (prioridadPrecio < prioridadNutricion) {
             // Priorizar nutrición
             todosProductos.sort(Comparator.comparing(obj -> {
                 Producto p = (Producto) obj;
@@ -296,6 +291,9 @@ public class ListaCompraServicio {
                         (p.getInfoNutricional().getCarbohidratos() * 2) +
                         (p.getInfoNutricional().getGrasas() * 3);
             }).reversed());
+        } else {
+            // Balance entre nutrición y precio
+            todosProductos.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
         }
 
         // Añadir productos hasta alcanzar objetivos o agotar presupuesto
