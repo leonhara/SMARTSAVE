@@ -674,7 +674,3 @@ public class PerfilController implements Initializable {
         dialog.setContentText("Modalidad:");
 
         // Estilizar diálogo
-        estilizarAlerta((Alert) dialog);
-
-        dialog.showAndWait().ifPresent(modalidad -> {
-            if (!modalidad.equals(usuarioActual
