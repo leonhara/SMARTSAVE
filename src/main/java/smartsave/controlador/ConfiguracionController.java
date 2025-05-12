@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -675,4 +676,143 @@ public class ConfiguracionController implements Initializable {
 
     private void mostrarAlertaNoImplementado(String caracteristica) {
         Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle(caracteristica + "
+        alerta.setTitle(caracteristica + " - En desarrollo");
+        alerta.setHeaderText(null);
+        alerta.setContentText("Esta funcionalidad aún no está implementada.");
+
+        // Estilizar alerta
+        DialogPane dialogPane = alerta.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: #1A1A25; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-border-color: #FF00FF; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        dialogPane.lookupAll(".label").forEach(node ->
+                node.setStyle("-fx-text-fill: white;")
+        );
+
+        dialogPane.lookupAll(".button").forEach(node -> {
+            node.setStyle(
+                    "-fx-background-color: #25253A; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-border-color: #4050FF; " +
+                            "-fx-border-width: 1px;"
+            );
+
+            // Efectos de hover
+            node.setOnMouseEntered(e ->
+                    node.setStyle(
+                            "-fx-background-color: #35354A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #FF00FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+
+            node.setOnMouseExited(e ->
+                    node.setStyle(
+                            "-fx-background-color: #25253A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #4050FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+        });
+
+        alerta.showAndWait();
+    }
+
+    private void mostrarAlerta(Alert.AlertType tipo, String titulo, String mensaje) {
+        Alert alerta = new Alert(tipo);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+
+        // Estilizar alerta
+        DialogPane dialogPane = alerta.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: #1A1A25; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-border-color: #FF00FF; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        dialogPane.lookupAll(".label").forEach(node ->
+                node.setStyle("-fx-text-fill: white;")
+        );
+
+        dialogPane.lookupAll(".button").forEach(node -> {
+            node.setStyle(
+                    "-fx-background-color: #25253A; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-border-color: #4050FF; " +
+                            "-fx-border-width: 1px;"
+            );
+
+            // Efectos de hover
+            node.setOnMouseEntered(e ->
+                    node.setStyle(
+                            "-fx-background-color: #35354A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #FF00FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+
+            node.setOnMouseExited(e ->
+                    node.setStyle(
+                            "-fx-background-color: #25253A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #4050FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+        });
+
+        alerta.showAndWait();
+    }
+
+    private void estilizarAlerta(Alert alerta) {
+        DialogPane dialogPane = alerta.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: #1A1A25; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-border-color: #FF00FF; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        dialogPane.lookupAll(".label").forEach(node ->
+                node.setStyle("-fx-text-fill: white;")
+        );
+
+        dialogPane.lookupAll(".button").forEach(node -> {
+            node.setStyle(
+                    "-fx-background-color: #25253A; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-border-color: #4050FF; " +
+                            "-fx-border-width: 1px;"
+            );
+
+            // Efectos de hover
+            node.setOnMouseEntered(e ->
+                    node.setStyle(
+                            "-fx-background-color: #35354A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #FF00FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+
+            node.setOnMouseExited(e ->
+                    node.setStyle(
+                            "-fx-background-color: #25253A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #4050FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+        });
+    }
+}
