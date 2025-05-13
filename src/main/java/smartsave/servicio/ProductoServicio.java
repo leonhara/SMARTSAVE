@@ -4,10 +4,9 @@ import smartsave.api.MercadonaAPI;
 import smartsave.configuracion.ConfiguracionMercadona;
 import smartsave.modelo.Producto;
 import smartsave.modelo.Producto.NutricionProducto;
-import java.util.List;
-import java.util.ArrayList;
+
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Random;
 
 
 public class ProductoServicio {
@@ -136,16 +135,27 @@ public class ProductoServicio {
             return productosCache;
         }
 
-        // Agregar productos locales
+        // Buscar en productos locales primero (más rápido)
         productos.addAll(buscarProductosLocales(termino));
 
-        // Agregar productos de Mercadona
+        // Luego buscar en Mercadona (con manejo de errores mejorado)
         try {
             List<Producto> productosMercadona = mercadonaAPI.buscarProductos(termino);
-            productos.addAll(productosMercadona);
+
+            // Filtrar duplicados por ID si los hay
+            Set<Long> idsLocales = productos.stream()
+                    .map(Producto::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            List<Producto> productosMercadonaFiltrados = productosMercadona.stream()
+                    .filter(p -> p.getId() == null || !idsLocales.contains(p.getId()))
+                    .collect(Collectors.toList());
+
+            productos.addAll(productosMercadonaFiltrados);
         } catch (Exception e) {
             System.err.println("Error al buscar en Mercadona: " + e.getMessage());
-            // Continuar sin productos de Mercadona en caso de error
+            // Continuar con solo productos locales
         }
 
         // Guardar en caché

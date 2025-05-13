@@ -9,6 +9,7 @@ import smartsave.modelo.Producto;
 public class CacheProductos {
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
     private static final int DURACION_CACHE_MINUTOS = 30;
+    private static final int MAX_CACHE_SIZE = 100; // Añadir esta constante
 
     static class CacheEntry {
         List<Producto> productos;
@@ -57,5 +58,4 @@ public class CacheProductos {
     public void invalidar(String clave) {
         cache.remove(clave);
     }
-
 }

@@ -107,6 +107,8 @@ public class ComprasController implements Initializable {
     // Servicios
     private ListaCompraServicio listaCompraServicio = new ListaCompraServicio();
     private ProductoServicio productoServicio = new ProductoServicio();
+    private Timeline searchTimeline;
+    private Task<List<Producto>> currentSearchTask;
 
     // Variables de estado
     private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
@@ -119,6 +121,9 @@ public class ComprasController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Inyectar ProductoServicio en ConfiguracionMercadona
+        smartsave.configuracion.ConfiguracionMercadona.setProductoServicio(productoServicio);
+
         // Aplicar estilos
         aplicarEstilos();
 
@@ -134,19 +139,34 @@ public class ComprasController implements Initializable {
         // Cargar datos
         cargarListasCompra();
         buscarProductoField.textProperty().addListener((observable, oldValue, newValue) -> {
+            // Cancelar búsqueda anterior si existe
+            if (searchTimeline != null) {
+                searchTimeline.stop();
+            }
+
             if (newValue.trim().length() >= 2) {
-                // Debouncing - retrasar la búsqueda para evitar demasiadas llamadas
-                Platform.runLater(() -> {
-                    Timeline timeline = new Timeline(new KeyFrame(
-                            Duration.millis(500),
-                            e -> realizarBusqueda(newValue)
-                    ));
-                    timeline.play();
-                });
+                searchTimeline = new Timeline(new KeyFrame(
+                        Duration.millis(500),
+                        e -> realizarBusqueda(newValue)
+                ));
+                searchTimeline.play();
+            } else if (newValue.trim().isEmpty()) {
+                // Limpiar resultados si el campo está vacío
+                resultadosProductosTableView.setItems(FXCollections.observableArrayList());
+                busquedaProgressIndicator.setVisible(false);
+                busquedaProgressIndicator.setManaged(false);
             }
         });
     }
     private void realizarBusqueda(String termino) {
+        if (listaSeleccionada == null) {
+            return;
+        }
+
+        // Mostrar indicador de carga
+        busquedaProgressIndicator.setVisible(true);
+        busquedaProgressIndicator.setManaged(true);
+
         Task<List<Producto>> task = new Task<List<Producto>>() {
             @Override
             protected List<Producto> call() throws Exception {
@@ -156,12 +176,45 @@ public class ComprasController implements Initializable {
             @Override
             protected void succeeded() {
                 Platform.runLater(() -> {
+                    List<Producto> productos = getValue();
                     resultadosProductosTableView.setItems(
-                            FXCollections.observableArrayList(getValue())
+                            FXCollections.observableArrayList(productos)
                     );
+                    busquedaProgressIndicator.setVisible(false);
+                    busquedaProgressIndicator.setManaged(false);
+
+                    // Mensaje si no se encontraron productos
+                    if (productos.isEmpty()) {
+                        mostrarAlertaInformacion("Sin resultados",
+                                "No se encontraron productos para: " + termino);
+                    }
+                });
+            }
+
+            @Override
+            protected void failed() {
+                Platform.runLater(() -> {
+                    busquedaProgressIndicator.setVisible(false);
+                    busquedaProgressIndicator.setManaged(false);
+                    mostrarAlertaError("Error de búsqueda",
+                            "Error al buscar productos: " + getException().getMessage());
+                });
+            }
+
+            @Override
+            protected void cancelled() {
+                Platform.runLater(() -> {
+                    busquedaProgressIndicator.setVisible(false);
+                    busquedaProgressIndicator.setManaged(false);
                 });
             }
         };
+
+        // Cancelar tarea anterior si existe
+        if (currentSearchTask != null && currentSearchTask.isRunning()) {
+            currentSearchTask.cancel();
+        }
+        currentSearchTask = task;
 
         new Thread(task).start();
     }
