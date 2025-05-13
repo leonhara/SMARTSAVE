@@ -346,16 +346,48 @@ public class DashboardController implements Initializable {
 
     @FXML
     private void handleSettingsAction(ActionEvent evento) {
-        // Cambiar a la vista de configuración
-        activarBoton(settingsButton);
-        mostrarAlertaNoImplementado("Configuración");
+        try {
+            // Cargar la vista de configuración
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/configuracion.fxml"));
+            Parent raizConfiguracion = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaConfiguracion = new Scene(raizConfiguracion);
+            escenaConfiguracion.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) settingsButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaConfiguracion);
+            escenarioActual.setTitle("SmartSave - Configuración");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de configuración: " + e.getMessage());
+        }
     }
 
     @FXML
     private void handleProfileAction(ActionEvent evento) {
-        // Cambiar a la vista de perfil
-        activarBoton(profileButton);
-        mostrarAlertaNoImplementado("Mi Perfil");
+        try {
+            // Cargar la vista de perfil
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/perfil.fxml"));
+            Parent raizPerfil = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaPerfil = new Scene(raizPerfil);
+            escenaPerfil.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) profileButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaPerfil);
+            escenarioActual.setTitle("SmartSave - Mi Perfil");
+
+        } catch (IOException e) {
+            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de perfil: " + e.getMessage());
+        }
     }
 
     @FXML

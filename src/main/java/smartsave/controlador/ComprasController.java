@@ -1,8 +1,12 @@
 package smartsave.controlador;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,6 +20,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 import smartsave.modelo.*;
 import smartsave.servicio.*;
 import smartsave.utilidad.EstilosApp;
@@ -25,6 +30,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class ComprasController implements Initializable {
@@ -73,6 +79,7 @@ public class ComprasController implements Initializable {
     @FXML private TableColumn<ItemCompra, Void> accionesColumn;
     @FXML private Button agregarProductoButton;
     @FXML private CheckBox completadaCheckBox;
+    @FXML private ProgressIndicator busquedaProgressIndicator;
 
     // Referencias a elementos del panel de creación de lista
     @FXML private VBox crearListaPane;
@@ -126,6 +133,37 @@ public class ComprasController implements Initializable {
 
         // Cargar datos
         cargarListasCompra();
+        buscarProductoField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.trim().length() >= 2) {
+                // Debouncing - retrasar la búsqueda para evitar demasiadas llamadas
+                Platform.runLater(() -> {
+                    Timeline timeline = new Timeline(new KeyFrame(
+                            Duration.millis(500),
+                            e -> realizarBusqueda(newValue)
+                    ));
+                    timeline.play();
+                });
+            }
+        });
+    }
+    private void realizarBusqueda(String termino) {
+        Task<List<Producto>> task = new Task<List<Producto>>() {
+            @Override
+            protected List<Producto> call() throws Exception {
+                return productoServicio.buscarProductos(termino);
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    resultadosProductosTableView.setItems(
+                            FXCollections.observableArrayList(getValue())
+                    );
+                });
+            }
+        };
+
+        new Thread(task).start();
     }
 
     private void aplicarEstilos() {
@@ -670,13 +708,44 @@ public class ComprasController implements Initializable {
     private void handleBuscarProducto(ActionEvent event) {
         String termino = buscarProductoField.getText().trim();
 
-        if (termino.isEmpty()) {
-            resultadosProductosTableView.setItems(FXCollections.observableArrayList(
-                    productoServicio.obtenerTodosProductos()));
-        } else {
-            resultadosProductosTableView.setItems(FXCollections.observableArrayList(
-                    productoServicio.buscarProductos(termino)));
-        }
+        // Mostrar indicador de carga
+        busquedaProgressIndicator.setVisible(true);
+        busquedaProgressIndicator.setManaged(true);
+
+        Task<List<Producto>> task = new Task<List<Producto>>() {
+            @Override
+            protected List<Producto> call() throws Exception {
+                if (termino.isEmpty()) {
+                    return productoServicio.obtenerTodosProductos();
+                } else {
+                    return productoServicio.buscarProductos(termino);
+                }
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    resultadosProductosTableView.setItems(
+                            FXCollections.observableArrayList(getValue())
+                    );
+                    // Ocultar indicador de carga
+                    busquedaProgressIndicator.setVisible(false);
+                    busquedaProgressIndicator.setManaged(false);
+                });
+            }
+
+            @Override
+            protected void failed() {
+                Platform.runLater(() -> {
+                    busquedaProgressIndicator.setVisible(false);
+                    busquedaProgressIndicator.setManaged(false);
+                    mostrarAlertaError("Error de búsqueda",
+                            "No se pudieron obtener los productos. Inténtalo más tarde.");
+                });
+            }
+        };
+
+        new Thread(task).start();
     }
 
     @FXML

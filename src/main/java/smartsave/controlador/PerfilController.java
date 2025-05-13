@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class PerfilController implements Initializable {
@@ -622,7 +623,7 @@ public class PerfilController implements Initializable {
         nombreField.requestFocus();
 
         // Estilizar el diálogo
-        estilizarAlerta((Alert) dialog);
+        estilizarDialog(dialog);
 
         // Convertir el resultado cuando se presiona el botón guardar
         dialog.setResultConverter(dialogButton -> {
@@ -664,6 +665,7 @@ public class PerfilController implements Initializable {
         });
     }
 
+
     @FXML
     private void handleCambiarModalidadAction(ActionEvent evento) {
         // Crear diálogo para cambiar modalidad de ahorro
@@ -674,3 +676,248 @@ public class PerfilController implements Initializable {
         dialog.setContentText("Modalidad:");
 
         // Estilizar diálogo
+        estilizarDialog(dialog);
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(modalidad -> {
+            usuarioActual.setModalidadAhorroSeleccionada(modalidad);
+            if (usuarioServicio.actualizarUsuario(usuarioActual)) {
+                cargarDatosUsuario();
+                mostrarAlerta(Alert.AlertType.INFORMATION, "Modalidad actualizada",
+                        "Tu modalidad de ahorro ha sido cambiada a: " + modalidad);
+            } else {
+                mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo cambiar la modalidad.");
+            }
+        });
+    }
+
+    @FXML
+    private void handleConfigurarPerfilAction(ActionEvent evento) {
+        try {
+            // Cargar la vista de configuración
+            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/configuracion.fxml"));
+            Parent raizConfiguracion = cargador.load();
+
+            // Configurar la nueva escena
+            Scene escenaConfiguracion = new Scene(raizConfiguracion);
+            escenaConfiguracion.setFill(Color.TRANSPARENT);
+
+            // Obtener el escenario actual
+            Stage escenarioActual = (Stage) configurarPerfilButton.getScene().getWindow();
+
+            // Establecer la nueva escena
+            escenarioActual.setScene(escenaConfiguracion);
+            escenarioActual.setTitle("SmartSave - Configuración");
+
+        } catch (IOException e) {
+            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de configuración: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleExportarDatosAction(ActionEvent evento) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Exportar Datos del Perfil");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Archivo JSON", "*.json"),
+                new FileChooser.ExtensionFilter("Archivo CSV", "*.csv")
+        );
+
+        Stage stage = (Stage) exportarDatosButton.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(stage);
+
+        if (file != null) {
+            try {
+                // Simular exportación de datos
+                Thread.sleep(1000);
+
+                // En un caso real, aquí se exportarían los datos del perfil
+                mostrarAlerta(Alert.AlertType.INFORMATION, "Datos exportados",
+                        "Los datos de tu perfil han sido exportados correctamente a:\n" + file.getAbsolutePath());
+            } catch (InterruptedException e) {
+                mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al exportar los datos: " + e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    private void handleEliminarCuentaAction(ActionEvent evento) {
+        // Mostrar diálogo de confirmación doble
+        Alert confirmacion = new Alert(Alert.AlertType.WARNING);
+        confirmacion.setTitle("Eliminar Cuenta - PELIGRO");
+        confirmacion.setHeaderText("¿Estás ABSOLUTAMENTE seguro?");
+        confirmacion.setContentText("Esta acción ELIMINARÁ PERMANENTEMENTE tu cuenta y todos tus datos.\n" +
+                "Esta acción NO SE PUEDE DESHACER.\n\n" +
+                "¿Deseas continuar?");
+
+        estilizarAlerta(confirmacion);
+
+        confirmacion.showAndWait().ifPresent(respuesta -> {
+            if (respuesta == ButtonType.OK) {
+                // Segunda confirmación
+                TextInputDialog dialog = new TextInputDialog();
+                dialog.setTitle("Confirmar eliminación");
+                dialog.setHeaderText("Para confirmar la eliminación, escribe: ELIMINAR");
+                dialog.setContentText("Texto de confirmación:");
+
+                estilizarDialog(dialog);
+
+                Optional<String> result = dialog.showAndWait();
+                result.ifPresent(texto -> {
+                    if ("ELIMINAR".equals(texto)) {
+                        try {
+                            // Simular eliminación de cuenta
+                            Thread.sleep(2000);
+
+                            mostrarAlerta(Alert.AlertType.INFORMATION, "Cuenta eliminada",
+                                    "Tu cuenta ha sido eliminada correctamente.\n" +
+                                            "Gracias por usar SmartSave.");
+
+                            // Redirigir al login
+                            try {
+                                FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
+                                Parent raizLogin = cargador.load();
+
+                                Scene escenaLogin = new Scene(raizLogin);
+                                escenaLogin.setFill(Color.TRANSPARENT);
+
+                                Stage escenarioActual = (Stage) eliminarCuentaButton.getScene().getWindow();
+                                escenarioActual.setScene(escenaLogin);
+                                escenarioActual.setTitle("SmartSave - Login");
+                                escenarioActual.centerOnScreen();
+
+                            } catch (IOException e) {
+                                mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al volver al login: " + e.getMessage());
+                            }
+
+                        } catch (InterruptedException e) {
+                            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al eliminar la cuenta.");
+                        }
+                    } else {
+                        mostrarAlerta(Alert.AlertType.WARNING, "Texto incorrecto",
+                                "El texto de confirmación no es correcto. Eliminación cancelada.");
+                    }
+                });
+            }
+        });
+    }
+
+    private void activarBoton(Button botonActivo) {
+        // Quitar la clase 'selected' de todos los botones
+        dashboardButton.getStyleClass().remove("selected");
+        transactionsButton.getStyleClass().remove("selected");
+        nutritionButton.getStyleClass().remove("selected");
+        shoppingButton.getStyleClass().remove("selected");
+        savingsButton.getStyleClass().remove("selected");
+        reportsButton.getStyleClass().remove("selected");
+        settingsButton.getStyleClass().remove("selected");
+        profileButton.getStyleClass().remove("selected");
+
+        // Añadir la clase 'selected' al botón activo
+        botonActivo.getStyleClass().add("selected");
+    }
+
+    private void mostrarAlertaNoImplementado(String caracteristica) {
+        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+        alerta.setTitle(caracteristica + " - En desarrollo");
+        alerta.setHeaderText(null);
+        alerta.setContentText("Esta funcionalidad aún no está implementada.");
+
+        estilizarAlerta(alerta);
+        alerta.showAndWait();
+    }
+
+    private void mostrarAlerta(Alert.AlertType tipo, String titulo, String mensaje) {
+        Alert alerta = new Alert(tipo);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+
+        estilizarAlerta(alerta);
+        alerta.showAndWait();
+    }
+
+    private void estilizarDialog(Dialog<?> dialog) {
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: #1A1A25; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-border-color: #FF00FF; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        dialogPane.lookupAll(".label").forEach(node ->
+                node.setStyle("-fx-text-fill: white;")
+        );
+
+        dialogPane.lookupAll(".button").forEach(node -> {
+            node.setStyle(
+                    "-fx-background-color: #25253A; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-border-color: #4050FF; " +
+                            "-fx-border-width: 1px;"
+            );
+
+            // Efectos de hover
+            node.setOnMouseEntered(e ->
+                    node.setStyle(
+                            "-fx-background-color: #35354A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #FF00FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+
+            node.setOnMouseExited(e ->
+                    node.setStyle(
+                            "-fx-background-color: #25253A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #4050FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+        });
+    }
+
+    private void estilizarAlerta(Alert alerta) {
+        DialogPane dialogPane = alerta.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: #1A1A25; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-border-color: #FF00FF; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        dialogPane.lookupAll(".label").forEach(node ->
+                node.setStyle("-fx-text-fill: white;")
+        );
+
+        dialogPane.lookupAll(".button").forEach(node -> {
+            node.setStyle(
+                    "-fx-background-color: #25253A; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-border-color: #4050FF; " +
+                            "-fx-border-width: 1px;"
+            );
+
+            // Efectos de hover
+            node.setOnMouseEntered(e ->
+                    node.setStyle(
+                            "-fx-background-color: #35354A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #FF00FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+
+            node.setOnMouseExited(e ->
+                    node.setStyle(
+                            "-fx-background-color: #25253A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #4050FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+        });
+    }
+}

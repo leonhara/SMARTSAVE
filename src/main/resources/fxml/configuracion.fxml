@@ -145,24 +145,12 @@
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
                         <Label text="Tema:" />
-                        <ComboBox fx:id="temaComboBox" prefWidth="200" promptText="Tema actual">
-                            <items>
-                                <String value="OSCURO">Oscuro (Actual)</String>
-                                <String value="CLARO">Claro</String>
-                                <String value="AUTO">Automático</String>
-                            </items>
-                        </ComboBox>
+                        <ComboBox fx:id="temaComboBox" prefWidth="200" />
                     </HBox>
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
                         <Label text="Idioma:" />
-                        <ComboBox fx:id="idiomaComboBox" prefWidth="200" promptText="Idioma actual">
-                            <items>
-                                <String value="ES">Español</String>
-                                <String value="EN">English</String>
-                                <String value="FR">Français</String>
-                            </items>
-                        </ComboBox>
+                        <ComboBox fx:id="idiomaComboBox" prefWidth="200" />
                     </HBox>
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
@@ -225,24 +213,12 @@
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
                         <Label text="Moneda predeterminada:" />
-                        <ComboBox fx:id="monedaComboBox" prefWidth="150" promptText="EUR">
-                            <items>
-                                <String value="EUR">EUR (€)</String>
-                                <String value="USD">USD ($)</String>
-                                <String value="GBP">GBP (£)</String>
-                            </items>
-                        </ComboBox>
+                        <ComboBox fx:id="monedaComboBox" prefWidth="150" />
                     </HBox>
 
                     <HBox spacing="15" alignment="CENTER_LEFT">
                         <Label text="Decimales en moneda:" />
-                        <ComboBox fx:id="decimalesComboBox" prefWidth="100" promptText="2">
-                            <items>
-                                <String value="0">0</String>
-                                <String value="2">2</String>
-                                <String value="3">3</String>
-                            </items>
-                        </ComboBox>
+                        <ComboBox fx:id="decimalesComboBox" prefWidth="100" />
                     </HBox>
 
                     <CheckBox fx:id="modoDebugCheckBox" text="Modo desarrollador (mostrar información técnica)" selected="false" />

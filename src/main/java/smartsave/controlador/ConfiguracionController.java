@@ -1,5 +1,6 @@
 package smartsave.controlador;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -127,6 +128,8 @@ public class ConfiguracionController implements Initializable {
         EstilosApp.aplicarEstiloBotonPrimario(copiaSeguridad);
         EstilosApp.aplicarEstiloBotonPrimario(exportarDatos);
         EstilosApp.aplicarEstiloBotonPrimario(cambiarContrasena);
+
+        aplicarEstiloScrollBarNeon();
     }
 
     private void configurarVentanaArrastrable() {
@@ -161,11 +164,21 @@ public class ConfiguracionController implements Initializable {
             tamanoFuenteLabel.setText(String.format("%.0fpx", newValue.doubleValue()));
         });
 
-        // Configurar valores por defecto
-        temaComboBox.getSelectionModel().select("OSCURO");
-        idiomaComboBox.getSelectionModel().select("ES");
-        monedaComboBox.getSelectionModel().select("EUR");
-        decimalesComboBox.getSelectionModel().select("2");
+        // Inicializar ComboBox de tema
+        temaComboBox.getItems().addAll("Oscuro (Actual)", "Claro", "Automático");
+        temaComboBox.setValue("Oscuro (Actual)");
+
+        // Inicializar ComboBox de idioma
+        idiomaComboBox.getItems().addAll("Español", "English", "Français");
+        idiomaComboBox.setValue("Español");
+
+        // Inicializar ComboBox de moneda
+        monedaComboBox.getItems().addAll("EUR (€)", "USD ($)", "GBP (£)");
+        monedaComboBox.setValue("EUR (€)");
+
+        // Inicializar ComboBox de decimales
+        decimalesComboBox.getItems().addAll("0", "2", "3");
+        decimalesComboBox.setValue("2");
 
         // Inicializar fecha de última copia
         fechaUltimaCopia.setText("No disponible");
@@ -813,6 +826,90 @@ public class ConfiguracionController implements Initializable {
                                     "-fx-border-width: 1px;"
                     )
             );
+        });
+    }
+
+    private void aplicarEstiloScrollBarNeon() {
+        Platform.runLater(() -> {
+            ScrollPane scrollPane = (ScrollPane) mainPane.getCenter();
+
+            if (scrollPane != null) {
+                // Configurar para que la barra sea siempre visible
+                scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+                scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+                // Añadir una clase CSS personalizada al ScrollPane
+                scrollPane.getStyleClass().add("neon-scroll-pane");
+
+                // Crear CSS con el mismo estilo que los botones principales pero 20% más delgado
+                String css =
+                        ".neon-scroll-pane .scroll-bar:vertical {\n" +
+                                "    -fx-pref-width: 12px;\n" +  // 20% más delgado (15px -> 12px)
+                                "    -fx-background-color: transparent;\n" +
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .track {\n" +
+                                "    -fx-background-color: rgba(25, 25, 35, 0.9);\n" +
+                                "    -fx-border-color: rgba(255, 0, 255, 0.3);\n" +
+                                "    -fx-border-width: 1px;\n" +
+                                "    -fx-background-radius: 5px;\n" +  // Mantenemos el mismo radio
+                                "    -fx-border-radius: 5px;\n" +
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .thumb {\n" +
+                                "    -fx-background-color: linear-gradient(to bottom, rgb(255,0,255), rgb(80,145,255));\n" +
+                                "    -fx-background-radius: 5px;\n" +  // Mantenemos el mismo radio
+                                "    -fx-border-color: transparent;\n" +
+                                "    -fx-effect: dropshadow(gaussian, rgba(180,70,255,0.7), 10, 0.1, 0, 0);\n" +  // Mismos efectos de sombra
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .thumb:hover {\n" +
+                                "    -fx-background-color: linear-gradient(to bottom, rgb(255,0,255), rgb(80,145,255));\n" +
+                                "    -fx-effect: dropshadow(gaussian, rgba(200,100,255,0.9), 15, 0.2, 0, 0);\n" +
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .thumb:pressed {\n" +
+                                "    -fx-effect: dropshadow(gaussian, rgba(180,70,255,0.5), 5, 0.05, 0, 0);\n" +
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .increment-button,\n" +
+                                ".neon-scroll-pane .scroll-bar:vertical .decrement-button {\n" +
+                                "    -fx-background-color: linear-gradient(to bottom, rgb(255,0,255), rgb(80,145,255));\n" +
+                                "    -fx-background-radius: 5px;\n" +
+                                "    -fx-border-color: transparent;\n" +
+                                "    -fx-effect: dropshadow(gaussian, rgba(180,70,255,0.7), 10, 0.1, 0, 0);\n" +
+                                "    -fx-pref-height: 12px;\n" +  // Botones también 20% más pequeños
+                                "    -fx-pref-width: 12px;\n" +
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .increment-button:hover,\n" +
+                                ".neon-scroll-pane .scroll-bar:vertical .decrement-button:hover {\n" +
+                                "    -fx-effect: dropshadow(gaussian, rgba(200,100,255,0.9), 15, 0.2, 0, 0);\n" +
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .increment-button:pressed,\n" +
+                                ".neon-scroll-pane .scroll-bar:vertical .decrement-button:pressed {\n" +
+                                "    -fx-effect: dropshadow(gaussian, rgba(180,70,255,0.5), 5, 0.05, 0, 0);\n" +
+                                "}\n" +
+
+                                ".neon-scroll-pane .scroll-bar:vertical .increment-arrow,\n" +
+                                ".neon-scroll-pane .scroll-bar:vertical .decrement-arrow {\n" +
+                                "    -fx-background-color: white;\n" +
+                                "    -fx-shape: \"M 0 3 L 3 0 L 6 3 Z\";\n" +
+                                "    -fx-pref-width: 6px;\n" +  // Flechas mantienen el tamaño
+                                "    -fx-pref-height: 3px;\n" +
+                                "}";
+
+                // Aplicar CSS a toda la escena
+                Scene scene = scrollPane.getScene();
+                if (scene != null) {
+                    // Crear un stylesheet temporal
+                    String stylesheet = "data:text/css," + css.replace("\n", " ");
+                    scene.getStylesheets().add(stylesheet);
+
+                    System.out.println("CSS aplicado con estilo de botón principal (20% más delgado)");
+                }
+            }
         });
     }
 }

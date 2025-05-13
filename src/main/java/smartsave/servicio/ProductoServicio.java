@@ -1,260 +1,334 @@
 package smartsave.servicio;
 
-import smartsave.modelo.ModalidadAhorro;
+import smartsave.api.MercadonaAPI;
+import smartsave.configuracion.ConfiguracionMercadona;
 import smartsave.modelo.Producto;
-
-import java.util.*;
+import smartsave.modelo.Producto.NutricionProducto;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.Random;
 
-/**
- * Servicio para gestionar operaciones relacionadas con productos
- * (Por ahora utiliza una simulación en memoria, luego se conectará a APIs de supermercados)
- */
+
 public class ProductoServicio {
+    private MercadonaAPI mercadonaAPI;
+    private CacheProductos cache;
+    private List<Producto> productosLocales;
 
-    // Simulación de base de datos (solo para demostración)
-    private static final List<Producto> PRODUCTOS = new ArrayList<>();
-    private static Long ultimoId = 0L;
+    public ProductoServicio() {
+        // Inicializar con un código postal por defecto
+        this.mercadonaAPI = new MercadonaAPI(ConfiguracionMercadona.getCodigoPostal(), "es");
+        this.cache = new CacheProductos();
+        this.productosLocales = new ArrayList<>();
 
-    // Inicializa la lista con productos de muestra
-    static {
-        // Carnes
-        agregarProductoInicial("Pechuga de pollo", "Carrefour", "Carnes", 4.99, "Carrefour", 120, 22, 0, 2.5);
-        agregarProductoInicial("Filete de ternera", "El Pozo", "Carnes", 8.50, "Mercadona", 180, 26, 0, 10);
-        agregarProductoInicial("Hamburguesa de vacuno", "Hacendado", "Carnes", 3.75, "Mercadona", 240, 18, 5, 18);
+        // Inicializar algunos productos de ejemplo
+        inicializarProductosEjemplo();
+    }
 
+    private void inicializarProductosEjemplo() {
         // Lácteos
-        agregarProductoInicial("Leche semidesnatada", "Hacendado", "Lácteos", 0.85, "Mercadona", 46, 3.2, 4.8, 1.6);
-        agregarProductoInicial("Yogur natural", "Danone", "Lácteos", 1.75, "Carrefour", 55, 3.9, 5.0, 1.5);
-        agregarProductoInicial("Queso fresco", "García Baquero", "Lácteos", 2.99, "Dia", 220, 18, 3, 16);
+        Producto leche = new Producto("Leche Entera", "Central Lechera Asturiana", "Lácteos", 1.25, "Hipercor");
+        leche.setInfoNutricional(new NutricionProducto(64, 3.2, 4.8, 3.6, 0, 50, 4.8));
+        productosLocales.add(leche);
 
-        // Frutas y verduras
-        agregarProductoInicial("Plátano de Canarias", "Plátano", "Frutas", 1.89, "Mercadona", 89, 1.1, 22.8, 0.3);
-        agregarProductoInicial("Manzana Golden", "Manzanas", "Frutas", 1.99, "Carrefour", 52, 0.3, 14, 0.2);
-        agregarProductoInicial("Brócoli", "Verduras", "Verduras", 1.50, "Dia", 34, 2.8, 6.6, 0.4);
-        agregarProductoInicial("Tomate", "Tomates", "Verduras", 1.29, "Mercadona", 18, 0.9, 3.9, 0.2);
+        Producto yogur = new Producto("Yogur Natural", "Danone", "Lácteos", 2.10, "El Corte Inglés");
+        yogur.setInfoNutricional(new NutricionProducto(79, 4.5, 6.0, 3.3, 0, 50, 6.0));
+        productosLocales.add(yogur);
+
+        Producto queso = new Producto("Queso Manchego", "García Baquero", "Lácteos", 8.50, "DIA");
+        queso.setInfoNutricional(new NutricionProducto(406, 29.5, 0.9, 32.4, 0, 580, 0.9));
+        productosLocales.add(queso);
+
+        // Carnes
+        Producto pollo = new Producto("Pechuga de Pollo", "Sada", "Carnes", 6.99, "Mercadona");
+        pollo.setInfoNutricional(new NutricionProducto(165, 31.0, 0, 3.6, 0, 74, 0));
+        productosLocales.add(pollo);
+
+        Producto ternera = new Producto("Filete de Ternera", "Fribin", "Carnes", 12.50, "Carrefour");
+        ternera.setInfoNutricional(new NutricionProducto(174, 28.8, 0, 5.3, 0, 62, 0));
+        productosLocales.add(ternera);
 
         // Pescados
-        agregarProductoInicial("Salmón fresco", "Pescados", "Pescados", 13.95, "Carrefour", 208, 20, 0, 13);
-        agregarProductoInicial("Merluza fileteada", "Pescados", "Pescados", 10.50, "Mercadona", 83, 18, 0, 1.3);
+        Producto salmon = new Producto("Salmón Fresco", "Mariscos del Norte", "Pescados", 15.99, "El Corte Inglés");
+        salmon.setInfoNutricional(new NutricionProducto(206, 22.1, 0, 12.4, 0, 50, 0));
+        productosLocales.add(salmon);
 
-        // Cereales y legumbres
-        agregarProductoInicial("Arroz", "La Fallera", "Cereales", 1.25, "Mercadona", 130, 2.7, 28.2, 0.3);
-        agregarProductoInicial("Lentejas", "Luengo", "Legumbres", 1.95, "Carrefour", 116, 9, 20, 0.4);
-        agregarProductoInicial("Garbanzos", "Hacendado", "Legumbres", 0.99, "Mercadona", 120, 7.2, 20.5, 2.1);
+        Producto merluza = new Producto("Merluza", "Pescanova", "Pescados", 9.90, "Hipercor");
+        merluza.setInfoNutricional(new NutricionProducto(92, 17.9, 0, 1.8, 0, 80, 0));
+        productosLocales.add(merluza);
 
-        // Panadería
-        agregarProductoInicial("Pan de molde integral", "Bimbo", "Panadería", 2.15, "Dia", 220, 9, 41, 3);
-        agregarProductoInicial("Baguette", "Panadería", "Panadería", 0.65, "Mercadona", 250, 8, 50, 1);
+        // Frutas
+        Producto manzanas = new Producto("Manzanas Golden", "Frutas Montaña", "Frutas", 2.50, "Mercadona");
+        manzanas.setInfoNutricional(new NutricionProducto(52, 0.3, 13.8, 0.4, 2.4, 1, 10.4));
+        productosLocales.add(manzanas);
 
-        // Snacks y dulces
-        agregarProductoInicial("Chocolate negro 85%", "Lindt", "Dulces", 2.75, "Carrefour", 600, 7.5, 19, 46);
-        agregarProductoInicial("Patatas fritas", "Lays", "Snacks", 1.89, "Mercadona", 500, 6, 50, 31);
+        Producto platanos = new Producto("Plátanos de Canarias", "Platanología", "Frutas", 1.99, "LIDL");
+        platanos.setInfoNutricional(new NutricionProducto(89, 1.1, 23.0, 0.3, 2.6, 1, 12.2));
+        productosLocales.add(platanos);
+
+        // Verduras
+        Producto tomates = new Producto("Tomates Cherry", "Huerta Verde", "Verduras", 3.20, "Carrefour");
+        tomates.setInfoNutricional(new NutricionProducto(18, 0.9, 3.9, 0.2, 1.2, 5, 2.6));
+        productosLocales.add(tomates);
+
+        Producto lechuga = new Producto("Lechuga Iceberg", "Verde Natura", "Verduras", 1.50, "DIA");
+        lechuga.setInfoNutricional(new NutricionProducto(14, 0.9, 2.0, 0.1, 1.2, 10, 1.4));
+        productosLocales.add(lechuga);
+
+        // Cereales y Panadería
+        Producto pan = new Producto("Pan Integral", "Bimbo", "Panadería", 1.80, "Mercadona");
+        pan.setInfoNutricional(new NutricionProducto(247, 12.9, 39.4, 4.6, 8.5, 520, 3.4));
+        productosLocales.add(pan);
+
+        Producto arroz = new Producto("Arroz Bomba", "Calasparra", "Cereales", 3.50, "El Corte Inglés");
+        arroz.setInfoNutricional(new NutricionProducto(381, 7.0, 85.2, 0.4, 0.3, 5, 0.2));
+        productosLocales.add(arroz);
+
+        // Legumbres
+        Producto lentejas = new Producto("Lentejas Castellanas", "Cidacos", "Legumbres", 2.30, "LIDL");
+        lentejas.setInfoNutricional(new NutricionProducto(337, 26.0, 51.1, 1.4, 11.5, 20, 1.9));
+        productosLocales.add(lentejas);
+
+        Producto garbanzos = new Producto("Garbanzos de Fuentes", "Conservas Dantza", "Legumbres", 2.80, "Hipercor");
+        garbanzos.setInfoNutricional(new NutricionProducto(364, 19.3, 55.8, 5.0, 17.4, 16, 2.3));
+        productosLocales.add(garbanzos);
+
+        // Aceites y Condimentos
+        Producto aceiteOliva = new Producto("Aceite de Oliva Virgen Extra", "Carbonell", "Aceites", 4.50, "Carrefour");
+        aceiteOliva.setInfoNutricional(new NutricionProducto(900, 0, 0, 100, 0, 0, 0));
+        productosLocales.add(aceiteOliva);
+
+        // Bebidas
+        Producto agua = new Producto("Agua Mineral", "Font Vella", "Bebidas", 0.89, "DIA");
+        agua.setInfoNutricional(new NutricionProducto(0, 0, 0, 0, 0, 5, 0));
+        productosLocales.add(agua);
+
+        Producto zumo = new Producto("Zumo de Naranja", "Don Simon", "Bebidas", 1.95, "Mercadona");
+        zumo.setInfoNutricional(new NutricionProducto(45, 0.8, 10.4, 0.2, 0.2, 3, 10.4));
+        productosLocales.add(zumo);
+
+        // Snacks y Dulces
+        Producto galletas = new Producto("Galletas Digestive", "McVitie's", "Snacks", 2.50, "El Corte Inglés");
+        galletas.setInfoNutricional(new NutricionProducto(477, 7.3, 68.0, 18.1, 4.0, 650, 15.0));
+        productosLocales.add(galletas);
+
+        // Productos de higiene
+        Producto champu = new Producto("Champú Anticaspa", "Pantene", "Higiene", 3.99, "LIDL");
+        productosLocales.add(champu);
+
+        Producto jabon = new Producto("Jabón de Manos", "Palmolive", "Higiene", 1.50, "DIA");
+        productosLocales.add(jabon);
+
+        // Asignar IDs aleatorios
+        Random random = new Random();
+        for (Producto p : productosLocales) {
+            p.setId((long) (random.nextInt(900000) + 100000));
+        }
     }
 
-    private static void agregarProductoInicial(String nombre, String marca, String categoria, double precio,
-                                               String supermercado, double calorias, double proteinas,
-                                               double carbohidratos, double grasas) {
-        Producto producto = new Producto(nombre, marca, categoria, precio, supermercado,
-                calorias, proteinas, carbohidratos, grasas);
-        producto.setId(++ultimoId);
-        PRODUCTOS.add(producto);
-    }
-
-    /**
-     * Obtiene todos los productos disponibles
-     * @return Lista de productos
-     */
-    public List<Producto> obtenerTodosProductos() {
-        return new ArrayList<>(PRODUCTOS);
-    }
-
-    /**
-     * Busca productos por nombre, marca o categoría
-     * @param termino Término de búsqueda
-     * @return Lista de productos que coinciden con la búsqueda
-     */
     public List<Producto> buscarProductos(String termino) {
+        List<Producto> productos = new ArrayList<>();
+
+        // Verificar caché primero
+        String cacheKey = "busqueda_" + termino.toLowerCase().trim();
+        List<Producto> productosCache = cache.get(cacheKey);
+        if (productosCache != null) {
+            return productosCache;
+        }
+
+        // Agregar productos locales
+        productos.addAll(buscarProductosLocales(termino));
+
+        // Agregar productos de Mercadona
+        try {
+            List<Producto> productosMercadona = mercadonaAPI.buscarProductos(termino);
+            productos.addAll(productosMercadona);
+        } catch (Exception e) {
+            System.err.println("Error al buscar en Mercadona: " + e.getMessage());
+            // Continuar sin productos de Mercadona en caso de error
+        }
+
+        // Guardar en caché
+        cache.put(cacheKey, productos);
+
+        return productos;
+    }
+
+    private List<Producto> buscarProductosLocales(String termino) {
         if (termino == null || termino.trim().isEmpty()) {
-            return new ArrayList<>(PRODUCTOS);
+            return new ArrayList<>(productosLocales);
         }
 
         String terminoLower = termino.toLowerCase().trim();
-
-        return PRODUCTOS.stream()
-                .filter(p -> p.getNombre().toLowerCase().contains(terminoLower) ||
-                        p.getMarca().toLowerCase().contains(terminoLower) ||
-                        p.getCategoria().toLowerCase().contains(terminoLower))
+        return productosLocales.stream()
+                .filter(producto ->
+                        producto.getNombre().toLowerCase().contains(terminoLower) ||
+                                producto.getMarca().toLowerCase().contains(terminoLower) ||
+                                producto.getCategoria().toLowerCase().contains(terminoLower)
+                )
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca productos por categoría
-     * @param categoria Categoría a buscar
-     * @return Lista de productos de la categoría especificada
-     */
-    public List<Producto> buscarPorCategoria(String categoria) {
-        if (categoria == null || categoria.trim().isEmpty()) {
-            return new ArrayList<>(PRODUCTOS);
+    public List<Producto> obtenerTodosProductos() {
+        String cacheKey = "todos_productos";
+        List<Producto> productosCache = cache.get(cacheKey);
+        if (productosCache != null) {
+            return productosCache;
         }
 
-        String categoriaLower = categoria.toLowerCase().trim();
+        List<Producto> productos = new ArrayList<>();
+        productos.addAll(productosLocales);
 
-        return PRODUCTOS.stream()
-                .filter(p -> p.getCategoria().toLowerCase().equals(categoriaLower))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Busca productos por supermercado
-     * @param supermercado Supermercado a buscar
-     * @return Lista de productos del supermercado especificado
-     */
-    public List<Producto> buscarPorSupermercado(String supermercado) {
-        if (supermercado == null || supermercado.trim().isEmpty()) {
-            return new ArrayList<>(PRODUCTOS);
+        // Opcional: Cargar algunos productos populares de Mercadona
+        try {
+            // Buscar categorías populares
+            List<String> categoriasPopulares = List.of("leche", "pan", "huevos", "aceite");
+            for (String categoria : categoriasPopulares) {
+                List<Producto> productosCategoria = mercadonaAPI.buscarProductos(categoria);
+                productos.addAll(productosCategoria.stream().limit(5).collect(Collectors.toList()));
+            }
+        } catch (Exception e) {
+            System.err.println("Error al cargar productos de Mercadona: " + e.getMessage());
         }
 
-        String supermercadoLower = supermercado.toLowerCase().trim();
+        cache.put(cacheKey, productos);
+        return productos;
+    }
 
-        return PRODUCTOS.stream()
-                .filter(p -> p.getSupermercado().toLowerCase().equals(supermercadoLower))
+    public List<Producto> obtenerProductosPorCategoria(String categoria) {
+        return productosLocales.stream()
+                .filter(producto -> producto.getCategoria().equalsIgnoreCase(categoria))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene un producto por su ID
-     * @param id ID del producto
-     * @return El producto si existe, null en caso contrario
-     */
     public Producto obtenerProductoPorId(Long id) {
-        return PRODUCTOS.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst()
-                .orElse(null);
-    }
-
-    /**
-     * Busca productos que cumplan con restricciones alimentarias
-     * @param restricciones Lista de restricciones alimentarias
-     * @return Lista de productos que cumplen con las restricciones
-     */
-    public List<Producto> buscarProductosCompatibles(List<String> restricciones) {
-        if (restricciones == null || restricciones.isEmpty()) {
-            return new ArrayList<>(PRODUCTOS);
+        // Buscar en productos locales
+        for (Producto producto : productosLocales) {
+            if (producto.getId().equals(id)) {
+                return producto;
+            }
         }
 
-        return PRODUCTOS.stream()
-                .filter(p -> p.cumpleRestricciones(restricciones))
-                .collect(Collectors.toList());
+        // Si no se encuentra localmente, buscar en Mercadona
+        try {
+            return mercadonaAPI.obtenerDetallesProducto(id.toString());
+        } catch (Exception e) {
+            System.err.println("Error al obtener producto de Mercadona: " + e.getMessage());
+        }
+
+        return null;
     }
 
-    /**
-     * Obtiene las categorías disponibles de productos
-     * @return Lista de categorías únicas
-     */
-    public List<String> obtenerCategorias() {
-        return PRODUCTOS.stream()
+    public void agregarProducto(Producto producto) {
+        productosLocales.add(producto);
+        // Invalidar caché
+        cache.invalidar();
+    }
+
+    public void actualizarProducto(Producto producto) {
+        for (int i = 0; i < productosLocales.size(); i++) {
+            if (productosLocales.get(i).getId().equals(producto.getId())) {
+                productosLocales.set(i, producto);
+                // Invalidar caché
+                cache.invalidar();
+                break;
+            }
+        }
+    }
+
+    public boolean eliminarProducto(Long id) {
+        boolean eliminado = productosLocales.removeIf(producto -> producto.getId().equals(id));
+        if (eliminado) {
+            // Invalidar caché
+            cache.invalidar();
+        }
+        return eliminado;
+    }
+
+    public List<Producto> obtenerProductosRecomendados(String modalidadAhorro) {
+        List<Producto> todosProductos = obtenerTodosProductos();
+
+        // Filtrar según modalidad de ahorro
+        switch (modalidadAhorro.toLowerCase()) {
+            case "máximo":
+                // Productos más baratos
+                return todosProductos.stream()
+                        .sorted((p1, p2) -> Double.compare(p1.getPrecio(), p2.getPrecio()))
+                        .limit(20)
+                        .collect(Collectors.toList());
+
+            case "equilibrado":
+                // Balance entre precio y calidad
+                return todosProductos.stream()
+                        .filter(p -> p.getPrecio() < 10.0)
+                        .limit(20)
+                        .collect(Collectors.toList());
+
+            case "estándar":
+                // Productos en rango medio de precios
+                return todosProductos.stream()
+                        .filter(p -> p.getPrecio() >= 2.0 && p.getPrecio() <= 15.0)
+                        .limit(20)
+                        .collect(Collectors.toList());
+
+            default:
+                return todosProductos.stream().limit(20).collect(Collectors.toList());
+        }
+    }
+
+    public List<Producto> obtenerProductosEnOferta() {
+        // En la implementación real, esto vendría de la API de Mercadona
+        List<Producto> productosOferta = new ArrayList<>();
+
+        try {
+            // Buscar productos en ofertas específicas
+            productosOferta.addAll(mercadonaAPI.buscarProductos("oferta"));
+        } catch (Exception e) {
+            System.err.println("Error al obtener ofertas de Mercadona: " + e.getMessage());
+        }
+
+        // Simular algunas ofertas locales
+        Random random = new Random();
+        productosLocales.stream()
+                .filter(p -> random.nextBoolean())
+                .limit(5)
+                .forEach(productosOferta::add);
+
+        return productosOferta;
+    }
+
+    public void cambiarCodigoPostal(String nuevoCodigoPostal) {
+        ConfiguracionMercadona.setCodigoPostal(nuevoCodigoPostal);
+        // Reinicializar API con nuevo código postal
+        this.mercadonaAPI = new MercadonaAPI(nuevoCodigoPostal, "es");
+        // Invalidar caché
+        cache.invalidar();
+    }
+
+    public List<String> obtenerCategoriasDisponibles() {
+        List<String> categorias = productosLocales.stream()
                 .map(Producto::getCategoria)
                 .distinct()
-                .sorted()
                 .collect(Collectors.toList());
+
+        // Agregar categorías estándar de Mercadona
+        categorias.addAll(List.of("Bebidas", "Congelados", "Conservas", "Limpieza", "Perfumería"));
+
+        return categorias.stream().distinct().collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene los supermercados disponibles
-     * @return Lista de supermercados únicos
-     */
-    public List<String> obtenerSupermercados() {
-        return PRODUCTOS.stream()
-                .map(Producto::getSupermercado)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Compara precios de un producto en diferentes supermercados
-     * @param nombreProducto Nombre del producto a comparar
-     * @return Mapa con supermercado como clave y precio como valor
-     */
-    public Map<String, Double> compararPrecios(String nombreProducto) {
-        if (nombreProducto == null || nombreProducto.trim().isEmpty()) {
-            return new HashMap<>();
+    // AGREGAR ESTOS DOS MÉTODOS AQUÍ
+    public List<Producto> buscarProductosCompatibles(List<String> restricciones) {
+        if (restricciones == null || restricciones.isEmpty()) {
+            return new ArrayList<>(productosLocales);
         }
 
-        String nombreLower = nombreProducto.toLowerCase().trim();
-
-        Map<String, Double> preciosPorSupermercado = new HashMap<>();
-
-        PRODUCTOS.stream()
-                .filter(p -> p.getNombre().toLowerCase().contains(nombreLower))
-                .forEach(p -> {
-                    // Solo guarda el precio si es menor que el que ya existe
-                    // o si no hay precio registrado para ese supermercado
-                    if (!preciosPorSupermercado.containsKey(p.getSupermercado()) ||
-                            preciosPorSupermercado.get(p.getSupermercado()) > p.getPrecio()) {
-                        preciosPorSupermercado.put(p.getSupermercado(), p.getPrecio());
-                    }
-                });
-
-        return preciosPorSupermercado;
-    }
-
-    /**
-     * Obtiene productos con mejor relación proteína/precio
-     * @param limite Número máximo de productos a devolver
-     * @return Lista de productos ordenados por relación proteína/precio
-     */
-    public List<Producto> obtenerProductosMejorRelacionProteinaPrecio(int limite) {
-        return PRODUCTOS.stream()
-                .sorted((p1, p2) -> Double.compare(p2.getRelacionProteinaPrecio(), p1.getRelacionProteinaPrecio()))
-                .limit(limite)
+        return productosLocales.stream()
+                .filter(producto -> producto.cumpleRestricciones(restricciones))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Obtiene productos con mejor relación calorías/precio
-     * @param limite Número máximo de productos a devolver
-     * @return Lista de productos ordenados por relación calorías/precio
-     */
-    public List<Producto> obtenerProductosMejorRelacionCaloriasPrecio(int limite) {
-        return PRODUCTOS.stream()
-                .sorted((p1, p2) -> Double.compare(p2.getRelacionCaloriasPrecio(), p1.getRelacionCaloriasPrecio()))
-                .limit(limite)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Filtra productos según una modalidad de ahorro
-     * @param productos Lista de productos a filtrar
-     * @param modalidad Modalidad de ahorro a aplicar
-     * @return Lista filtrada y ordenada según la modalidad
-     */
-    public List<Producto> filtrarSegunModalidad(List<Producto> productos, ModalidadAhorro modalidad) {
-        if (modalidad == null) {
-            return new ArrayList<>(productos);
-        }
-
-        List<Producto> productosFiltrados = new ArrayList<>(productos);
-
-        // Ordenar según prioridades de la modalidad
-        if ("Máximo".equals(modalidad.getNombre())) {
-            // Priorizar precio
-            productosFiltrados.sort(Comparator.comparing(Producto::getPrecio));
-        } else if ("Estándar".equals(modalidad.getNombre())) {
-            // Priorizar nutrición - CORREGIDO para usar tu sintaxis
-            productosFiltrados.sort(Comparator.comparing(obj -> {
-                Producto p = (Producto) obj;
-                return p.getInfoNutricional().getProteinas() +
-                        p.getInfoNutricional().getCarbohidratos() / 2 +
-                        p.getInfoNutricional().getGrasas() / 3;
-            }).reversed());
-        } else {
-            // Equilibrado - Balance entre precio y nutrición
-            productosFiltrados.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
-        }
-
-        return productosFiltrados;
+    public List<Producto> buscarPorCategoria(String categoria) {
+        return obtenerProductosPorCategoria(categoria);
     }
 }
