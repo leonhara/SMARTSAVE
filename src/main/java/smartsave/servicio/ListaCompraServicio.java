@@ -618,4 +618,6 @@ public class ListaCompraServicio {
             throw new RuntimeException("Error actualizando lista de compra: " + e.getMessage(), e);
         }
     }
+
+
 }
