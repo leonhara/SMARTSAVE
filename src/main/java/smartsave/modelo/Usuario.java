@@ -19,7 +19,7 @@ public class Usuario {
     @Column(nullable = false)
     private String apellidos;
 
-    @Column(nullable = false)
+    @Column(name = "contrasena_hash", nullable = false)
     private String contrasenaHash;
 
     @Column(name = "fecha_registro")

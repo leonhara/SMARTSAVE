@@ -1,209 +1,217 @@
 package smartsave.modelo;
 
+import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "perfiles_nutricionales")
 public class PerfilNutricional {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long usuarioId;
-    private int edad;
-    private double peso;  // en kg
-    private double altura;  // en cm
-    private String sexo;  // "M" o "F"
-    private String nivelActividad;  // "Sedentario", "Ligero", "Moderado", "Intenso", "Muy intenso"
-    private List<String> restricciones;  // Lista de restricciones alimentarias
-    private int caloriasDiarias;  // Calculado según los datos biométricos
-    private double imc;  // Índice de Masa Corporal
 
-    // Constructor por defecto
-    public PerfilNutricional() {
-        this.restricciones = new ArrayList<>();
+    @Column(name = "usuario_id", nullable = false)
+    private Long usuarioId;
+
+    @Column(nullable = false)
+    private int edad;
+
+    @Column(nullable = false, precision = 5, scale = 2)
+    private BigDecimal peso;  // en kg - cambiado a BigDecimal
+
+    @Column(nullable = false, precision = 5, scale = 2)
+    private BigDecimal altura;  // en cm - cambiado a BigDecimal
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Sexo sexo;
+
+    @Column(name = "nivel_actividad", nullable = false)
+    private String nivelActividad;
+
+    @Column(name = "calorias_diarias", nullable = false)
+    private int caloriasDiarias;
+
+    @Column(nullable = false, precision = 4, scale = 2)
+    private BigDecimal imc; // cambiado a BigDecimal
+
+    // Relación One-to-Many con restricciones
+    @OneToMany(mappedBy = "perfil", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<RestriccionNutricional> restriccionesEntidades = new ArrayList<>();
+
+    // Enum para el sexo
+    public enum Sexo {
+        M, F
     }
 
-    // Constructor con parámetros básicos
+    // Constructores
+    public PerfilNutricional() {}
+
     public PerfilNutricional(Long usuarioId, int edad, double peso, double altura, String sexo, String nivelActividad) {
         this.usuarioId = usuarioId;
         this.edad = edad;
-        this.peso = peso;
-        this.altura = altura;
-        this.sexo = sexo;
+        this.peso = BigDecimal.valueOf(peso);
+        this.altura = BigDecimal.valueOf(altura);
+        this.sexo = Sexo.valueOf(sexo);
         this.nivelActividad = nivelActividad;
-        this.restricciones = new ArrayList<>();
-
-        // Calcular IMC y calorías diarias al crear el perfil
         calcularIMC();
         calcularCaloriasDiarias();
     }
 
-    // Getters y setters
-    public Long getId() {
-        return id;
-    }
+    // Getters y setters básicos
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
-    }
-
-    public int getEdad() {
-        return edad;
-    }
-
+    public int getEdad() { return edad; }
     public void setEdad(int edad) {
         this.edad = edad;
-        calcularCaloriasDiarias();  // Recalcular calorías al cambiar la edad
+        calcularCaloriasDiarias();
     }
 
-    public double getPeso() {
-        return peso;
-    }
-
-    public void setPeso(double peso) {
+    // Métodos para peso (BigDecimal + compatibilidad con double)
+    public BigDecimal getPesoBD() { return peso; }
+    public void setPesoBD(BigDecimal peso) {
         this.peso = peso;
-        calcularIMC();  // Recalcular IMC al cambiar el peso
-        calcularCaloriasDiarias();  // Recalcular calorías al cambiar el peso
+        calcularIMC();
+        calcularCaloriasDiarias();
     }
 
-    public double getAltura() {
-        return altura;
+    public double getPeso() { return peso != null ? peso.doubleValue() : 0.0; }
+    public void setPeso(double peso) {
+        this.peso = BigDecimal.valueOf(peso);
+        calcularIMC();
+        calcularCaloriasDiarias();
     }
 
-    public void setAltura(double altura) {
+    // Métodos para altura (BigDecimal + compatibilidad con double)
+    public BigDecimal getAlturaBD() { return altura; }
+    public void setAlturaBD(BigDecimal altura) {
         this.altura = altura;
-        calcularIMC();  // Recalcular IMC al cambiar la altura
-        calcularCaloriasDiarias();  // Recalcular calorías al cambiar la altura
+        calcularIMC();
+        calcularCaloriasDiarias();
     }
 
-    public String getSexo() {
-        return sexo;
+    public double getAltura() { return altura != null ? altura.doubleValue() : 0.0; }
+    public void setAltura(double altura) {
+        this.altura = BigDecimal.valueOf(altura);
+        calcularIMC();
+        calcularCaloriasDiarias();
     }
 
+    // Métodos para compatibilidad con código existente
+    public String getSexo() { return sexo.name(); }
     public void setSexo(String sexo) {
+        this.sexo = Sexo.valueOf(sexo);
+        calcularCaloriasDiarias();
+    }
+
+    public Sexo getSexoEnum() { return sexo; }
+    public void setSexoEnum(Sexo sexo) {
         this.sexo = sexo;
-        calcularCaloriasDiarias();  // Recalcular calorías al cambiar el sexo
+        calcularCaloriasDiarias();
     }
 
-    public String getNivelActividad() {
-        return nivelActividad;
-    }
-
+    public String getNivelActividad() { return nivelActividad; }
     public void setNivelActividad(String nivelActividad) {
         this.nivelActividad = nivelActividad;
-        calcularCaloriasDiarias();  // Recalcular calorías al cambiar el nivel de actividad
+        calcularCaloriasDiarias();
     }
 
+    // Método para obtener restricciones como lista de Strings
     public List<String> getRestricciones() {
+        List<String> restricciones = new ArrayList<>();
+        for (RestriccionNutricional entidad : restriccionesEntidades) {
+            restricciones.add(entidad.getRestriccion());
+        }
         return restricciones;
     }
 
     public void setRestricciones(List<String> restricciones) {
-        this.restricciones = restricciones;
+        // Limpiar restricciones existentes
+        this.restriccionesEntidades.clear();
+
+        // Agregar nuevas restricciones
+        for (String restriccion : restricciones) {
+            agregarRestriccion(restriccion);
+        }
     }
 
     public void agregarRestriccion(String restriccion) {
-        if (!this.restricciones.contains(restriccion)) {
-            this.restricciones.add(restriccion);
+        // Verificar que no exista ya
+        boolean existe = restriccionesEntidades.stream()
+                .anyMatch(r -> r.getRestriccion().equals(restriccion));
+
+        if (!existe) {
+            RestriccionNutricional entidad = new RestriccionNutricional();
+            entidad.setPerfil(this);
+            entidad.setRestriccion(restriccion);
+            restriccionesEntidades.add(entidad);
         }
     }
 
     public void eliminarRestriccion(String restriccion) {
-        this.restricciones.remove(restriccion);
+        restriccionesEntidades.removeIf(r -> r.getRestriccion().equals(restriccion));
     }
 
-    public int getCaloriasDiarias() {
-        return caloriasDiarias;
-    }
+    public int getCaloriasDiarias() { return caloriasDiarias; }
 
-    public double getImc() {
-        return imc;
-    }
+    // Métodos para IMC (BigDecimal + compatibilidad con double)
+    public BigDecimal getImcBD() { return imc; }
+    public double getImc() { return imc != null ? imc.doubleValue() : 0.0; }
 
     // Métodos de cálculo
-
-    /**
-     * Calcula el Índice de Masa Corporal (IMC)
-     * IMC = peso (kg) / (altura (m))^2
-     */
     private void calcularIMC() {
-        // Convertir altura de cm a m
-        double alturaEnMetros = this.altura / 100.0;
-        this.imc = this.peso / (alturaEnMetros * alturaEnMetros);
+        if (peso != null && altura != null && altura.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal alturaEnMetros = altura.divide(BigDecimal.valueOf(100));
+            this.imc = peso.divide(alturaEnMetros.multiply(alturaEnMetros), 2, BigDecimal.ROUND_HALF_UP);
+        }
     }
 
-    /**
-     * Calcula las calorías diarias recomendadas basadas en la fórmula de Harris-Benedict
-     * https://www.calculator.net/calorie-calculator.html
-     */
     private void calcularCaloriasDiarias() {
-        double tmb; // Tasa Metabólica Basal
+        if (peso == null || altura == null) return;
+
+        double pesoD = peso.doubleValue();
+        double alturaD = altura.doubleValue();
+        double tmb;
 
         // Fórmula Harris-Benedict revisada
-        if ("M".equals(this.sexo)) {
-            // Hombres: TMB = 88.362 + (13.397 × peso en kg) + (4.799 × altura en cm) - (5.677 × edad en años)
-            tmb = 88.362 + (13.397 * this.peso) + (4.799 * this.altura) - (5.677 * this.edad);
+        if (sexo == Sexo.M) {
+            tmb = 88.362 + (13.397 * pesoD) + (4.799 * alturaD) - (5.677 * this.edad);
         } else {
-            // Mujeres: TMB = 447.593 + (9.247 × peso en kg) + (3.098 × altura en cm) - (4.330 × edad en años)
-            tmb = 447.593 + (9.247 * this.peso) + (3.098 * this.altura) - (4.330 * this.edad);
+            tmb = 447.593 + (9.247 * pesoD) + (3.098 * alturaD) - (4.330 * this.edad);
         }
 
-        // Aplicar factor de actividad
+        // Factor de actividad
         double factorActividad;
         switch (this.nivelActividad) {
-            case "Sedentario":  // Poco o ningún ejercicio
-                factorActividad = 1.2;
-                break;
-            case "Ligero":  // Ejercicio ligero 1-3 días a la semana
-                factorActividad = 1.375;
-                break;
-            case "Moderado":  // Ejercicio moderado 3-5 días a la semana
-                factorActividad = 1.55;
-                break;
-            case "Intenso":  // Ejercicio intenso 6-7 días a la semana
-                factorActividad = 1.725;
-                break;
-            case "Muy intenso":  // Ejercicio muy intenso o trabajo físico
-                factorActividad = 1.9;
-                break;
-            default:
-                factorActividad = 1.2;
-                break;
+            case "Sedentario": factorActividad = 1.2; break;
+            case "Ligero": factorActividad = 1.375; break;
+            case "Moderado": factorActividad = 1.55; break;
+            case "Intenso": factorActividad = 1.725; break;
+            case "Muy intenso": factorActividad = 1.9; break;
+            default: factorActividad = 1.2; break;
         }
 
         this.caloriasDiarias = (int) Math.round(tmb * factorActividad);
     }
 
-    /**
-     * Obtiene la categoría de peso según el IMC
-     * @return Categoría de peso
-     */
     public String getCategoriaIMC() {
-        if (imc < 18.5) {
-            return "Bajo peso";
-        } else if (imc < 25) {
-            return "Normal";
-        } else if (imc < 30) {
-            return "Sobrepeso";
-        } else {
-            return "Obesidad";
-        }
+        double imcValue = getImc();
+        if (imcValue < 18.5) return "Bajo peso";
+        else if (imcValue < 25) return "Normal";
+        else if (imcValue < 30) return "Sobrepeso";
+        else return "Obesidad";
     }
 
-    /**
-     * Obtiene la distribución de macronutrientes recomendada (en gramos)
-     * @return Mapa con los gramos diarios recomendados de proteínas, carbohidratos y grasas
-     */
     public MacronutrientesDiarios getMacronutrientesDiarios() {
-        // Distribución típica: 30% proteínas, 40% carbohidratos, 30% grasas
-        double proteinas = (caloriasDiarias * 0.30) / 4; // 4 calorías por gramo de proteína
-        double carbohidratos = (caloriasDiarias * 0.40) / 4; // 4 calorías por gramo de carbohidrato
-        double grasas = (caloriasDiarias * 0.30) / 9; // 9 calorías por gramo de grasa
+        double proteinas = (caloriasDiarias * 0.30) / 4;
+        double carbohidratos = (caloriasDiarias * 0.40) / 4;
+        double grasas = (caloriasDiarias * 0.30) / 9;
 
         return new MacronutrientesDiarios(
                 Math.round(proteinas),
@@ -224,16 +232,8 @@ public class PerfilNutricional {
             this.grasas = grasas;
         }
 
-        public long getProteinas() {
-            return proteinas;
-        }
-
-        public long getCarbohidratos() {
-            return carbohidratos;
-        }
-
-        public long getGrasas() {
-            return grasas;
-        }
+        public long getProteinas() { return proteinas; }
+        public long getCarbohidratos() { return carbohidratos; }
+        public long getGrasas() { return grasas; }
     }
 }

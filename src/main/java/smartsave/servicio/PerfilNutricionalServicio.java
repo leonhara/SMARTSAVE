@@ -1,21 +1,19 @@
 package smartsave.servicio;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+import smartsave.config.HibernateConfig;
 import smartsave.modelo.PerfilNutricional;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Servicio para gestionar operaciones relacionadas con perfiles nutricionales
- * (Por ahora utiliza una estructura en memoria, luego se conectará a la BD)
+ * MIGRADO A HIBERNATE - Reemplaza estructuras en memoria
  */
 public class PerfilNutricionalServicio {
-
-    // Simulación de base de datos (solo para demostración)
-    private static final Map<Long, PerfilNutricional> PERFILES_POR_USUARIO = new HashMap<>();
-    private static Long ultimoId = 0L;
 
     /**
      * Crea o actualiza el perfil nutricional de un usuario
@@ -23,19 +21,28 @@ public class PerfilNutricionalServicio {
      * @return El perfil nutricional guardado
      */
     public PerfilNutricional guardarPerfil(PerfilNutricional perfil) {
-        // Si el usuario ya tiene un perfil, actualizarlo
-        if (PERFILES_POR_USUARIO.containsKey(perfil.getUsuarioId())) {
-            PerfilNutricional perfilExistente = PERFILES_POR_USUARIO.get(perfil.getUsuarioId());
-            perfil.setId(perfilExistente.getId());
-        } else {
-            // Si es un nuevo perfil, asignar ID
-            perfil.setId(++ultimoId);
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            // Si el usuario ya tiene un perfil, actualizarlo
+            PerfilNutricional perfilExistente = obtenerPerfilPorUsuario(perfil.getUsuarioId());
+            if (perfilExistente != null) {
+                perfil.setId(perfilExistente.getId());
+                session.merge(perfil);
+            } else {
+                // Si es un nuevo perfil, guardarlo
+                session.save(perfil);
+            }
+
+            transaction.commit();
+            return perfil;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error guardando perfil nutricional: " + e.getMessage(), e);
         }
-
-        // Guardar en el mapa
-        PERFILES_POR_USUARIO.put(perfil.getUsuarioId(), perfil);
-
-        return perfil;
     }
 
     /**
@@ -44,7 +51,23 @@ public class PerfilNutricionalServicio {
      * @return El perfil nutricional o null si no existe
      */
     public PerfilNutricional obtenerPerfilPorUsuario(Long usuarioId) {
-        return PERFILES_POR_USUARIO.get(usuarioId);
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<PerfilNutricional> query = session.createQuery(
+                    "FROM PerfilNutricional p WHERE p.usuarioId = :usuarioId",
+                    PerfilNutricional.class);
+            query.setParameter("usuarioId", usuarioId);
+
+            List<PerfilNutricional> resultados = query.getResultList();
+            if (!resultados.isEmpty()) {
+                PerfilNutricional perfil = resultados.get(0);
+                // Forzar carga de restricciones para evitar LazyLoadingException
+                perfil.getRestricciones().size();
+                return perfil;
+            }
+            return null;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo perfil por usuario: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -53,7 +76,15 @@ public class PerfilNutricionalServicio {
      * @return true si el usuario tiene perfil nutricional
      */
     public boolean tienePerfil(Long usuarioId) {
-        return PERFILES_POR_USUARIO.containsKey(usuarioId);
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(p) FROM PerfilNutricional p WHERE p.usuarioId = :usuarioId",
+                    Long.class);
+            query.setParameter("usuarioId", usuarioId);
+            return query.uniqueResult() > 0;
+        } catch (Exception e) {
+            throw new RuntimeException("Error verificando existencia de perfil: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -62,7 +93,30 @@ public class PerfilNutricionalServicio {
      * @return true si se eliminó correctamente
      */
     public boolean eliminarPerfil(Long usuarioId) {
-        return PERFILES_POR_USUARIO.remove(usuarioId) != null;
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            Query<PerfilNutricional> query = session.createQuery(
+                    "FROM PerfilNutricional p WHERE p.usuarioId = :usuarioId",
+                    PerfilNutricional.class);
+            query.setParameter("usuarioId", usuarioId);
+
+            List<PerfilNutricional> perfiles = query.getResultList();
+            if (!perfiles.isEmpty()) {
+                session.delete(perfiles.get(0));
+                transaction.commit();
+                return true;
+            } else {
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error eliminando perfil: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -93,6 +147,10 @@ public class PerfilNutricionalServicio {
      * @return Puntuación de 0 a 100
      */
     public int calcularPuntuacionNutricional(PerfilNutricional perfil) {
+        if (perfil == null) {
+            return 0;
+        }
+
         int puntuacion = 75; // Base de 75 puntos
 
         // Ajuste por IMC
@@ -124,6 +182,10 @@ public class PerfilNutricionalServicio {
      * @return Texto con recomendaciones generales
      */
     public String generarRecomendacionAlimentaria(PerfilNutricional perfil) {
+        if (perfil == null) {
+            return "No se encontró perfil nutricional. Por favor, crea tu perfil para recibir recomendaciones personalizadas.";
+        }
+
         StringBuilder recomendacion = new StringBuilder();
 
         // Recomendación basada en calorías

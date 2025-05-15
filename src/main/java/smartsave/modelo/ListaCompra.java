@@ -1,19 +1,43 @@
 package smartsave.modelo;
 
+import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "listas_compra")
 public class ListaCompra {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
+
+    @Column(nullable = false)
     private String nombre;
+
+    @Column(name = "fecha_creacion")
     private LocalDate fechaCreacion;
+
+    @Column(name = "fecha_planificada")
     private LocalDate fechaPlanificada;
-    private String modalidadAhorro; // "Máximo", "Equilibrado", "Estándar"
-    private double presupuestoMaximo;
-    private List<ItemCompra> items;
-    private boolean completada;
+
+    @Column(name = "modalidad_ahorro", nullable = false)
+    private String modalidadAhorro;
+
+    @Column(name = "presupuesto_maximo", nullable = false, precision = 10, scale = 2)
+    private BigDecimal presupuestoMaximo;
+
+    @Column(nullable = false)
+    private boolean completada = false;
+
+    // Relación One-to-Many con items
+    @OneToMany(mappedBy = "lista", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<ItemCompra> items = new ArrayList<>();
 
     // Constructores
     public ListaCompra() {
@@ -30,7 +54,7 @@ public class ListaCompra {
         this.completada = false;
     }
 
-    public ListaCompra(Long usuarioId, String nombre, String modalidadAhorro, double presupuestoMaximo) {
+    public ListaCompra(Long usuarioId, String nombre, String modalidadAhorro, BigDecimal presupuestoMaximo) {
         this.usuarioId = usuarioId;
         this.nombre = nombre;
         this.modalidadAhorro = modalidadAhorro;
@@ -59,8 +83,22 @@ public class ListaCompra {
     public String getModalidadAhorro() { return modalidadAhorro; }
     public void setModalidadAhorro(String modalidadAhorro) { this.modalidadAhorro = modalidadAhorro; }
 
-    public double getPresupuestoMaximo() { return presupuestoMaximo; }
-    public void setPresupuestoMaximo(double presupuestoMaximo) { this.presupuestoMaximo = presupuestoMaximo; }
+    // Métodos corregidos para BigDecimal
+    public BigDecimal getPresupuestoMaximo() {
+        return presupuestoMaximo;
+    }
+
+    public void setPresupuestoMaximo(BigDecimal presupuestoMaximo) {
+        this.presupuestoMaximo = presupuestoMaximo;
+    }
+
+    public double getPresupuestoMaximoAsDouble() {
+        return presupuestoMaximo != null ? presupuestoMaximo.doubleValue() : 0.0;
+    }
+
+    public void setPresupuestoMaximo(double presupuesto) {
+        this.presupuestoMaximo = BigDecimal.valueOf(presupuesto);
+    }
 
     public List<ItemCompra> getItems() { return items; }
     public void setItems(List<ItemCompra> items) { this.items = items; }
@@ -69,104 +107,61 @@ public class ListaCompra {
     public void setCompletada(boolean completada) { this.completada = completada; }
 
     // Métodos adicionales
-
-    /**
-     * Añade un item a la lista de compra
-     * @param item Item a añadir
-     */
     public void agregarItem(ItemCompra item) {
+        item.setLista(this);
         items.add(item);
     }
 
-    /**
-     * Elimina un item de la lista de compra
-     * @param item Item a eliminar
-     * @return true si se eliminó correctamente
-     */
     public boolean eliminarItem(ItemCompra item) {
         return items.remove(item);
     }
 
-    /**
-     * Calcula el coste total de la lista de compra
-     * @return Suma de los precios de todos los items
-     */
     public double getCosteTotal() {
         return items.stream()
                 .mapToDouble(ItemCompra::getPrecioTotal)
                 .sum();
     }
 
-    /**
-     * Calcula el total de calorías de la lista de compra
-     * @return Suma de calorías de todos los items
-     */
     public double getCaloriasTotales() {
         return items.stream()
                 .mapToDouble(ItemCompra::getCaloriasTotales)
                 .sum();
     }
 
-    /**
-     * Calcula el total de proteínas de la lista de compra
-     * @return Suma de proteínas de todos los items
-     */
     public double getProteinasTotales() {
         return items.stream()
                 .mapToDouble(ItemCompra::getProteinasTotales)
                 .sum();
     }
 
-    /**
-     * Calcula el total de carbohidratos de la lista de compra
-     * @return Suma de carbohidratos de todos los items
-     */
     public double getCarbohidratosTotales() {
         return items.stream()
                 .mapToDouble(ItemCompra::getCarbohidratosTotales)
                 .sum();
     }
 
-    /**
-     * Calcula el total de grasas de la lista de compra
-     * @return Suma de grasas de todos los items
-     */
     public double getGrasasTotales() {
         return items.stream()
                 .mapToDouble(ItemCompra::getGrasasTotales)
                 .sum();
     }
 
-    /**
-     * Verifica si la lista de compra está dentro del presupuesto
-     * @return true si el coste total es menor o igual al presupuesto máximo
-     */
+    // CORREGIDO: Comparar BigDecimal con double
     public boolean estaDentroPresupuesto() {
-        return getCosteTotal() <= presupuestoMaximo;
+        if (presupuestoMaximo == null) return false;
+        return BigDecimal.valueOf(getCosteTotal()).compareTo(presupuestoMaximo) <= 0;
     }
 
-    /**
-     * Calcula el número de items en la lista
-     * @return Número de items
-     */
     public int getNumeroItems() {
         return items.size();
     }
 
-    /**
-     * Calcula el número de items marcados como comprados
-     * @return Número de items comprados
-     */
     public int getNumeroItemsComprados() {
         return (int) items.stream()
                 .filter(ItemCompra::isComprado)
                 .count();
     }
 
-    /**
-     * Calcula el porcentaje de progreso de la compra
-     * @return Porcentaje de items comprados (0-100)
-     */
     public int getPorcentajeProgreso() {
         if (items.isEmpty()) return 0;
         return (getNumeroItemsComprados() * 100) / getNumeroItems();

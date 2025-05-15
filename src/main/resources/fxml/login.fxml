@@ -39,7 +39,7 @@
 
             <!-- Icono de la aplicación (estilo similar a la imagen de referencia) -->
             <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
-                <Image url="@../imagenes/app_icon.png" />
+                <Image url="@../imagenes/cerdito.png" />
             </ImageView>
 
             <Label fx:id="titleLabel" text="SmartSave" />

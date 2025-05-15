@@ -1,20 +1,45 @@
 package smartsave.modelo;
 
+import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
+@Entity
+@Table(name = "transacciones")
 public class Transaccion {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private LocalDate fecha;
+
+    @Column(nullable = false)
     private String descripcion;
+
+    @Column(nullable = false)
     private String categoria;
-    private double monto;
-    private String tipo; // "Ingreso" o "Gasto"
-    private Long usuarioId; // Para asociar la transacción con un usuario
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal monto; // Cambiado a BigDecimal
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoTransaccion tipo;
+
+    @Column(name = "usuario_id", nullable = false)
+    private Long usuarioId;
+
+    // Enum para el tipo de transacción
+    public enum TipoTransaccion {
+        Ingreso,
+        Gasto
+    }
 
     // Constructor sin argumentos
     public Transaccion() {
         this.fecha = LocalDate.now();
+        this.monto = BigDecimal.ZERO;
     }
 
     // Constructor con argumentos básicos
@@ -22,8 +47,8 @@ public class Transaccion {
         this.fecha = fecha;
         this.descripcion = descripcion;
         this.categoria = categoria;
-        this.monto = monto;
-        this.tipo = tipo;
+        this.monto = BigDecimal.valueOf(monto);
+        this.tipo = TipoTransaccion.valueOf(tipo);
     }
 
     // Constructor completo
@@ -32,82 +57,51 @@ public class Transaccion {
         this.fecha = fecha;
         this.descripcion = descripcion;
         this.categoria = categoria;
-        this.monto = monto;
-        this.tipo = tipo;
+        this.monto = BigDecimal.valueOf(monto);
+        this.tipo = TipoTransaccion.valueOf(tipo);
         this.usuarioId = usuarioId;
     }
 
     // Getters y setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public LocalDate getFecha() { return fecha; }
+    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
 
-    public LocalDate getFecha() {
-        return fecha;
-    }
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
-    public void setFecha(LocalDate fecha) {
-        this.fecha = fecha;
-    }
+    public String getCategoria() { return categoria; }
+    public void setCategoria(String categoria) { this.categoria = categoria; }
 
-    public String getDescripcion() {
-        return descripcion;
-    }
+    // Métodos para monto (BigDecimal + compatibilidad con double)
+    public BigDecimal getMontoBD() { return monto; }
+    public void setMontoBD(BigDecimal monto) { this.monto = monto; }
+    public double getMonto() { return monto != null ? monto.doubleValue() : 0.0; }
+    public void setMonto(double monto) { this.monto = BigDecimal.valueOf(monto); }
 
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
+    // Métodos para compatibilidad con código existente
+    public String getTipo() { return tipo.name(); }
+    public void setTipo(String tipo) { this.tipo = TipoTransaccion.valueOf(tipo); }
 
-    public String getCategoria() {
-        return categoria;
-    }
+    public TipoTransaccion getTipoEnum() { return tipo; }
+    public void setTipoEnum(TipoTransaccion tipo) { this.tipo = tipo; }
 
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
+    public Long getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
-    public double getMonto() {
-        return monto;
-    }
-
-    public void setMonto(double monto) {
-        this.monto = monto;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
-    }
-
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
-    }
-
-    // Método útil para formatear la fecha
+    // Métodos útiles
     public String getFechaFormateada() {
-        DateTimeFormatter formateador = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return fecha.format(formateador);
+        return fecha.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
-    // Método útil para formatear el monto
     public String getMontoFormateado() {
-        return String.format("€%.2f", monto);
+        return String.format("€%.2f", getMonto());
     }
 
-    // Método para obtener el monto con signo según el tipo
     public double getMontoConSigno() {
-        return "Gasto".equals(tipo) ? -monto : monto;
+        return tipo == TipoTransaccion.Gasto ? -getMonto() : getMonto();
     }
 
     @Override

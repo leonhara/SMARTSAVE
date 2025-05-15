@@ -1,21 +1,18 @@
 package smartsave.servicio;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+import smartsave.config.HibernateConfig;
 import smartsave.modelo.Usuario;
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * Servicio para gestionar operaciones relacionadas con usuarios
- * (Por ahora utiliza un mapa en memoria, pero luego se conectará a la base de datos)
+ * MIGRADO A HIBERNATE - Reemplaza el Map en memoria
  */
 public class UsuarioServicio {
-
-    // Simulación de base de datos (solo para demostración)
-    private static final Map<String, Usuario> USUARIOS_POR_EMAIL = new HashMap<>();
-    private static final Map<Long, Usuario> USUARIOS_POR_ID = new HashMap<>();
-    private static Long ultimoId = 0L;
 
     /**
      * Registra un nuevo usuario en el sistema
@@ -23,23 +20,27 @@ public class UsuarioServicio {
      * @return true si el registro fue exitoso, false si el email ya está en uso
      */
     public boolean registrarUsuario(Usuario usuario) {
-        // Verificar si el email ya está registrado
-        if (USUARIOS_POR_EMAIL.containsKey(usuario.getEmail())) {
-            return false;
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            // Verificar si el email ya existe
+            if (existsByEmail(usuario.getEmail())) {
+                transaction.rollback();
+                return false;
+            }
+
+            // Guardar usuario
+            session.save(usuario);
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error registrando usuario: " + e.getMessage(), e);
         }
-
-        // En un caso real, aquí se haría hash de la contraseña
-        // String contraseñaHash = hashPassword(usuario.getContraseñaHash());
-        // usuario.setContraseñaHash(contraseñaHash);
-
-        // Asignar ID
-        usuario.setId(++ultimoId);
-
-        // Guardar usuario en los mapas
-        USUARIOS_POR_EMAIL.put(usuario.getEmail(), usuario);
-        USUARIOS_POR_ID.put(usuario.getId(), usuario);
-
-        return true;
     }
 
     /**
@@ -49,15 +50,27 @@ public class UsuarioServicio {
      * @return El usuario si las credenciales son válidas, null en caso contrario
      */
     public Usuario verificarCredenciales(String email, String contrasena) {
-        Usuario usuario = USUARIOS_POR_EMAIL.get(email);
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Usuario> query = session.createQuery(
+                    "FROM Usuario u WHERE u.email = :email AND u.contrasenaHash = :contrasena",
+                    Usuario.class);
+            query.setParameter("email", email);
+            query.setParameter("contrasena", contrasena);
 
-        if (usuario != null && usuario.getContrasenaHash().equals(contrasena)) {
-            // Actualizar fecha de último login
-            usuario.actualizarUltimoLogin();
-            return usuario;
+            List<Usuario> usuarios = query.getResultList();
+
+            if (!usuarios.isEmpty()) {
+                Usuario usuario = usuarios.get(0);
+                // Actualizar fecha de último login
+                usuario.actualizarUltimoLogin();
+                actualizarUsuario(usuario);
+                return usuario;
+            }
+
+            return null;
+        } catch (Exception e) {
+            throw new RuntimeException("Error verificando credenciales: " + e.getMessage(), e);
         }
-
-        return null;
     }
 
     /**
@@ -66,7 +79,16 @@ public class UsuarioServicio {
      * @return El usuario si existe, null en caso contrario
      */
     public Usuario obtenerUsuarioPorEmail(String email) {
-        return USUARIOS_POR_EMAIL.get(email);
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Usuario> query = session.createQuery(
+                    "FROM Usuario u WHERE u.email = :email", Usuario.class);
+            query.setParameter("email", email);
+
+            List<Usuario> usuarios = query.getResultList();
+            return usuarios.isEmpty() ? null : usuarios.get(0);
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo usuario por email: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -75,7 +97,11 @@ public class UsuarioServicio {
      * @return El usuario si existe, null en caso contrario
      */
     public Usuario obtenerUsuarioPorId(Long id) {
-        return USUARIOS_POR_ID.get(id);
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            return session.get(Usuario.class, id);
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo usuario por ID: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -84,25 +110,20 @@ public class UsuarioServicio {
      * @return true si la actualización fue exitosa
      */
     public boolean actualizarUsuario(Usuario usuario) {
-        if (!USUARIOS_POR_ID.containsKey(usuario.getId())) {
-            return false;
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            session.update(usuario);
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error actualizando usuario: " + e.getMessage(), e);
         }
-
-        // Actualizar referencias en ambos mapas
-        String emailAnterior = USUARIOS_POR_ID.get(usuario.getId()).getEmail();
-        if (!emailAnterior.equals(usuario.getEmail())) {
-            // Si cambió el email, hay que actualizar las claves del mapa
-            USUARIOS_POR_EMAIL.remove(emailAnterior);
-            USUARIOS_POR_EMAIL.put(usuario.getEmail(), usuario);
-        } else {
-            // Si no cambió el email, solo actualizamos el valor
-            USUARIOS_POR_EMAIL.put(usuario.getEmail(), usuario);
-        }
-
-        // Actualizar en el mapa por ID
-        USUARIOS_POR_ID.put(usuario.getId(), usuario);
-
-        return true;
     }
 
     /**
@@ -111,13 +132,25 @@ public class UsuarioServicio {
      * @return true si la eliminación fue exitosa
      */
     public boolean eliminarUsuario(String email) {
-        Usuario usuario = USUARIOS_POR_EMAIL.get(email);
-        if (usuario != null) {
-            USUARIOS_POR_ID.remove(usuario.getId());
-            USUARIOS_POR_EMAIL.remove(email);
-            return true;
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            Usuario usuario = obtenerUsuarioPorEmail(email);
+            if (usuario != null) {
+                session.delete(usuario);
+                transaction.commit();
+                return true;
+            } else {
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error eliminando usuario: " + e.getMessage(), e);
         }
-        return false;
     }
 
     /**
@@ -125,7 +158,12 @@ public class UsuarioServicio {
      * @return Número de usuarios registrados
      */
     public int obtenerCantidadUsuarios() {
-        return USUARIOS_POR_EMAIL.size();
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery("SELECT COUNT(u) FROM Usuario u", Long.class);
+            return query.uniqueResult().intValue();
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo cantidad de usuarios: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -139,7 +177,7 @@ public class UsuarioServicio {
 
         if (usuario != null) {
             usuario.setModalidadAhorroSeleccionada(modalidad);
-            return true;
+            return actualizarUsuario(usuario);
         }
 
         return false;
@@ -180,6 +218,27 @@ public class UsuarioServicio {
      * @return Lista de usuarios
      */
     public List<Usuario> obtenerTodosUsuarios() {
-        return new ArrayList<>(USUARIOS_POR_ID.values());
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Usuario> query = session.createQuery("FROM Usuario u ORDER BY u.fechaRegistro DESC", Usuario.class);
+            return query.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo todos los usuarios: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Verifica si existe un usuario con el email especificado
+     * @param email Email a verificar
+     * @return true si existe, false en caso contrario
+     */
+    private boolean existsByEmail(String email) {
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(u) FROM Usuario u WHERE u.email = :email", Long.class);
+            query.setParameter("email", email);
+            return query.uniqueResult() > 0;
+        } catch (Exception e) {
+            throw new RuntimeException("Error verificando existencia de email: " + e.getMessage(), e);
+        }
     }
 }

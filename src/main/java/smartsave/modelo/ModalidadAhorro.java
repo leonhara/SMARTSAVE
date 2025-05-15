@@ -1,6 +1,7 @@
 package smartsave.modelo;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "modalidades_ahorro")
@@ -15,21 +16,31 @@ public class ModalidadAhorro {
     @Column(nullable = false, length = 500)
     private String descripcion;
 
-    @Column(nullable = false)
-    private double factorPresupuesto; // porcentaje del presupuesto a utilizar (0.7 para máximo ahorro, 0.85 para equilibrado, 1.0 para estándar)
+    @Column(name = "factor_presupuesto", nullable = false, precision = 3, scale = 2)
+    private BigDecimal factorPresupuesto; // porcentaje del presupuesto a utilizar
 
-    @Column(nullable = false)
+    @Column(name = "prioridad_precio", nullable = false)
     private int prioridadPrecio; // 1-10, qué tanto priorizar precio vs calidad
 
-    @Column(nullable = false)
+    @Column(name = "prioridad_nutricion", nullable = false)
     private int prioridadNutricion; // 1-10, qué tanto priorizar nutrición vs precio
 
     // Constructor vacío
     public ModalidadAhorro() {
     }
 
-    // Constructor con parámetros
+    // Constructor con parámetros - actualizado para usar BigDecimal
     public ModalidadAhorro(String nombre, String descripcion, double factorPresupuesto,
+                           int prioridadPrecio, int prioridadNutricion) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.factorPresupuesto = BigDecimal.valueOf(factorPresupuesto);
+        this.prioridadPrecio = prioridadPrecio;
+        this.prioridadNutricion = prioridadNutricion;
+    }
+
+    // Constructor con BigDecimal
+    public ModalidadAhorro(String nombre, String descripcion, BigDecimal factorPresupuesto,
                            int prioridadPrecio, int prioridadNutricion) {
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -63,12 +74,23 @@ public class ModalidadAhorro {
         this.descripcion = descripcion;
     }
 
-    public double getFactorPresupuesto() {
+    // Getter para BigDecimal
+    public BigDecimal getFactorPresupuesto() {
         return factorPresupuesto;
     }
 
-    public void setFactorPresupuesto(double factorPresupuesto) {
+    // Setter para BigDecimal
+    public void setFactorPresupuesto(BigDecimal factorPresupuesto) {
         this.factorPresupuesto = factorPresupuesto;
+    }
+
+    // Métodos adicionales para compatibilidad con double
+    public double getFactorPresupuestoAsDouble() {
+        return factorPresupuesto != null ? factorPresupuesto.doubleValue() : 0.0;
+    }
+
+    public void setFactorPresupuesto(double factorPresupuesto) {
+        this.factorPresupuesto = BigDecimal.valueOf(factorPresupuesto);
     }
 
     public int getPrioridadPrecio() {

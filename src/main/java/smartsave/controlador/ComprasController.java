@@ -467,10 +467,7 @@ public class ComprasController implements Initializable {
         // Calcular ahorro estimado según modalidad
         UsuarioServicio usuarioServicio = new UsuarioServicio();
         double factorAhorro = usuarioServicio.obtenerFactorPresupuestoUsuario(usuarioIdActual);
-        double ahorroEstimado = lista.getPresupuestoMaximo() * (1 - factorAhorro);
-
-        // Si tienes un Label para mostrar el ahorro, actualízalo
-        // ahorroEstimadoLabel.setText(String.format("€%.2f", ahorroEstimado));
+        double ahorroEstimado = lista.getPresupuestoMaximoAsDouble() * (1 - factorAhorro);
 
         // Actualizar tabla de productos
         productosTableView.setItems(FXCollections.observableArrayList(lista.getItems()));

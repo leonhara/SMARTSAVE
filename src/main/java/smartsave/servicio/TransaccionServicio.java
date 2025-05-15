@@ -1,20 +1,22 @@
 package smartsave.servicio;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+import smartsave.config.HibernateConfig;
 import smartsave.modelo.Transaccion;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Servicio para gestionar operaciones relacionadas con transacciones
- * (Por ahora utiliza estructuras en memoria, luego se conectará a la BD)
+ * MIGRADO A HIBERNATE - Reemplaza estructuras en memoria
  */
 public class TransaccionServicio {
-
-    // Simulación de base de datos (solo para demostración)
-    private static final Map<Long, List<Transaccion>> TRANSACCIONES_POR_USUARIO = new HashMap<>();
-    private static Long ultimoId = 0L;
 
     /**
      * Agrega una nueva transacción asociada a un usuario
@@ -23,20 +25,21 @@ public class TransaccionServicio {
      * @return La transacción con su ID asignado
      */
     public Transaccion agregarTransaccion(Transaccion transaccion, Long usuarioId) {
-        // Asignar ID y usuario
-        transaccion.setId(++ultimoId);
-        transaccion.setUsuarioId(usuarioId);
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
-        // Obtener la lista de transacciones del usuario o crear una nueva
-        List<Transaccion> transaccionesUsuario = TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>());
+            transaccion.setUsuarioId(usuarioId);
+            session.save(transaccion);
 
-        // Añadir la transacción
-        transaccionesUsuario.add(transaccion);
-
-        // Actualizar el mapa
-        TRANSACCIONES_POR_USUARIO.put(usuarioId, transaccionesUsuario);
-
-        return transaccion;
+            transaction.commit();
+            return transaccion;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error agregando transacción: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -45,10 +48,15 @@ public class TransaccionServicio {
      * @return Lista de transacciones del usuario
      */
     public List<Transaccion> obtenerTransaccionesPorUsuario(Long usuarioId) {
-        return TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .sorted(Comparator.comparing(Transaccion::getFecha).reversed())
-                .collect(Collectors.toList());
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Transaccion> query = session.createQuery(
+                    "FROM Transaccion t WHERE t.usuarioId = :usuarioId ORDER BY t.fecha DESC",
+                    Transaccion.class);
+            query.setParameter("usuarioId", usuarioId);
+            return query.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo transacciones por usuario: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -59,26 +67,22 @@ public class TransaccionServicio {
      * @return Lista de transacciones filtradas por periodo
      */
     public List<Transaccion> obtenerTransaccionesPorPeriodo(Long usuarioId, LocalDate fechaInicio, LocalDate fechaFin) {
-        // Crear copias locales
-        LocalDate inicio = fechaInicio;
-        LocalDate fin = fechaFin;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            // Si las fechas son null, usar valores por defecto
+            LocalDate inicio = fechaInicio != null ? fechaInicio : LocalDate.of(2000, 1, 1);
+            LocalDate fin = fechaFin != null ? fechaFin : LocalDate.now();
 
-        if (inicio == null) {
-            inicio = LocalDate.of(2000, 1, 1);
+            Query<Transaccion> query = session.createQuery(
+                    "FROM Transaccion t WHERE t.usuarioId = :usuarioId " +
+                            "AND t.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY t.fecha DESC",
+                    Transaccion.class);
+            query.setParameter("usuarioId", usuarioId);
+            query.setParameter("fechaInicio", inicio);
+            query.setParameter("fechaFin", fin);
+            return query.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo transacciones por periodo: " + e.getMessage(), e);
         }
-        if (fin == null) {
-            fin = LocalDate.now();
-        }
-
-        // Variables finales para usar en lambda
-        final LocalDate finalInicio = inicio;
-        final LocalDate finalFin = fin;
-
-        return TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(t -> !t.getFecha().isBefore(finalInicio) && !t.getFecha().isAfter(finalFin))
-                .sorted(Comparator.comparing(Transaccion::getFecha).reversed())
-                .collect(Collectors.toList());
     }
 
     /**
@@ -88,11 +92,16 @@ public class TransaccionServicio {
      * @return Lista de transacciones filtradas por tipo
      */
     public List<Transaccion> obtenerTransaccionesPorTipo(Long usuarioId, String tipo) {
-        return TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(t -> t.getTipo().equalsIgnoreCase(tipo))
-                .sorted(Comparator.comparing(Transaccion::getFecha).reversed())
-                .collect(Collectors.toList());
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Transaccion> query = session.createQuery(
+                    "FROM Transaccion t WHERE t.usuarioId = :usuarioId AND t.tipo = :tipo ORDER BY t.fecha DESC",
+                    Transaccion.class);
+            query.setParameter("usuarioId", usuarioId);
+            query.setParameter("tipo", tipo);
+            return query.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo transacciones por tipo: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -102,11 +111,16 @@ public class TransaccionServicio {
      * @return Lista de transacciones filtradas por categoría
      */
     public List<Transaccion> obtenerTransaccionesPorCategoria(Long usuarioId, String categoria) {
-        return TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(t -> t.getCategoria().equalsIgnoreCase(categoria))
-                .sorted(Comparator.comparing(Transaccion::getFecha).reversed())
-                .collect(Collectors.toList());
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Transaccion> query = session.createQuery(
+                    "FROM Transaccion t WHERE t.usuarioId = :usuarioId AND t.categoria = :categoria ORDER BY t.fecha DESC",
+                    Transaccion.class);
+            query.setParameter("usuarioId", usuarioId);
+            query.setParameter("categoria", categoria);
+            return query.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo transacciones por categoría: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -117,27 +131,26 @@ public class TransaccionServicio {
      * @return Suma total de ingresos
      */
     public double obtenerTotalIngresos(Long usuarioId, LocalDate fechaInicio, LocalDate fechaFin) {
-        // Crear copias locales
-        LocalDate inicio = fechaInicio;
-        LocalDate fin = fechaFin;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            LocalDate inicio = fechaInicio != null ? fechaInicio : LocalDate.of(2000, 1, 1);
+            LocalDate fin = fechaFin != null ? fechaFin : LocalDate.now();
 
-        if (inicio == null) {
-            inicio = LocalDate.of(2000, 1, 1); // Fecha anterior a cualquier registro
+            // CAMBIO: Usar BigDecimal en lugar de Double
+            Query<BigDecimal> query = session.createQuery(
+                    "SELECT COALESCE(SUM(t.monto), 0.0) FROM Transaccion t " +
+                            "WHERE t.usuarioId = :usuarioId AND t.tipo = 'Ingreso' " +
+                            "AND t.fecha BETWEEN :fechaInicio AND :fechaFin",
+                    BigDecimal.class); // <-- CAMBIO AQUÍ
+            query.setParameter("usuarioId", usuarioId);
+            query.setParameter("fechaInicio", inicio);
+            query.setParameter("fechaFin", fin);
+
+            // CAMBIO: Convertir BigDecimal a double
+            BigDecimal resultado = query.uniqueResult();
+            return resultado != null ? resultado.doubleValue() : 0.0;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo total de ingresos: " + e.getMessage(), e);
         }
-        if (fin == null) {
-            fin = LocalDate.now(); // Hoy
-        }
-
-        // Variables finales para usar en lambda
-        final LocalDate finalInicio = inicio;
-        final LocalDate finalFin = fin;
-
-        return TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(t -> t.getTipo().equalsIgnoreCase("Ingreso"))
-                .filter(t -> !t.getFecha().isBefore(finalInicio) && !t.getFecha().isAfter(finalFin))
-                .mapToDouble(Transaccion::getMonto)
-                .sum();
     }
 
     /**
@@ -148,27 +161,26 @@ public class TransaccionServicio {
      * @return Suma total de gastos
      */
     public double obtenerTotalGastos(Long usuarioId, LocalDate fechaInicio, LocalDate fechaFin) {
-        // Crear copias locales
-        LocalDate inicio = fechaInicio;
-        LocalDate fin = fechaFin;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            LocalDate inicio = fechaInicio != null ? fechaInicio : LocalDate.of(2000, 1, 1);
+            LocalDate fin = fechaFin != null ? fechaFin : LocalDate.now();
 
-        if (inicio == null) {
-            inicio = LocalDate.of(2000, 1, 1); // Fecha anterior a cualquier registro
+            // CAMBIO: Usar BigDecimal en lugar de Double
+            Query<BigDecimal> query = session.createQuery(
+                    "SELECT COALESCE(SUM(t.monto), 0.0) FROM Transaccion t " +
+                            "WHERE t.usuarioId = :usuarioId AND t.tipo = 'Gasto' " +
+                            "AND t.fecha BETWEEN :fechaInicio AND :fechaFin",
+                    BigDecimal.class); // <-- CAMBIO AQUÍ
+            query.setParameter("usuarioId", usuarioId);
+            query.setParameter("fechaInicio", inicio);
+            query.setParameter("fechaFin", fin);
+
+            // CAMBIO: Convertir BigDecimal a double
+            BigDecimal resultado = query.uniqueResult();
+            return resultado != null ? resultado.doubleValue() : 0.0;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo total de gastos: " + e.getMessage(), e);
         }
-        if (fin == null) {
-            fin = LocalDate.now(); // Hoy
-        }
-
-        // Variables finales para usar en lambda
-        final LocalDate finalInicio = inicio;
-        final LocalDate finalFin = fin;
-
-        return TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(t -> t.getTipo().equalsIgnoreCase("Gasto"))
-                .filter(t -> !t.getFecha().isBefore(finalInicio) && !t.getFecha().isAfter(finalFin))
-                .mapToDouble(Transaccion::getMonto)
-                .sum();
     }
 
     /**
@@ -188,33 +200,40 @@ public class TransaccionServicio {
      * Obtiene los gastos por categoría en un periodo determinado
      * @param usuarioId ID del usuario
      * @param fechaInicio Fecha de inicio del periodo
-     * @param fechaFin Fecha de fin del periodo
+     * @param fechaFin Fecha de fin del periode
      * @return Mapa con categorías como clave y el total gastado como valor
      */
     public Map<String, Double> obtenerGastosPorCategoria(Long usuarioId, LocalDate fechaInicio, LocalDate fechaFin) {
-        // Crear copias locales
-        LocalDate inicio = fechaInicio;
-        LocalDate fin = fechaFin;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            // Si las fechas son null, usar valores por defecto
+            LocalDate inicio = fechaInicio != null ? fechaInicio : LocalDate.of(2000, 1, 1);
+            LocalDate fin = fechaFin != null ? fechaFin : LocalDate.now();
 
-        if (inicio == null) {
-            inicio = LocalDate.of(2000, 1, 1);
+            Query<Object[]> query = session.createQuery(
+                    "SELECT t.categoria, SUM(t.monto) FROM Transaccion t " +
+                            "WHERE t.usuarioId = :usuarioId AND t.tipo = 'Gasto' " +
+                            "AND t.fecha BETWEEN :fechaInicio AND :fechaFin " +
+                            "GROUP BY t.categoria",
+                    Object[].class);
+            query.setParameter("usuarioId", usuarioId);
+            query.setParameter("fechaInicio", inicio);
+            query.setParameter("fechaFin", fin);
+
+            List<Object[]> resultados = query.getResultList();
+
+            Map<String, Double> gastosPorCategoria = new HashMap<>();
+            for (Object[] resultado : resultados) {
+                String categoria = (String) resultado[0];
+                // CAMBIO: Convertir BigDecimal a Double
+                BigDecimal totalBigDecimal = (BigDecimal) resultado[1];
+                Double total = totalBigDecimal.doubleValue();
+                gastosPorCategoria.put(categoria, total);
+            }
+
+            return gastosPorCategoria;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo gastos por categoría: " + e.getMessage(), e);
         }
-        if (fin == null) {
-            fin = LocalDate.now();
-        }
-
-        // Variables finales para usar en lambda
-        final LocalDate finalInicio = inicio;
-        final LocalDate finalFin = fin;
-
-        return TRANSACCIONES_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(t -> t.getTipo().equalsIgnoreCase("Gasto"))
-                .filter(t -> !t.getFecha().isBefore(finalInicio) && !t.getFecha().isAfter(finalFin))
-                .collect(Collectors.groupingBy(
-                        Transaccion::getCategoria,
-                        Collectors.summingDouble(Transaccion::getMonto)
-                ));
     }
 
     /**
@@ -224,18 +243,26 @@ public class TransaccionServicio {
      * @return true si se eliminó correctamente
      */
     public boolean eliminarTransaccion(Long transaccionId, Long usuarioId) {
-        List<Transaccion> transaccionesUsuario = TRANSACCIONES_POR_USUARIO.get(usuarioId);
-        if (transaccionesUsuario == null) {
-            return false;
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            // Verificar que la transacción pertenece al usuario
+            Transaccion transaccion = session.get(Transaccion.class, transaccionId);
+            if (transaccion != null && transaccion.getUsuarioId().equals(usuarioId)) {
+                session.delete(transaccion);
+                transaction.commit();
+                return true;
+            } else {
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error eliminando transacción: " + e.getMessage(), e);
         }
-
-        int tamanioAnterior = transaccionesUsuario.size();
-        transaccionesUsuario.removeIf(t -> t.getId().equals(transaccionId));
-
-        // Actualizar la lista en el mapa
-        TRANSACCIONES_POR_USUARIO.put(usuarioId, transaccionesUsuario);
-
-        return tamanioAnterior > transaccionesUsuario.size();
     }
 
     /**
@@ -244,31 +271,19 @@ public class TransaccionServicio {
      * @return true si se actualizó correctamente
      */
     public boolean actualizarTransaccion(Transaccion transaccion) {
-        if (transaccion.getId() == null || transaccion.getUsuarioId() == null) {
-            return false;
-        }
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
-        List<Transaccion> transaccionesUsuario = TRANSACCIONES_POR_USUARIO.get(transaccion.getUsuarioId());
-        if (transaccionesUsuario == null) {
-            return false;
-        }
-
-        // Buscar la transacción por ID
-        boolean encontrada = false;
-        for (int i = 0; i < transaccionesUsuario.size(); i++) {
-            if (transaccionesUsuario.get(i).getId().equals(transaccion.getId())) {
-                transaccionesUsuario.set(i, transaccion);
-                encontrada = true;
-                break;
+            session.update(transaccion);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
+            throw new RuntimeException("Error actualizando transacción: " + e.getMessage(), e);
         }
-
-        // Si se encontró, actualizar la lista en el mapa
-        if (encontrada) {
-            TRANSACCIONES_POR_USUARIO.put(transaccion.getUsuarioId(), transaccionesUsuario);
-        }
-
-        return encontrada;
     }
 
     /**
@@ -278,24 +293,27 @@ public class TransaccionServicio {
      * @return La transacción si existe, null en caso contrario
      */
     public Transaccion obtenerTransaccionPorId(Long transaccionId, Long usuarioId) {
-        List<Transaccion> transaccionesUsuario = TRANSACCIONES_POR_USUARIO.get(usuarioId);
-        if (transaccionesUsuario == null) {
-            return null;
-        }
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<Transaccion> query = session.createQuery(
+                    "FROM Transaccion t WHERE t.id = :transaccionId AND t.usuarioId = :usuarioId",
+                    Transaccion.class);
+            query.setParameter("transaccionId", transaccionId);
+            query.setParameter("usuarioId", usuarioId);
 
-        return transaccionesUsuario.stream()
-                .filter(t -> t.getId().equals(transaccionId))
-                .findFirst()
-                .orElse(null);
+            List<Transaccion> resultados = query.getResultList();
+            return resultados.isEmpty() ? null : resultados.get(0);
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo transacción por ID: " + e.getMessage(), e);
+        }
     }
 
     /**
      * Obtiene las categorías de gastos disponibles
-     * (Esto podría venir de una tabla de categorías en la BD)
      * @return Lista de categorías de gastos
      */
     public List<String> obtenerCategoriasGastos() {
-        return Arrays.asList(
+        // Mantenemos la lista estática por ahora
+        return List.of(
                 "Alimentación", "Vivienda", "Transporte", "Entretenimiento",
                 "Salud", "Educación", "Ropa", "Servicios", "Otros"
         );
@@ -303,11 +321,11 @@ public class TransaccionServicio {
 
     /**
      * Obtiene las categorías de ingresos disponibles
-     * (Esto podría venir de una tabla de categorías en la BD)
      * @return Lista de categorías de ingresos
      */
     public List<String> obtenerCategoriasIngresos() {
-        return Arrays.asList(
+        // Mantenemos la lista estática por ahora
+        return List.of(
                 "Salario", "Inversiones", "Regalos", "Otros"
         );
     }

@@ -1,25 +1,48 @@
 package smartsave.servicio;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+import smartsave.config.HibernateConfig;
 import smartsave.modelo.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Servicio para gestionar operaciones relacionadas con listas de compra
- * (Por ahora utiliza una estructura en memoria, luego se conectará a la BD)
+ * MIGRADO A HIBERNATE - Reemplaza estructuras en memoria
  */
 public class ListaCompraServicio {
 
-    // Simulación de base de datos (solo para demostración)
-    private static final Map<Long, List<ListaCompra>> LISTAS_POR_USUARIO = new HashMap<>();
-    private static Long ultimoIdLista = 0L;
-    private static Long ultimoIdItem = 0L;
-
     // Servicios relacionados
-    private ProductoServicio productoServicio = new ProductoServicio();
-    private PerfilNutricionalServicio perfilServicio = new PerfilNutricionalServicio();
+    private ProductoServicio productoServicio;
+    private PerfilNutricionalServicio perfilServicio;
+    private UsuarioServicio usuarioServicio;
+
+    // Métodos singleton para servicios
+    private ProductoServicio getProductoServicio() {
+        if (productoServicio == null) {
+            productoServicio = new ProductoServicio();
+        }
+        return productoServicio;
+    }
+
+    private PerfilNutricionalServicio getPerfilServicio() {
+        if (perfilServicio == null) {
+            perfilServicio = new PerfilNutricionalServicio();
+        }
+        return perfilServicio;
+    }
+
+    private UsuarioServicio getUsuarioServicio() {
+        if (usuarioServicio == null) {
+            usuarioServicio = new UsuarioServicio();
+        }
+        return usuarioServicio;
+    }
 
     /**
      * Crea una nueva lista de compra para un usuario
@@ -30,19 +53,21 @@ public class ListaCompraServicio {
      * @return La lista de compra creada
      */
     public ListaCompra crearListaCompra(Long usuarioId, String nombre, String modalidadAhorro, double presupuestoMaximo) {
-        ListaCompra lista = new ListaCompra(usuarioId, nombre, modalidadAhorro, presupuestoMaximo);
-        lista.setId(++ultimoIdLista);
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
-        // Obtener o crear la lista de listas del usuario
-        List<ListaCompra> listasUsuario = LISTAS_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>());
+            ListaCompra lista = new ListaCompra(usuarioId, nombre, modalidadAhorro, BigDecimal.valueOf(presupuestoMaximo));
+            session.save(lista);
 
-        // Añadir la nueva lista
-        listasUsuario.add(lista);
-
-        // Actualizar el mapa
-        LISTAS_POR_USUARIO.put(usuarioId, listasUsuario);
-
-        return lista;
+            transaction.commit();
+            return lista;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error creando lista de compra: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -51,7 +76,19 @@ public class ListaCompraServicio {
      * @return Lista de todas las listas de compra del usuario
      */
     public List<ListaCompra> obtenerListasCompraUsuario(Long usuarioId) {
-        return LISTAS_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>());
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<ListaCompra> query = session.createQuery(
+                    "FROM ListaCompra l WHERE l.usuarioId = :usuarioId ORDER BY l.fechaCreacion DESC",
+                    ListaCompra.class);
+            query.setParameter("usuarioId", usuarioId);
+
+            List<ListaCompra> listas = query.getResultList();
+            // Forzar carga de items para evitar lazy loading issues
+            listas.forEach(lista -> lista.getItems().size());
+            return listas;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo listas de compra: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -61,15 +98,23 @@ public class ListaCompraServicio {
      * @return La lista de compra o null si no existe
      */
     public ListaCompra obtenerListaCompra(Long listaId, Long usuarioId) {
-        List<ListaCompra> listasUsuario = LISTAS_POR_USUARIO.get(usuarioId);
-        if (listasUsuario == null) {
-            return null;
-        }
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<ListaCompra> query = session.createQuery(
+                    "FROM ListaCompra l WHERE l.id = :listaId AND l.usuarioId = :usuarioId",
+                    ListaCompra.class);
+            query.setParameter("listaId", listaId);
+            query.setParameter("usuarioId", usuarioId);
 
-        return listasUsuario.stream()
-                .filter(l -> l.getId().equals(listaId))
-                .findFirst()
-                .orElse(null);
+            List<ListaCompra> listas = query.getResultList();
+            if (!listas.isEmpty()) {
+                ListaCompra lista = listas.get(0);
+                lista.getItems().size(); // Forzar carga de items
+                return lista;
+            }
+            return null;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo lista de compra: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -80,17 +125,49 @@ public class ListaCompraServicio {
      * @return La lista actualizada
      */
     public ListaCompra agregarProductoALista(ListaCompra lista, Long productoId, int cantidad) {
-        Producto producto = productoServicio.obtenerProductoPorId(productoId);
-        if (producto == null) {
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            // Reattach de la lista si es necesario
+            lista = session.merge(lista);
+
+            // Obtener el producto
+            Producto producto = getProductoServicio().obtenerProductoPorId(productoId);
+            if (producto == null) {
+                transaction.rollback();
+                return lista;
+            }
+
+            // Verificar si el producto ya está en la lista
+            boolean productoExiste = lista.getItems().stream()
+                    .anyMatch(item -> item.getProducto().getId().equals(productoId));
+
+            if (productoExiste) {
+                // Si ya existe, aumentar la cantidad
+                for (ItemCompra item : lista.getItems()) {
+                    if (item.getProducto().getId().equals(productoId)) {
+                        item.setCantidad(item.getCantidad() + cantidad);
+                        session.update(item);
+                        break;
+                    }
+                }
+            } else {
+                // Si no existe, crear nuevo item
+                ItemCompra nuevoItem = new ItemCompra(producto, cantidad);
+                lista.agregarItem(nuevoItem);
+                session.save(nuevoItem);
+            }
+
+            session.update(lista);
+            transaction.commit();
             return lista;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error agregando producto a lista: " + e.getMessage(), e);
         }
-
-        ItemCompra item = new ItemCompra(producto, cantidad);
-        item.setId(++ultimoIdItem);
-
-        lista.agregarItem(item);
-
-        return lista;
     }
 
     /**
@@ -100,15 +177,25 @@ public class ListaCompraServicio {
      * @return true si se eliminó correctamente
      */
     public boolean eliminarItemDeLista(ListaCompra lista, Long itemId) {
-        Optional<ItemCompra> itemOptional = lista.getItems().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst();
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
-        if (itemOptional.isPresent()) {
-            return lista.eliminarItem(itemOptional.get());
+            ItemCompra item = session.get(ItemCompra.class, itemId);
+            if (item != null && item.getLista().getId().equals(lista.getId())) {
+                session.delete(item);
+                transaction.commit();
+                return true;
+            } else {
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error eliminando item de lista: " + e.getMessage(), e);
         }
-
-        return false;
     }
 
     /**
@@ -119,16 +206,26 @@ public class ListaCompraServicio {
      * @return true si se actualizó correctamente
      */
     public boolean actualizarEstadoItem(ListaCompra lista, Long itemId, boolean comprado) {
-        Optional<ItemCompra> itemOptional = lista.getItems().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst();
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
-        if (itemOptional.isPresent()) {
-            itemOptional.get().setComprado(comprado);
-            return true;
+            ItemCompra item = session.get(ItemCompra.class, itemId);
+            if (item != null && item.getLista().getId().equals(lista.getId())) {
+                item.setComprado(comprado);
+                session.update(item);
+                transaction.commit();
+                return true;
+            } else {
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error actualizando estado de item: " + e.getMessage(), e);
         }
-
-        return false;
     }
 
     /**
@@ -143,16 +240,26 @@ public class ListaCompraServicio {
             return false;
         }
 
-        Optional<ItemCompra> itemOptional = lista.getItems().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst();
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
-        if (itemOptional.isPresent()) {
-            itemOptional.get().setCantidad(nuevaCantidad);
-            return true;
+            ItemCompra item = session.get(ItemCompra.class, itemId);
+            if (item != null && item.getLista().getId().equals(lista.getId())) {
+                item.setCantidad(nuevaCantidad);
+                session.update(item);
+                transaction.commit();
+                return true;
+            } else {
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error actualizando cantidad de item: " + e.getMessage(), e);
         }
-
-        return false;
     }
 
     /**
@@ -161,8 +268,21 @@ public class ListaCompraServicio {
      * @return La lista actualizada
      */
     public ListaCompra marcarListaComoCompletada(ListaCompra lista) {
-        lista.setCompletada(true);
-        return lista;
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            lista.setCompletada(true);
+            session.update(lista);
+
+            transaction.commit();
+            return lista;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error marcando lista como completada: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -173,15 +293,13 @@ public class ListaCompraServicio {
      * @param presupuestoMaximo Presupuesto máximo
      * @return Lista de compra generada automáticamente
      */
-    // Añadir como campo de clase en ListaCompraServicio
-    private UsuarioServicio usuarioServicio = new UsuarioServicio();
-
-    // Reemplazar el metodo generarListaOptimizada con esta versión actualizada
     public ListaCompra generarListaOptimizada(Long usuarioId, String nombre, String modalidadAhorro, double presupuestoMaximo) {
         // Crear la lista vacía
         ListaCompra lista = crearListaCompra(usuarioId, nombre, modalidadAhorro, presupuestoMaximo);
 
         // Verificar si el usuario tiene perfil nutricional
+        ProductoServicio productoServicio = getProductoServicio();
+        PerfilNutricionalServicio perfilServicio = getPerfilServicio();
         PerfilNutricional perfil = perfilServicio.obtenerPerfilPorUsuario(usuarioId);
         if (perfil == null) {
             // Si no hay perfil, generar una lista básica
@@ -193,9 +311,8 @@ public class ListaCompraServicio {
         int caloriasDiarias = perfil.getCaloriasDiarias();
 
         // Aplicar factor según modalidad de ahorro
-        double factorPresupuesto = usuarioServicio.obtenerFactorPresupuestoUsuario(usuarioId);
-
-        double presupuestoAjustado = presupuestoMaximo * factorPresupuesto;
+        double factorPresupuesto = getUsuarioServicio().obtenerFactorPresupuestoUsuario(usuarioId);
+        double presupuestoAjustado = lista.getPresupuestoMaximoAsDouble() * factorPresupuesto;
 
         // Conseguir productos que cumplan con las restricciones alimentarias
         List<Producto> productosCompatibles = productoServicio.buscarProductosCompatibles(perfil.getRestricciones());
@@ -225,8 +342,8 @@ public class ListaCompraServicio {
         // Obtener prioridades según modalidad
         ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
         ModalidadAhorro modalidadObj = modalidadServicio.obtenerModalidadPorNombre(modalidadAhorro);
-        int prioridadPrecio = modalidadObj != null ? modalidadObj.getPrioridadPrecio() : 6; // Default: equilibrado
-        int prioridadNutricion = modalidadObj != null ? modalidadObj.getPrioridadNutricion() : 7; // Default: equilibrado
+        int prioridadPrecio = modalidadObj != null ? modalidadObj.getPrioridadPrecio() : 6;
+        int prioridadNutricion = modalidadObj != null ? modalidadObj.getPrioridadNutricion() : 7;
 
         // Priorizar categorías según necesidades
         for (String categoria : categoriasEsenciales) {
@@ -299,7 +416,15 @@ public class ListaCompraServicio {
         // Añadir productos hasta alcanzar objetivos o agotar presupuesto
         for (Producto producto : todosProductos) {
             // Evitar duplicados
-            if (lista.getItems().stream().anyMatch(i -> i.getProducto().getId().equals(producto.getId()))) {
+            boolean yaEstaEnLista = false;
+            try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+                ListaCompra actualizada = session.get(ListaCompra.class, lista.getId());
+                actualizada.getItems().size(); // Forzar carga
+                yaEstaEnLista = actualizada.getItems().stream()
+                        .anyMatch(i -> i.getProducto().getId().equals(producto.getId()));
+            }
+
+            if (yaEstaEnLista) {
                 continue;
             }
 
@@ -382,10 +507,10 @@ public class ListaCompraServicio {
                 "Carnes", "Lácteos", "Frutas", "Verduras", "Cereales", "Panadería"
         );
 
-        double presupuestoRestante = lista.getPresupuestoMaximo();
+        double presupuestoRestante = lista.getPresupuestoMaximoAsDouble();
 
         for (String categoria : categoriasBasicas) {
-            List<Producto> productosCategoria = productoServicio.buscarPorCategoria(categoria);
+            List<Producto> productosCategoria = getProductoServicio().buscarPorCategoria(categoria);
 
             if (!productosCategoria.isEmpty()) {
                 // Ordenar por precio ascendente
@@ -412,17 +537,25 @@ public class ListaCompraServicio {
      * @return true si se eliminó correctamente
      */
     public boolean eliminarListaCompra(Long listaId, Long usuarioId) {
-        List<ListaCompra> listasUsuario = LISTAS_POR_USUARIO.get(usuarioId);
-        if (listasUsuario == null) {
-            return false;
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            ListaCompra lista = obtenerListaCompra(listaId, usuarioId);
+            if (lista != null) {
+                session.delete(lista);
+                transaction.commit();
+                return true;
+            } else {
+                transaction.rollback();
+                return false;
+            }
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error eliminando lista de compra: " + e.getMessage(), e);
         }
-
-        int tamanioAnterior = listasUsuario.size();
-        listasUsuario.removeIf(l -> l.getId().equals(listaId));
-
-        LISTAS_POR_USUARIO.put(usuarioId, listasUsuario);
-
-        return tamanioAnterior > listasUsuario.size();
     }
 
     /**
@@ -431,10 +564,18 @@ public class ListaCompraServicio {
      * @return Lista de listas de compra activas
      */
     public List<ListaCompra> obtenerListasActivas(Long usuarioId) {
-        return LISTAS_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(l -> !l.isCompletada())
-                .collect(Collectors.toList());
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<ListaCompra> query = session.createQuery(
+                    "FROM ListaCompra l WHERE l.usuarioId = :usuarioId AND l.completada = false ORDER BY l.fechaCreacion DESC",
+                    ListaCompra.class);
+            query.setParameter("usuarioId", usuarioId);
+
+            List<ListaCompra> listas = query.getResultList();
+            listas.forEach(lista -> lista.getItems().size());
+            return listas;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo listas activas: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -443,10 +584,18 @@ public class ListaCompraServicio {
      * @return Lista de listas de compra completadas
      */
     public List<ListaCompra> obtenerListasCompletadas(Long usuarioId) {
-        return LISTAS_POR_USUARIO.getOrDefault(usuarioId, new ArrayList<>())
-                .stream()
-                .filter(ListaCompra::isCompletada)
-                .collect(Collectors.toList());
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            Query<ListaCompra> query = session.createQuery(
+                    "FROM ListaCompra l WHERE l.usuarioId = :usuarioId AND l.completada = true ORDER BY l.fechaCreacion DESC",
+                    ListaCompra.class);
+            query.setParameter("usuarioId", usuarioId);
+
+            List<ListaCompra> listas = query.getResultList();
+            listas.forEach(lista -> lista.getItems().size());
+            return listas;
+        } catch (Exception e) {
+            throw new RuntimeException("Error obteniendo listas completadas: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -455,24 +604,18 @@ public class ListaCompraServicio {
      * @return true si se actualizó correctamente
      */
     public boolean actualizarListaCompra(ListaCompra lista) {
-        if (lista.getId() == null || lista.getUsuarioId() == null) {
-            return false;
-        }
+        Transaction transaction = null;
+        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
 
-        List<ListaCompra> listasUsuario = LISTAS_POR_USUARIO.get(lista.getUsuarioId());
-        if (listasUsuario == null) {
-            return false;
-        }
-
-        // Buscar y actualizar la lista
-        for (int i = 0; i < listasUsuario.size(); i++) {
-            if (listasUsuario.get(i).getId().equals(lista.getId())) {
-                listasUsuario.set(i, lista);
-                LISTAS_POR_USUARIO.put(lista.getUsuarioId(), listasUsuario);
-                return true;
+            session.update(lista);
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
             }
+            throw new RuntimeException("Error actualizando lista de compra: " + e.getMessage(), e);
         }
-
-        return false;
     }
 }

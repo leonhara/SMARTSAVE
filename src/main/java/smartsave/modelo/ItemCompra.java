@@ -1,10 +1,29 @@
 package smartsave.modelo;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "items_compra")
 public class ItemCompra {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lista_id", nullable = false)
+    private ListaCompra lista;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
-    private int cantidad;
-    private boolean comprado;
+
+    @Column(nullable = false)
+    private int cantidad = 1;
+
+    @Column(nullable = false)
+    private boolean comprado = false;
+
+    @Column(columnDefinition = "TEXT")
     private String notas;
 
     // Constructores
@@ -28,6 +47,9 @@ public class ItemCompra {
     // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public ListaCompra getLista() { return lista; }
+    public void setLista(ListaCompra lista) { this.lista = lista; }
 
     public Producto getProducto() { return producto; }
     public void setProducto(Producto producto) { this.producto = producto; }

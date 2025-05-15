@@ -213,7 +213,7 @@ public class AhorroController implements Initializable {
                     nombreLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
 
                     // Factor de presupuesto
-                    Label factorLabel = new Label(String.format("Factor: %.0f%%", item.getFactorPresupuesto() * 100));
+                    Label factorLabel = new Label(String.format("Factor: %.0f%%", item.getFactorPresupuestoAsDouble() * 100));
                     factorLabel.setStyle("-fx-text-fill: rgb(200, 200, 220);");
 
                     // Prioridades
@@ -304,7 +304,7 @@ public class AhorroController implements Initializable {
         descripcionModalidadTextArea.setText(modalidad.getDescripcion());
 
         // Actualizar etiquetas y barras de progreso
-        factorPresupuestoLabel.setText(String.format("%.0f%%", modalidad.getFactorPresupuesto() * 100));
+        factorPresupuestoLabel.setText(String.format("%.0f%%", modalidad.getFactorPresupuestoAsDouble() * 100));
 
         prioridadPrecioLabel.setText(modalidad.getPrioridadPrecio() + "/10");
         prioridadPrecioProgress.setProgress(modalidad.getPrioridadPrecio() / 10.0);
