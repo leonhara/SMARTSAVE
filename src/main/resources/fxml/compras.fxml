@@ -8,7 +8,7 @@
 <?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controlador.ComprasController">
+<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controlador.ComprasController">
     <top>
         <HBox fx:id="titleBar" alignment="CENTER_RIGHT" spacing="5">
             <padding>
@@ -285,9 +285,6 @@
             <padding>
                 <Insets top="20" right="20" bottom="20" left="20" />
             </padding>
-
-            <!-- Indicador de carga -->
-            <ProgressIndicator fx:id="busquedaProgressIndicator" visible="false" managed="false" />
 
             <Label text="Añadir Producto" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
 
