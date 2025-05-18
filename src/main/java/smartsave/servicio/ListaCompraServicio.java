@@ -9,6 +9,7 @@ import smartsave.modelo.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -129,45 +130,125 @@ public class ListaCompraServicio {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
 
-            // Reattach de la lista si es necesario
-            lista = session.merge(lista);
+            // 1. Obtener la lista con sus items usando JOIN FETCH para evitar lazy loading
+            Query<ListaCompra> queryLista = session.createQuery(
+                    "SELECT l FROM ListaCompra l " +
+                            "LEFT JOIN FETCH l.items i " +
+                            "LEFT JOIN FETCH i.producto " +
+                            "WHERE l.id = :listaId",
+                    ListaCompra.class);
+            queryLista.setParameter("listaId", lista.getId());
 
-            // Obtener el producto
-            Producto producto = getProductoServicio().obtenerProductoPorId(productoId);
-            if (producto == null) {
+            ListaCompra listaConItems = queryLista.uniqueResult();
+            if (listaConItems == null) {
                 transaction.rollback();
                 return lista;
             }
 
-            // Verificar si el producto ya está en la lista
-            boolean productoExiste = lista.getItems().stream()
-                    .anyMatch(item -> item.getProducto().getId().equals(productoId));
+            // 2. Obtener el producto - VERIFICAR SI ES DE MERCADONA
+            Producto producto = session.get(Producto.class, productoId);
 
-            if (productoExiste) {
-                // Si ya existe, aumentar la cantidad
-                for (ItemCompra item : lista.getItems()) {
-                    if (item.getProducto().getId().equals(productoId)) {
-                        item.setCantidad(item.getCantidad() + cantidad);
-                        session.update(item);
-                        break;
-                    }
+            // Si el producto no existe en la BD, puede ser de Mercadona
+            if (producto == null) {
+                // Buscar en productos de Mercadona y guardarlo primero
+                ProductoServicio productoServicio = getProductoServicio();
+                producto = buscarYGuardarProductoMercadona(session, productoId);
+
+                if (producto == null) {
+                    System.err.println("Producto no encontrado con ID: " + productoId);
+                    transaction.rollback();
+                    return lista;
                 }
+            }
+
+            // 3. Verificar si el producto ya está en la lista
+            ItemCompra itemExistente = listaConItems.getItems().stream()
+                    .filter(item -> item.getProducto().getId().equals(productoId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (itemExistente != null) {
+                // Si ya existe, aumentar la cantidad
+                itemExistente.setCantidad(itemExistente.getCantidad() + cantidad);
+                session.merge(itemExistente); // Usar merge en lugar de update
             } else {
                 // Si no existe, crear nuevo item
                 ItemCompra nuevoItem = new ItemCompra(producto, cantidad);
-                lista.agregarItem(nuevoItem);
-                session.save(nuevoItem);
+                nuevoItem.setLista(listaConItems); // IMPORTANTE: establecer la relación bidireccional
+
+                // Añadir a la colección ANTES de persistir
+                listaConItems.getItems().add(nuevoItem);
+
+                // Persistir el nuevo item
+                session.persist(nuevoItem);
             }
 
-            session.update(lista);
+            // 4. Actualizar la lista (flush para asegurar la persistencia)
+            session.merge(listaConItems);
+            session.flush(); // Forzar la escritura a la BD
+
             transaction.commit();
-            return lista;
+
+            // 5. RETORNAR LA LISTA ACTUALIZADA CON LOS ITEMS CARGADOS
+            return cargarListaConItems(listaConItems.getId(), session);
+
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
             }
+            System.err.println("Error agregando producto a lista: " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Error agregando producto a lista: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Busca un producto de Mercadona por su ID generado y lo guarda en la BD
+     */
+    private Producto buscarYGuardarProductoMercadona(Session session, Long productoId) {
+        try {
+            // Obtener productos de Mercadona
+            ProductoServicio productoServicio = getProductoServicio();
+            CompletableFuture<List<Producto>> futureProductos = productoServicio.getMercadonaApiServicio().obtenerProductosNuevos();
+            List<Producto> productosMercadona = futureProductos.get();
+
+            // También buscar con una consulta simple
+            CompletableFuture<List<Producto>> futureSearch = productoServicio.getMercadonaApiServicio().buscarProductos("leche");
+            productosMercadona.addAll(futureSearch.get());
+
+            // Buscar el producto con el ID específico
+            Producto productoEncontrado = productosMercadona.stream()
+                    .filter(p -> p.getId() != null && p.getId().equals(productoId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (productoEncontrado != null) {
+                // Guardar el producto en la base de datos
+                session.persist(productoEncontrado);
+                session.flush(); // Asegurar que se guarda inmediatamente
+                return productoEncontrado;
+            }
+
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error buscando producto de Mercadona: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Carga una lista con todos sus items desde la base de datos
+     */
+    private ListaCompra cargarListaConItems(Long listaId, Session session) {
+        Query<ListaCompra> query = session.createQuery(
+                "SELECT l FROM ListaCompra l " +
+                        "LEFT JOIN FETCH l.items i " +
+                        "LEFT JOIN FETCH i.producto " +
+                        "WHERE l.id = :listaId",
+                ListaCompra.class);
+        query.setParameter("listaId", listaId);
+
+        return query.uniqueResult();
     }
 
     /**

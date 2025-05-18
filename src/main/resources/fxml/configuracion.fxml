@@ -152,32 +152,6 @@
                         <Label text="Idioma:" />
                         <ComboBox fx:id="idiomaComboBox" prefWidth="200" />
                     </HBox>
-
-                    <HBox spacing="15" alignment="CENTER_LEFT">
-                        <Label text="Tamaño de fuente:" />
-                        <Slider fx:id="tamanoFuenteSlider" min="12" max="20" value="14" showTickLabels="true" showTickMarks="true" majorTickUnit="2" />
-                        <Label fx:id="tamanoFuenteLabel" text="14px" style="-fx-min-width: 40;" />
-                    </HBox>
-                </VBox>
-
-                <!-- Notificaciones -->
-                <VBox spacing="15" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
-                    <padding>
-                        <Insets top="15" right="15" bottom="15" left="15" />
-                    </padding>
-                    <Label text="🔔 Notificaciones" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
-
-                    <VBox spacing="10">
-                        <CheckBox fx:id="notificacionesGastosCheckBox" text="Notificarme cuando me acerque al límite de presupuesto" selected="true" />
-                        <CheckBox fx:id="notificacionesIngresoCheckBox" text="Recordatorios para registrar ingresos recurrentes" selected="true" />
-                        <CheckBox fx:id="notificacionesComprasCheckBox" text="Alertas de ofertas en productos de mi lista de compra" selected="false" />
-                        <CheckBox fx:id="notificacionesAhorroCheckBox" text="Recordatorios para revisar mis metas de ahorro" selected="true" />
-                    </VBox>
-
-                    <HBox spacing="15" alignment="CENTER_LEFT">
-                        <Label text="Envío por email:" />
-                        <CheckBox fx:id="emailNotificacionesCheckBox" text="Resumen semanal por email" selected="false" />
-                    </HBox>
                 </VBox>
 
                 <!-- Datos y Seguridad -->
@@ -188,40 +162,9 @@
                     <Label text="🔒 Datos y Seguridad" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
 
                     <HBox spacing="10">
-                        <Button fx:id="copiaSeguridad" text="Crear Copia de Seguridad" onAction="#handleCrearCopiaSeguridadAction" prefWidth="200" />
-                        <Label text="Última copia: " style="-fx-text-fill: rgb(200, 200, 220);" />
-                        <Label fx:id="fechaUltimaCopia" text="No disponible" style="-fx-text-fill: rgb(200, 200, 220);" />
-                    </HBox>
-
-                    <HBox spacing="10">
-                        <Button fx:id="exportarDatos" text="Exportar Datos" onAction="#handleExportarDatosAction" prefWidth="200" />
-                        <Label text="Exporta tus datos a CSV/JSON" style="-fx-text-fill: rgb(200, 200, 220);" />
-                    </HBox>
-
-                    <HBox spacing="10">
                         <Button fx:id="cambiarContrasena" text="Cambiar Contraseña" onAction="#handleCambiarContrasenaAction" prefWidth="200" />
                         <Label text="Modifica tu contraseña de acceso" style="-fx-text-fill: rgb(200, 200, 220);" />
                     </HBox>
-                </VBox>
-
-                <!-- Avanzado -->
-                <VBox spacing="15" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
-                    <padding>
-                        <Insets top="15" right="15" bottom="15" left="15" />
-                    </padding>
-                    <Label text="⚙️ Configuración Avanzada" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
-
-                    <HBox spacing="15" alignment="CENTER_LEFT">
-                        <Label text="Moneda predeterminada:" />
-                        <ComboBox fx:id="monedaComboBox" prefWidth="150" />
-                    </HBox>
-
-                    <HBox spacing="15" alignment="CENTER_LEFT">
-                        <Label text="Decimales en moneda:" />
-                        <ComboBox fx:id="decimalesComboBox" prefWidth="100" />
-                    </HBox>
-
-                    <CheckBox fx:id="modoDebugCheckBox" text="Modo desarrollador (mostrar información técnica)" selected="false" />
                 </VBox>
 
                 <!-- Sobre la aplicación -->
@@ -250,7 +193,7 @@
                         <Label fx:id="autorLabel" text="Leonel Yupanqui Serrano" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
                         <Label text="Fecha de compilación:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                        <Label fx:id="fechaCompilaciónLabel" text="28/04/2025" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <Label fx:id="fechaCompilacionLabel" text="28/04/2025" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
                         <Label text="Centro educativo:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                         <Label fx:id="centroLabel" text="Salesianos San Francisco De Sales El Buen Amigo" GridPane.columnIndex="1" GridPane.rowIndex="3" />
@@ -262,12 +205,6 @@
                         <Button fx:id="acercaDeButton" text="Acerca de" onAction="#handleAcercaDeAction" />
                     </HBox>
                 </VBox>
-
-                <!-- Botones de acción -->
-                <HBox spacing="15" alignment="CENTER">
-                    <Button fx:id="guardarConfiguracion" text="Guardar Configuración" onAction="#handleGuardarConfiguracionAction" prefWidth="180" />
-                    <Button fx:id="restablecerConfiguracion" text="Restablecer por Defecto" onAction="#handleRestablecerConfiguracionAction" prefWidth="180" />
-                </HBox>
             </VBox>
         </ScrollPane>
     </center>

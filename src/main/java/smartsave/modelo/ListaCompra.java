@@ -106,9 +106,11 @@ public class ListaCompra {
     public boolean isCompletada() { return completada; }
     public void setCompletada(boolean completada) { this.completada = completada; }
 
-    // Métodos adicionales
     public void agregarItem(ItemCompra item) {
-        item.setLista(this);
+        item.setLista(this);  // Establecer la relación bidireccional
+        if (items == null) {
+            items = new ArrayList<>();
+        }
         items.add(item);
     }
 

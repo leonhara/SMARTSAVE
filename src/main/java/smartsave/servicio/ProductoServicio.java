@@ -27,6 +27,64 @@ public class ProductoServicio {
         this("14010"); //del salesianos
     }
 
+    // Añadir estos métodos al ProductoServicio.java
+
+    /**
+     * Obtiene el servicio de API de Mercadona para uso interno
+     * @return El servicio de API de Mercadona
+     */
+    public MercadonaApiServicio getMercadonaApiServicio() {
+        return this.mercadonaApi;
+    }
+
+    /**
+     * Busca y guarda un producto de Mercadona en la base de datos si no existe
+     * @param productoId ID del producto generado
+     * @return El producto guardado o null si no se encuentra
+     */
+    public Producto buscarYGuardarProductoMercadona(Long productoId) {
+        // Primero verificar si ya existe en la BD
+        Producto productoExistente = obtenerProductoPorId(productoId);
+        if (productoExistente != null) {
+            return productoExistente;
+        }
+
+        // Si no existe, buscar en la API de Mercadona
+        if (!usarApiMercadona) {
+            return null;
+        }
+
+        try {
+            // Obtener productos recientes de Mercadona
+            CompletableFuture<List<Producto>> futureProductos = mercadonaApi.obtenerProductosNuevos();
+            List<Producto> productosMercadona = futureProductos.get();
+
+            // También buscar con términos comunes
+            String[] terminos = {"leche", "pan", "carne", "fruta", "verdura"};
+            for (String termino : terminos) {
+                CompletableFuture<List<Producto>> futureSearch = mercadonaApi.buscarProductos(termino);
+                List<Producto> resultados = futureSearch.get();
+                productosMercadona.addAll(resultados);
+            }
+
+            // Buscar el producto con el ID específico
+            Producto productoEncontrado = productosMercadona.stream()
+                    .filter(p -> p.getId() != null && p.getId().equals(productoId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (productoEncontrado != null) {
+                // Guardar en la base de datos
+                return guardarProducto(productoEncontrado);
+            }
+
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error buscando producto de Mercadona con ID " + productoId + ": " + e.getMessage());
+            return null;
+        }
+    }
+
     public ProductoServicio(String codigoPostal) {
         try {
             this.mercadonaApi = new MercadonaApiServicio(codigoPostal);

@@ -1,14 +1,10 @@
-// src/main/java/smartsave/controlador/AhorroController.java
 package smartsave.controlador;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -16,10 +12,10 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import smartsave.modelo.ModalidadAhorro;
 import smartsave.servicio.ModalidadAhorroServicio;
+import smartsave.servicio.NavegacionServicio;
 import smartsave.servicio.TransaccionServicio;
 import smartsave.utilidad.EstilosApp;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -71,6 +67,7 @@ public class AhorroController implements Initializable {
     // Servicios
     private ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
     private TransaccionServicio transaccionServicio = new TransaccionServicio();
+    private final NavegacionServicio navegacionServicio = NavegacionServicio.getInstancia();
 
     // Variables de estado
     private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
@@ -362,13 +359,13 @@ public class AhorroController implements Initializable {
             // Obtener el presupuesto ingresado
             String presupuestoTexto = presupuestoEjemploField.getText().trim();
             if (presupuestoTexto.isEmpty()) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error", "Por favor, ingresa un presupuesto válido.");
+                navegacionServicio.mostrarAlertaError("Error", "Por favor, ingresa un presupuesto válido.");
                 return;
             }
 
             double presupuesto = Double.parseDouble(presupuestoTexto);
             if (presupuesto <= 0) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error", "El presupuesto debe ser mayor que cero.");
+                navegacionServicio.mostrarAlertaError("Error", "El presupuesto debe ser mayor que cero.");
                 return;
             }
 
@@ -397,7 +394,7 @@ public class AhorroController implements Initializable {
             resultadoCalculoPane.setManaged(true);
 
         } catch (NumberFormatException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Por favor, ingresa un valor numérico válido.");
+            navegacionServicio.mostrarAlertaError("Formato incorrecto", "Por favor, ingresa un valor numérico válido.");
         }
     }
 
@@ -415,9 +412,35 @@ public class AhorroController implements Initializable {
         aplicarModalidadButton.setText("Modalidad Aplicada");
         aplicarModalidadButton.setDisable(true);
 
-        mostrarAlerta(Alert.AlertType.INFORMATION, "Modalidad Aplicada",
-                "La modalidad de ahorro '" + modalidadSeleccionada.getNombre() +
-                        "' ha sido aplicada correctamente. Se utilizará en tus recomendaciones de compra y presupuesto.");
+        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+        alerta.setTitle("Modalidad Aplicada");
+        alerta.setHeaderText(null);
+        alerta.setContentText("La modalidad de ahorro '" + modalidadSeleccionada.getNombre() +
+                "' ha sido aplicada correctamente. Se utilizará en tus recomendaciones de compra y presupuesto.");
+
+        // Estilizar alerta
+        DialogPane dialogPane = alerta.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: #1A1A25; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-border-color: #FF00FF; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        dialogPane.lookupAll(".label").forEach(node ->
+                node.setStyle("-fx-text-fill: white;")
+        );
+
+        dialogPane.lookupAll(".button").forEach(node -> {
+            node.setStyle(
+                    "-fx-background-color: #25253A; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-border-color: #4050FF; " +
+                            "-fx-border-width: 1px;"
+            );
+        });
+
+        alerta.showAndWait();
     }
 
     @FXML
@@ -445,96 +468,30 @@ public class AhorroController implements Initializable {
         escenario.close();
     }
 
+    // Métodos de navegación simplificados con NavegacionServicio
+
     @FXML
     private void handleDashboardAction(ActionEvent evento) {
-        try {
-            // Cargar la vista del dashboard
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
-            Parent raizDashboard = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaDashboard = new Scene(raizDashboard);
-            escenaDashboard.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaDashboard);
-            escenarioActual.setTitle("SmartSave - Dashboard");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar el dashboard: " + e.getMessage());
-        }
+        Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
+        navegacionServicio.navegarADashboard(escenarioActual);
     }
 
     @FXML
     private void handleTransactionsAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de transacciones
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/transacciones.fxml"));
-            Parent raizTransacciones = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaTransacciones = new Scene(raizTransacciones);
-            escenaTransacciones.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) transactionsButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaTransacciones);
-            escenarioActual.setTitle("SmartSave - Gestión de Ingresos y Gastos");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de transacciones: " + e.getMessage());
-        }
+        Stage escenarioActual = (Stage) transactionsButton.getScene().getWindow();
+        navegacionServicio.navegarATransacciones(escenarioActual);
     }
 
     @FXML
     private void handleNutritionAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de perfil nutricional
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/nutricion.fxml"));
-            Parent raizNutricion = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaNutricion = new Scene(raizNutricion);
-            escenaNutricion.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaNutricion);
-            escenarioActual.setTitle("SmartSave - Perfil Nutricional");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de perfil nutricional: " + e.getMessage());
-        }
+        Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
+        navegacionServicio.navegarANutricion(escenarioActual);
     }
 
     @FXML
     private void handleShoppingAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de plan de compras
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/compras.fxml"));
-            Parent raizCompras = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaCompras = new Scene(raizCompras);
-            escenaCompras.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaCompras);
-            escenarioActual.setTitle("SmartSave - Plan de Compras");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de plan de compras: " + e.getMessage());
-        }
+        Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
+        navegacionServicio.navegarACompras(escenarioActual);
     }
 
     @FXML
@@ -547,73 +504,25 @@ public class AhorroController implements Initializable {
     private void handleReportsAction(ActionEvent evento) {
         // Cambiar a la vista de informes
         activarBoton(reportsButton);
-        mostrarAlertaNoImplementado("Informes");
+        navegacionServicio.mostrarAlertaNoImplementado("Informes");
     }
 
     @FXML
     private void handleSettingsAction(ActionEvent evento) {
-        // Cambiar a la vista de configuración
-        activarBoton(settingsButton);
-        mostrarAlertaNoImplementado("Configuración");
+        Stage escenarioActual = (Stage) settingsButton.getScene().getWindow();
+        navegacionServicio.navegarAConfiguracion(escenarioActual);
     }
 
     @FXML
     private void handleProfileAction(ActionEvent evento) {
-        // Cambiar a la vista de perfil
-        activarBoton(profileButton);
-        mostrarAlertaNoImplementado("Mi Perfil");
+        Stage escenarioActual = (Stage) profileButton.getScene().getWindow();
+        navegacionServicio.navegarAPerfil(escenarioActual);
     }
 
     @FXML
     private void handleLogoutAction(ActionEvent evento) {
-        // Mostrar confirmación antes de cerrar sesión
-        Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
-        alerta.setTitle("Cerrar Sesión");
-        alerta.setHeaderText(null);
-        alerta.setContentText("¿Estás seguro que deseas cerrar la sesión?");
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alerta.showAndWait().ifPresent(respuesta -> {
-            if (respuesta == ButtonType.OK) {
-                try {
-                    // Volver a la pantalla de login
-                    FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
-                    Parent raizLogin = cargador.load();
-
-                    Scene escenaLogin = new Scene(raizLogin);
-                    escenaLogin.setFill(Color.TRANSPARENT);
-
-                    Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
-                    escenarioActual.setScene(escenaLogin);
-                    escenarioActual.setTitle("SmartSave - Login");
-                    escenarioActual.centerOnScreen();
-
-                } catch (IOException e) {
-                    mostrarAlerta(Alert.AlertType.ERROR, "Error al volver a la pantalla de login", e.getMessage());
-                }
-            }
-        });
+        Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
+        navegacionServicio.confirmarCerrarSesion(escenarioActual);
     }
 
     private void activarBoton(Button botonActivo) {
@@ -629,67 +538,5 @@ public class AhorroController implements Initializable {
 
         // Añadir la clase 'selected' al botón activo
         botonActivo.getStyleClass().add("selected");
-    }
-
-    private void mostrarAlertaNoImplementado(String caracteristica) {
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle(caracteristica + " - En desarrollo");
-        alerta.setHeaderText(null);
-        alerta.setContentText("Esta funcionalidad aún no está implementada.");
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alerta.showAndWait();
-    }
-
-    private void mostrarAlerta(Alert.AlertType tipo, String titulo, String mensaje) {
-        Alert alerta = new Alert(tipo);
-        alerta.setTitle(titulo);
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alerta.showAndWait();
     }
 }

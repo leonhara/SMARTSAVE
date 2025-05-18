@@ -11,15 +11,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import smartsave.utilidad.EstilosApp;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 public class ConfiguracionController implements Initializable {
@@ -46,27 +42,15 @@ public class ConfiguracionController implements Initializable {
     // Referencias a los elementos de configuración
     @FXML private ComboBox<String> temaComboBox;
     @FXML private ComboBox<String> idiomaComboBox;
-    @FXML private Slider tamanoFuenteSlider;
-    @FXML private Label tamanoFuenteLabel;
-
-    @FXML private CheckBox notificacionesGastosCheckBox;
-    @FXML private CheckBox notificacionesIngresoCheckBox;
-    @FXML private CheckBox notificacionesComprasCheckBox;
-    @FXML private CheckBox notificacionesAhorroCheckBox;
-    @FXML private CheckBox emailNotificacionesCheckBox;
 
     @FXML private Button copiaSeguridad;
     @FXML private Button exportarDatos;
     @FXML private Button cambiarContrasena;
     @FXML private Label fechaUltimaCopia;
 
-    @FXML private ComboBox<String> monedaComboBox;
-    @FXML private ComboBox<String> decimalesComboBox;
-    @FXML private CheckBox modoDebugCheckBox;
-
     @FXML private Label versionLabel;
     @FXML private Label autorLabel;
-    @FXML private Label fechaCompilaciónLabel;
+    @FXML private Label fechaCompilacionLabel;
     @FXML private Label centroLabel;
     @FXML private Button licenciaButton;
     @FXML private Button privacidadButton;
@@ -123,11 +107,10 @@ public class ConfiguracionController implements Initializable {
         settingsButton.getStyleClass().add("selected");
 
         // Aplicar estilos a los botones principales
-        EstilosApp.aplicarEstiloBotonPrimario(guardarConfiguracion);
-        EstilosApp.aplicarEstiloBotonPrimario(restablecerConfiguracion);
-        EstilosApp.aplicarEstiloBotonPrimario(copiaSeguridad);
-        EstilosApp.aplicarEstiloBotonPrimario(exportarDatos);
         EstilosApp.aplicarEstiloBotonPrimario(cambiarContrasena);
+        EstilosApp.aplicarEstiloBotonPrimario(licenciaButton);
+        EstilosApp.aplicarEstiloBotonPrimario(privacidadButton);
+        EstilosApp.aplicarEstiloBotonPrimario(acercaDeButton);
 
         aplicarEstiloScrollBarNeon();
     }
@@ -159,11 +142,6 @@ public class ConfiguracionController implements Initializable {
     }
 
     private void inicializarConfiguracion() {
-        // Configurar listener para el slider de tamaño de fuente
-        tamanoFuenteSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
-            tamanoFuenteLabel.setText(String.format("%.0fpx", newValue.doubleValue()));
-        });
-
         // PRIMERO agregar items a los ComboBox
         // Inicializar ComboBox de tema
         temaComboBox.getItems().addAll("Oscuro (Actual)", "Claro", "Automático");
@@ -171,38 +149,16 @@ public class ConfiguracionController implements Initializable {
         // Inicializar ComboBox de idioma
         idiomaComboBox.getItems().addAll("Español", "English", "Français");
 
-        // Inicializar ComboBox de moneda
-        monedaComboBox.getItems().addAll("EUR (€)", "USD ($)", "GBP (£)");
-
-        // Inicializar ComboBox de decimales
-        decimalesComboBox.getItems().addAll("0", "2", "3");
-
         // DESPUÉS seleccionar valores por defecto
         temaComboBox.setValue("Oscuro (Actual)");
         idiomaComboBox.setValue("Español");
-        monedaComboBox.setValue("EUR (€)");
-        decimalesComboBox.setValue("2");
-
-        // Inicializar fecha de última copia
-        fechaUltimaCopia.setText("No disponible");
     }
 
     private void cargarConfiguracionActual() {
-        // Cargar configuración desde archivo de propiedades o base de datos
-        // Por ahora usar valores por defecto
-
-        // Configurar notificaciones
-        notificacionesGastosCheckBox.setSelected(true);
-        notificacionesIngresoCheckBox.setSelected(true);
-        notificacionesComprasCheckBox.setSelected(false);
-        notificacionesAhorroCheckBox.setSelected(true);
-        emailNotificacionesCheckBox.setSelected(false);
-        modoDebugCheckBox.setSelected(false);
-
         // Información sobre la aplicación
         versionLabel.setText("1.0.0");
         autorLabel.setText("Leonel Yupanqui Serrano");
-        fechaCompilaciónLabel.setText("28/04/2025");
+        fechaCompilacionLabel.setText("28/04/2025");
         centroLabel.setText("Salesianos San Francisco De Sales El Buen Amigo");
     }
 
@@ -455,59 +411,6 @@ public class ConfiguracionController implements Initializable {
     // Métodos para manejar la configuración
 
     @FXML
-    private void handleCrearCopiaSeguridadAction(ActionEvent evento) {
-        try {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Guardar Copia de Seguridad");
-            fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("Archivo de Copia de Seguridad", "*.backup")
-            );
-
-            Stage stage = (Stage) copiaSeguridad.getScene().getWindow();
-            File file = fileChooser.showSaveDialog(stage);
-
-            if (file != null) {
-                // Simular creación de copia de seguridad
-                // Aquí iría la lógica real de backup
-                Thread.sleep(2000); // Simular proceso
-
-                // Actualizar fecha de última copia
-                fechaUltimaCopia.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-
-                mostrarAlerta(Alert.AlertType.INFORMATION, "Copia de Seguridad",
-                        "La copia de seguridad se ha creado correctamente en:\n" + file.getAbsolutePath());
-            }
-        } catch (Exception e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al crear la copia de seguridad: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleExportarDatosAction(ActionEvent evento) {
-        try {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Exportar Datos");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Archivo CSV", "*.csv"),
-                    new FileChooser.ExtensionFilter("Archivo JSON", "*.json")
-            );
-
-            Stage stage = (Stage) exportarDatos.getScene().getWindow();
-            File file = fileChooser.showSaveDialog(stage);
-
-            if (file != null) {
-                // Simular exportación de datos
-                Thread.sleep(1500);
-
-                mostrarAlerta(Alert.AlertType.INFORMATION, "Exportar Datos",
-                        "Los datos se han exportado correctamente a:\n" + file.getAbsolutePath());
-            }
-        } catch (Exception e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al exportar los datos: " + e.getMessage());
-        }
-    }
-
-    @FXML
     private void handleCambiarContrasenaAction(ActionEvent evento) {
         // Crear diálogo para cambiar contraseña
         Dialog<String[]> dialog = new Dialog<>();
@@ -645,54 +548,6 @@ public class ConfiguracionController implements Initializable {
         alerta.showAndWait();
     }
 
-    @FXML
-    private void handleGuardarConfiguracionAction(ActionEvent evento) {
-        try {
-            // Simular guardado de configuración
-            Thread.sleep(1000);
-
-            // Aquí iría la lógica real para guardar la configuración
-            // Podría usar Properties, JSON, o base de datos
-
-            mostrarAlerta(Alert.AlertType.INFORMATION, "Configuración Guardada",
-                    "La configuración se ha guardado correctamente.");
-        } catch (InterruptedException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al guardar la configuración.");
-        }
-    }
-
-    @FXML
-    private void handleRestablecerConfiguracionAction(ActionEvent evento) {
-        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmacion.setTitle("Restablecer Configuración");
-        confirmacion.setHeaderText(null);
-        confirmacion.setContentText("¿Estás seguro de que deseas restablecer la configuración a los valores por defecto? Esta acción no se puede deshacer.");
-
-        estilizarAlerta(confirmacion);
-
-        confirmacion.showAndWait().ifPresent(respuesta -> {
-            if (respuesta == ButtonType.OK) {
-                // Restablecer valores por defecto
-                temaComboBox.getSelectionModel().select("OSCURO");
-                idiomaComboBox.getSelectionModel().select("ES");
-                tamanoFuenteSlider.setValue(14);
-
-                notificacionesGastosCheckBox.setSelected(true);
-                notificacionesIngresoCheckBox.setSelected(true);
-                notificacionesComprasCheckBox.setSelected(false);
-                notificacionesAhorroCheckBox.setSelected(true);
-                emailNotificacionesCheckBox.setSelected(false);
-
-                monedaComboBox.getSelectionModel().select("EUR");
-                decimalesComboBox.getSelectionModel().select("2");
-                modoDebugCheckBox.setSelected(false);
-
-                mostrarAlerta(Alert.AlertType.INFORMATION, "Configuración Restablecida",
-                        "La configuración ha sido restablecida a los valores por defecto.");
-            }
-        });
-    }
-
     private void activarBoton(Button botonActivo) {
         // Quitar la clase 'selected' de todos los botones
         dashboardButton.getStyleClass().remove("selected");
@@ -714,47 +569,7 @@ public class ConfiguracionController implements Initializable {
         alerta.setHeaderText(null);
         alerta.setContentText("Esta funcionalidad aún no está implementada.");
 
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-
-            // Efectos de hover
-            node.setOnMouseEntered(e ->
-                    node.setStyle(
-                            "-fx-background-color: #35354A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #FF00FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-
-            node.setOnMouseExited(e ->
-                    node.setStyle(
-                            "-fx-background-color: #25253A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #4050FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-        });
-
+        estilizarAlerta(alerta);
         alerta.showAndWait();
     }
 
@@ -764,47 +579,7 @@ public class ConfiguracionController implements Initializable {
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
 
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-
-            // Efectos de hover
-            node.setOnMouseEntered(e ->
-                    node.setStyle(
-                            "-fx-background-color: #35354A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #FF00FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-
-            node.setOnMouseExited(e ->
-                    node.setStyle(
-                            "-fx-background-color: #25253A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #4050FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-        });
-
+        estilizarAlerta(alerta);
         alerta.showAndWait();
     }
 
@@ -978,8 +753,6 @@ public class ConfiguracionController implements Initializable {
                     // Crear un stylesheet temporal
                     String stylesheet = "data:text/css," + css.replace("\n", " ");
                     scene.getStylesheets().add(stylesheet);
-
-                    System.out.println("CSS aplicado con estilo de botón principal (20% más delgado)");
                 }
             }
         });

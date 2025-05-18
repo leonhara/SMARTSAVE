@@ -1,16 +1,11 @@
 package smartsave.controlador;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.PieChart;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -75,10 +70,6 @@ public class PerfilController implements Initializable {
     @FXML private Label ingresosMesLabel;
     @FXML private Label diasUsandoAppLabel;
 
-    // Referencias a gráficos
-    @FXML private LineChart<String, Number> evolucionFinancieraChart;
-    @FXML private PieChart distribucionGastosChart;
-
     // Referencias a botones de acción
     @FXML private Button configurarPerfilButton;
     @FXML private Button exportarDatosButton;
@@ -112,9 +103,6 @@ public class PerfilController implements Initializable {
 
         // Cargar datos financieros
         cargarDatosFinancieros();
-
-        // Cargar gráficos
-        cargarGraficos();
     }
 
     private void aplicarEstilos() {
@@ -149,10 +137,6 @@ public class PerfilController implements Initializable {
         EstilosApp.aplicarEstiloBotonPrimario(configurarPerfilButton);
         EstilosApp.aplicarEstiloBotonPrimario(exportarDatosButton);
         EstilosApp.aplicarEstiloBotonPrimario(eliminarCuentaButton);
-
-        // Aplicar estilos a los gráficos
-        EstilosApp.aplicarEstiloGrafico(evolucionFinancieraChart);
-        EstilosApp.aplicarEstiloGrafico(distribucionGastosChart);
     }
 
     private void configurarVentanaArrastrable() {
@@ -246,96 +230,6 @@ public class PerfilController implements Initializable {
             balanceActualLabel.setTextFill(Color.rgb(100, 220, 100)); // Verde
         } else {
             balanceActualLabel.setTextFill(Color.rgb(255, 100, 100)); // Rojo
-        }
-    }
-
-    private void cargarGraficos() {
-        // Cargar gráfico de evolución financiera
-        cargarGraficoEvolucion();
-
-        // Cargar gráfico de distribución de gastos
-        cargarGraficoDistribucion();
-    }
-
-    private void cargarGraficoEvolucion() {
-        // Datos simulados para los últimos 6 meses
-        XYChart.Series<String, Number> serieBalance = new XYChart.Series<>();
-        serieBalance.setName("Balance");
-
-        // Generar datos para los últimos 6 meses
-        LocalDate fechaActual = LocalDate.now();
-        for (int i = 5; i >= 0; i--) {
-            LocalDate fecha = fechaActual.minusMonths(i);
-            String mes = fecha.format(DateTimeFormatter.ofPattern("MMM"));
-
-            // Simular balance creciente con algunas fluctuaciones
-            double balance = 1000 + (i * 200) + (Math.random() * 300 - 150);
-            serieBalance.getData().add(new XYChart.Data<>(mes, balance));
-        }
-
-        XYChart.Series<String, Number> serieAhorros = new XYChart.Series<>();
-        serieAhorros.setName("Ahorros");
-
-        // Generar datos de ahorros acumulativos
-        for (int i = 5; i >= 0; i--) {
-            LocalDate fecha = fechaActual.minusMonths(i);
-            String mes = fecha.format(DateTimeFormatter.ofPattern("MMM"));
-
-            // Simular ahorros crecientes
-            double ahorros = 500 + ((5 - i) * 400) + (Math.random() * 200 - 100);
-            serieAhorros.getData().add(new XYChart.Data<>(mes, ahorros));
-        }
-
-        evolucionFinancieraChart.getData().clear();
-        evolucionFinancieraChart.getData().addAll(serieBalance, serieAhorros);
-    }
-
-    private void cargarGraficoDistribucion() {
-        // Obtener distribución de gastos del mes actual
-        LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
-        var gastosPorCategoria = transaccionServicio.obtenerGastosPorCategoria(usuarioIdActual, inicioMes, LocalDate.now());
-
-        // Crear datos para el gráfico
-        ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
-
-        if (gastosPorCategoria.isEmpty()) {
-            // Datos simulados si no hay datos reales
-            pieChartData.addAll(
-                    new PieChart.Data("Alimentación", 450),
-                    new PieChart.Data("Vivienda", 800),
-                    new PieChart.Data("Transporte", 200),
-                    new PieChart.Data("Entretenimiento", 150),
-                    new PieChart.Data("Otros", 100)
-            );
-        } else {
-            for (var entry : gastosPorCategoria.entrySet()) {
-                pieChartData.add(new PieChart.Data(entry.getKey(), entry.getValue()));
-            }
-        }
-
-        distribucionGastosChart.setData(pieChartData);
-
-        // Aplicar colores personalizados a las secciones
-        if (!pieChartData.isEmpty()) {
-            Color[] colores = {
-                    Color.rgb(255, 100, 255),  // Rosa neón
-                    Color.rgb(100, 170, 255),  // Azul neón
-                    Color.rgb(100, 220, 100),  // Verde neón
-                    Color.rgb(255, 200, 100),  // Naranja neón
-                    Color.rgb(200, 100, 255)   // Purpura neón
-            };
-
-            for (int i = 0; i < pieChartData.size() && i < colores.length; i++) {
-                int finalI = i;
-                pieChartData.get(i).nodeProperty().addListener((obs, oldNode, newNode) -> {
-                    if (newNode != null) {
-                        newNode.setStyle(String.format("-fx-pie-color: rgb(%d, %d, %d);",
-                                (int) (colores[finalI].getRed() * 255),
-                                (int) (colores[finalI].getGreen() * 255),
-                                (int) (colores[finalI].getBlue() * 255)));
-                    }
-                });
-            }
         }
     }
 
@@ -516,7 +410,6 @@ public class PerfilController implements Initializable {
         // Ya estamos en la vista de perfil, solo actualizamos los datos
         cargarDatosUsuario();
         cargarDatosFinancieros();
-        cargarGraficos();
         activarBoton(profileButton);
     }
 

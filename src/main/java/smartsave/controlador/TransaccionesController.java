@@ -5,10 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -16,14 +13,13 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import smartsave.modelo.Transaccion;
+import smartsave.servicio.NavegacionServicio;
 import smartsave.servicio.TransaccionServicio;
 import smartsave.utilidad.EstilosApp;
 
-import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -85,6 +81,7 @@ public class TransaccionesController implements Initializable {
 
     // Servicios
     private TransaccionServicio transaccionServicio = new TransaccionServicio();
+    private final NavegacionServicio navegacionServicio = NavegacionServicio.getInstancia();
 
     // Variables de estado
     private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
@@ -556,50 +553,24 @@ public class TransaccionesController implements Initializable {
     }
 
     private void eliminarTransaccion(Transaccion transaccion) {
-        // Confirmar eliminación
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar eliminación");
-        alert.setHeaderText(null);
-        alert.setContentText("¿Estás seguro de que deseas eliminar esta transacción?");
+        // Usar el servicio de navegación para confirmar la eliminación
+        boolean confirmado = navegacionServicio.confirmarEliminarTransaccion();
 
-        // Estilizar alerta
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
+        if (confirmado) {
+            // Eliminar transacción
+            boolean eliminada = transaccionServicio.eliminarTransaccion(transaccion.getId(), usuarioIdActual);
 
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alert.showAndWait().ifPresent(result -> {
-            if (result == ButtonType.OK) {
-                // Eliminar transacción
-                boolean eliminada = transaccionServicio.eliminarTransaccion(transaccion.getId(), usuarioIdActual);
-
-                if (eliminada) {
-                    // Recargar datos
-                    cargarDatos();
-
-                    // Notificar al usuario
-                    mostrarAlertaInformacion("Transacción eliminada", "La transacción ha sido eliminada correctamente.");
-                } else {
-                    mostrarAlertaError("Error al eliminar", "No se pudo eliminar la transacción. Inténtalo de nuevo.");
-                }
+            if (eliminada) {
+                // Recargar datos
+                cargarDatos();
+                // Notificar al usuario
+                navegacionServicio.mostrarAlertaInformacion("Transacción eliminada",
+                        "La transacción ha sido eliminada correctamente.");
+            } else {
+                navegacionServicio.mostrarAlertaError("Error al eliminar",
+                        "No se pudo eliminar la transacción. Inténtalo de nuevo.");
             }
-        });
+        }
     }
 
     @FXML
@@ -611,7 +582,7 @@ public class TransaccionesController implements Initializable {
                 categoriaComboBox.getValue() == null ||
                 montoField.getText().trim().isEmpty()) {
 
-            mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos.");
+            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos.");
             return;
         }
 
@@ -620,11 +591,11 @@ public class TransaccionesController implements Initializable {
         try {
             monto = Double.parseDouble(montoField.getText().trim());
             if (monto <= 0) {
-                mostrarAlertaError("Monto inválido", "El monto debe ser mayor que cero.");
+                navegacionServicio.mostrarAlertaError("Monto inválido", "El monto debe ser mayor que cero.");
                 return;
             }
         } catch (NumberFormatException e) {
-            mostrarAlertaError("Monto inválido", "Por favor, ingresa un valor numérico válido.");
+            navegacionServicio.mostrarAlertaError("Monto inválido", "Por favor, ingresa un valor numérico válido.");
             return;
         }
 
@@ -640,9 +611,11 @@ public class TransaccionesController implements Initializable {
             boolean actualizada = transaccionServicio.actualizarTransaccion(transaccionEnEdicion);
 
             if (actualizada) {
-                mostrarAlertaInformacion("Transacción actualizada", "La transacción ha sido actualizada correctamente.");
+                navegacionServicio.mostrarAlertaInformacion("Transacción actualizada",
+                        "La transacción ha sido actualizada correctamente.");
             } else {
-                mostrarAlertaError("Error al actualizar", "No se pudo actualizar la transacción. Inténtalo de nuevo.");
+                navegacionServicio.mostrarAlertaError("Error al actualizar",
+                        "No se pudo actualizar la transacción. Inténtalo de nuevo.");
             }
         } else {
             // Crear nueva transacción
@@ -655,7 +628,8 @@ public class TransaccionesController implements Initializable {
             );
 
             transaccionServicio.agregarTransaccion(nuevaTransaccion, usuarioIdActual);
-            mostrarAlertaInformacion("Transacción registrada", "La transacción ha sido registrada correctamente.");
+            navegacionServicio.mostrarAlertaInformacion("Transacción registrada",
+                    "La transacción ha sido registrada correctamente.");
         }
 
         // Ocultar formulario
@@ -680,66 +654,7 @@ public class TransaccionesController implements Initializable {
         transaccionFormPanel.setManaged(mostrar);
     }
 
-    private void mostrarAlertaInformacion(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        configurarEstiloAlerta(alert, titulo, mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarAlertaError(String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        configurarEstiloAlerta(alert, titulo, mensaje);
-        alert.showAndWait();
-    }
-
-    private void configurarEstiloAlerta(Alert alert, String titulo, String mensaje) {
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-
-            // Efectos de hover
-            node.setOnMouseEntered(e ->
-                    node.setStyle(
-                            "-fx-background-color: #35354A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #FF00FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-
-            node.setOnMouseExited(e ->
-                    node.setStyle(
-                            "-fx-background-color: #25253A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #4050FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-        });
-    }
-
-// Métodos de navegación
-
+    // Métodos de control de ventana
     @FXML
     private void handleMinimizeAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
@@ -765,27 +680,11 @@ public class TransaccionesController implements Initializable {
         escenario.close();
     }
 
+    // Métodos de navegación con NavegacionServicio
     @FXML
     private void handleDashboardAction(ActionEvent evento) {
-        try {
-            // Cargar la vista del dashboard
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
-            Parent raizDashboard = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaDashboard = new Scene(raizDashboard);
-            escenaDashboard.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaDashboard);
-            escenarioActual.setTitle("SmartSave - Dashboard");
-
-        } catch (IOException e) {
-            mostrarAlertaError("Error de navegación", "Error al cargar el dashboard: " + e.getMessage());
-        }
+        Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
+        navegacionServicio.navegarADashboard(escenarioActual);
     }
 
     @FXML
@@ -797,108 +696,45 @@ public class TransaccionesController implements Initializable {
 
     @FXML
     private void handleNutritionAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de perfil nutricional
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/nutricion.fxml"));
-            Parent raizNutricion = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaNutricion = new Scene(raizNutricion);
-            escenaNutricion.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaNutricion);
-            escenarioActual.setTitle("SmartSave - Perfil Nutricional");
-
-        } catch (IOException e) {
-            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de perfil nutricional: " + e.getMessage());
-        }
+        Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
+        navegacionServicio.navegarANutricion(escenarioActual);
     }
 
     @FXML
     private void handleShoppingAction(ActionEvent evento) {
-        // Cambiar a la vista de plan de compras
-        activarBoton(shoppingButton);
-        mostrarAlertaNoImplementado("Plan de Compras");
+        Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
+        navegacionServicio.navegarACompras(escenarioActual);
     }
 
     @FXML
     private void handleSavingsAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de modalidades de ahorro
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/ahorro.fxml"));
-            Parent raizAhorro = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaAhorro = new Scene(raizAhorro);
-            escenaAhorro.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) savingsButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaAhorro);
-            escenarioActual.setTitle("SmartSave - Modalidades de Ahorro");
-
-        } catch (IOException e) {
-            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de modalidades de ahorro: " + e.getMessage());
-        }
+        Stage escenarioActual = (Stage) savingsButton.getScene().getWindow();
+        navegacionServicio.navegarAAhorro(escenarioActual);
     }
 
     @FXML
     private void handleReportsAction(ActionEvent evento) {
         // Cambiar a la vista de informes
         activarBoton(reportsButton);
-        mostrarAlertaNoImplementado("Informes");
+        navegacionServicio.mostrarAlertaNoImplementado("Informes");
     }
 
     @FXML
     private void handleSettingsAction(ActionEvent evento) {
-        // Cambiar a la vista de configuración
-        activarBoton(settingsButton);
-        mostrarAlertaNoImplementado("Configuración");
+        Stage escenarioActual = (Stage) settingsButton.getScene().getWindow();
+        navegacionServicio.navegarAConfiguracion(escenarioActual);
     }
 
     @FXML
     private void handleProfileAction(ActionEvent evento) {
-        // Cambiar a la vista de perfil
-        activarBoton(profileButton);
-        mostrarAlertaNoImplementado("Mi Perfil");
+        Stage escenarioActual = (Stage) profileButton.getScene().getWindow();
+        navegacionServicio.navegarAPerfil(escenarioActual);
     }
 
     @FXML
     private void handleLogoutAction(ActionEvent evento) {
-        // Mostrar confirmación antes de cerrar sesión
-        Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
-        alerta.setTitle("Cerrar Sesión");
-        alerta.setHeaderText(null);
-        alerta.setContentText("¿Estás seguro que deseas cerrar la sesión?");
-
-        configurarEstiloAlerta(alerta, "Cerrar Sesión", "¿Estás seguro que deseas cerrar la sesión?");
-
-        alerta.showAndWait().ifPresent(respuesta -> {
-            if (respuesta == ButtonType.OK) {
-                try {
-                    // Volver a la pantalla de login
-                    FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
-                    Parent raizLogin = cargador.load();
-
-                    Scene escenaLogin = new Scene(raizLogin);
-                    escenaLogin.setFill(Color.TRANSPARENT);
-
-                    Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
-                    escenarioActual.setScene(escenaLogin);
-                    escenarioActual.setTitle("SmartSave - Login");
-                    escenarioActual.centerOnScreen();
-
-                } catch (IOException e) {
-                    mostrarAlertaError("Error al volver a la pantalla de login", e.getMessage());
-                }
-            }
-        });
+        Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
+        navegacionServicio.confirmarCerrarSesion(escenarioActual);
     }
 
     private void activarBoton(Button botonActivo) {
@@ -914,12 +750,5 @@ public class TransaccionesController implements Initializable {
 
         // Añadir la clase 'selected' al botón activo
         botonActivo.getStyleClass().add("selected");
-    }
-
-    private void mostrarAlertaNoImplementado(String caracteristica) {
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        configurarEstiloAlerta(alerta, caracteristica + " - En desarrollo",
-                "Esta funcionalidad aún no está implementada.");
-        alerta.showAndWait();
     }
 }

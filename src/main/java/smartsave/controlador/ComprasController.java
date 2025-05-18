@@ -1,5 +1,6 @@
 package smartsave.controlador;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,7 +20,6 @@ import javafx.util.Callback;
 import smartsave.modelo.*;
 import smartsave.servicio.*;
 import smartsave.utilidad.EstilosApp;
-import javafx.beans.property.SimpleStringProperty;
 
 import java.io.IOException;
 import java.net.URL;
@@ -447,36 +447,53 @@ public class ComprasController implements Initializable {
     }
 
     private void mostrarDetalleLista(ListaCompra lista) {
-        listaSeleccionada = lista;
+        // Recargar la lista con items actualizados SIEMPRE
+        ListaCompra listaActualizada = listaCompraServicio.obtenerListaCompra(lista.getId(), usuarioIdActual);
+        if (listaActualizada == null) {
+            ocultarDetalleLista();
+            return;
+        }
+
+        // USAR SOLO LA LISTA ACTUALIZADA
+        listaSeleccionada = listaActualizada;
 
         // Mostrar panel de detalle
         detalleListaPane.setVisible(true);
         detalleListaPane.setManaged(true);
 
         // Actualizar datos básicos
-        nombreListaLabel.setText(lista.getNombre());
+        nombreListaLabel.setText(listaActualizada.getNombre());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        fechaCreacionLabel.setText(lista.getFechaCreacion().format(formatter));
-        fechaProgramadaLabel.setText(lista.getFechaPlanificada() != null
-                ? lista.getFechaPlanificada().format(formatter) : "No programada");
+        fechaCreacionLabel.setText(listaActualizada.getFechaCreacion().format(formatter));
+        fechaProgramadaLabel.setText(listaActualizada.getFechaPlanificada() != null
+                ? listaActualizada.getFechaPlanificada().format(formatter) : "No programada");
 
-        modalidadLabel.setText(lista.getModalidadAhorro());
-        presupuestoLabel.setText(String.format("€%.2f", lista.getPresupuestoMaximo()));
+        modalidadLabel.setText(listaActualizada.getModalidadAhorro());
+        presupuestoLabel.setText(String.format("€%.2f", listaActualizada.getPresupuestoMaximo()));
 
-        // Calcular ahorro estimado según modalidad
-        UsuarioServicio usuarioServicio = new UsuarioServicio();
-        double factorAhorro = usuarioServicio.obtenerFactorPresupuestoUsuario(usuarioIdActual);
-        double ahorroEstimado = lista.getPresupuestoMaximoAsDouble() * (1 - factorAhorro);
+        // Actualizar tabla de productos CON LOGGING
+        System.out.println("=== ACTUALIZANDO TABLA ===");
+        System.out.println("Número de items en la lista: " + listaActualizada.getItems().size());
 
-        // Actualizar tabla de productos
-        productosTableView.setItems(FXCollections.observableArrayList(lista.getItems()));
+        ObservableList<ItemCompra> items = FXCollections.observableArrayList(listaActualizada.getItems());
+        productosTableView.setItems(items);
+        productosTableView.refresh(); // Forzar el refresh de la tabla
+
+        System.out.println("Items en ObservableList: " + items.size());
+        System.out.println("Items en TableView: " + productosTableView.getItems().size());
 
         // Actualizar estado de completada
-        completadaCheckBox.setSelected(lista.isCompletada());
+        completadaCheckBox.setSelected(listaActualizada.isCompletada());
 
         // Actualizar resumen
         actualizarResumenLista();
+
+        // FORZAR ACTUALIZACIÓN DE LA VISTA
+        Platform.runLater(() -> {
+            productosTableView.refresh();
+            productosTableView.getScene().getWindow().sizeToScene();
+        });
     }
 
     private void ocultarDetalleLista() {

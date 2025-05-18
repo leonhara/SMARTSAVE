@@ -159,7 +159,7 @@
             </plugin>
 
             <!-- JavaFX Plugin como alternativa (comentado) -->
-            <!--
+
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -168,7 +168,7 @@
                     <mainClass>smartsave.app.SmartSaveApp</mainClass>
                 </configuration>
             </plugin>
-            -->
+
         </plugins>
     </build>
 </project>

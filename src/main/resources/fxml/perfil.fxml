@@ -5,10 +5,6 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.NumberAxis?>
-<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
@@ -244,88 +240,6 @@
                                 <Label fx:id="diasUsandoAppLabel" text="47 días" GridPane.columnIndex="1" GridPane.rowIndex="4" style="-fx-text-fill: rgb(200, 200, 220);" />
                             </GridPane>
                         </VBox>
-                    </VBox>
-                </HBox>
-
-                <!-- Logros y Progreso -->
-                <VBox spacing="15" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
-                    <padding>
-                        <Insets top="15" right="15" bottom="15" left="15" />
-                    </padding>
-                    <Label text="🏆 Logros y Progreso" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
-
-                    <HBox spacing="15">
-                        <!-- Logro 1 -->
-                        <VBox alignment="CENTER" spacing="10" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
-                            <padding>
-                                <Insets top="15" right="15" bottom="15" left="15" />
-                            </padding>
-                            <Label text="💰" style="-fx-font-size: 30;" />
-                            <Label text="Primer Ahorro" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
-                            <Label text="Has ahorrado por primera vez" style="-fx-text-fill: rgb(200, 200, 220); -fx-text-alignment: center;" wrapText="true" />
-                            <Label text="Desbloqueado" style="-fx-text-fill: rgb(100, 220, 100); -fx-font-size: 10;" />
-                        </VBox>
-
-                        <!-- Logro 2 -->
-                        <VBox alignment="CENTER" spacing="10" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
-                            <padding>
-                                <Insets top="15" right="15" bottom="15" left="15" />
-                            </padding>
-                            <Label text="📊" style="-fx-font-size: 30;" />
-                            <Label text="Presupuesto Maestro" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
-                            <Label text="No has excedido tu presupuesto en 30 días" style="-fx-text-fill: rgb(200, 200, 220); -fx-text-alignment: center;" wrapText="true" />
-                            <Label text="En progreso (15/30)" style="-fx-text-fill: rgb(255, 200, 0); -fx-font-size: 10;" />
-                        </VBox>
-
-                        <!-- Logro 3 -->
-                        <VBox alignment="CENTER" spacing="10" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
-                            <padding>
-                                <Insets top="15" right="15" bottom="15" left="15" />
-                            </padding>
-                            <Label text="🥗" style="-fx-font-size: 30;" />
-                            <Label text="Nutrición Óptima" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
-                            <Label text="Mantén un score nutricional de 80+ por 7 días" style="-fx-text-fill: rgb(200, 200, 220); -fx-text-alignment: center;" wrapText="true" />
-                            <Label text="Bloqueado" style="-fx-text-fill: rgb(150, 150, 150); -fx-font-size: 10;" />
-                        </VBox>
-
-                        <!-- Logro 4 -->
-                        <VBox alignment="CENTER" spacing="10" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
-                            <padding>
-                                <Insets top="15" right="15" bottom="15" left="15" />
-                            </padding>
-                            <Label text="🛒" style="-fx-font-size: 30;" />
-                            <Label text="Comprador Eficiente" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
-                            <Label text="Completa 10 listas de compra sin exceder el presupuesto" style="-fx-text-fill: rgb(200, 200, 220); -fx-text-alignment: center;" wrapText="true" />
-                            <Label text="En progreso (3/10)" style="-fx-text-fill: rgb(255, 200, 0); -fx-font-size: 10;" />
-                        </VBox>
-                    </HBox>
-                </VBox>
-
-                <!-- Gráficos de evolución -->
-                <HBox spacing="15">
-                    <!-- Gráfico evolución financiera -->
-                    <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
-                        <padding>
-                            <Insets top="15" right="15" bottom="15" left="15" />
-                        </padding>
-                        <Label text="Evolución Financiera (Últimos 6 meses)" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250); -fx-font-size: 16;" />
-                        <LineChart fx:id="evolucionFinancieraChart" prefHeight="250" legendVisible="true" createSymbols="false">
-                            <xAxis>
-                                <CategoryAxis label="Mes" />
-                            </xAxis>
-                            <yAxis>
-                                <NumberAxis label="Euros" />
-                            </yAxis>
-                        </LineChart>
-                    </VBox>
-
-                    <!-- Gráfico distribución gastos -->
-                    <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
-                        <padding>
-                            <Insets top="15" right="15" bottom="15" left="15" />
-                        </padding>
-                        <Label text="Distribución de Gastos (Este Mes)" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250); -fx-font-size: 16;" />
-                        <PieChart fx:id="distribucionGastosChart" prefHeight="250" legendVisible="true" labelsVisible="true" />
                     </VBox>
                 </HBox>
 
