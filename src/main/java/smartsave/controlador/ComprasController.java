@@ -21,6 +21,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Controlador para la vista de Plan de Compras
@@ -732,13 +734,45 @@ public class ComprasController extends BaseController {
     private void handleBuscarProducto(ActionEvent event) {
         String termino = buscarProductoField.getText().trim();
 
-        if (termino.isEmpty()) {
-            resultadosProductosTableView.setItems(FXCollections.observableArrayList(
-                    productoServicio.obtenerTodosProductos()));
-        } else {
-            resultadosProductosTableView.setItems(FXCollections.observableArrayList(
-                    productoServicio.buscarProductos(termino)));
-        }
+        // Mostrar indicador de carga
+        buscarProductoButton.setDisable(true);
+        buscarProductoButton.setText("Buscando...");
+
+        // Usar CompletableFuture para no bloquear la UI
+        CompletableFuture.supplyAsync(() -> {
+            List<Producto> resultados;
+            if (termino.isEmpty()) {
+                resultados = productoServicio.obtenerTodosProductos();
+            } else {
+                resultados = productoServicio.buscarProductos(termino);
+            }
+            return resultados;
+        }).thenAccept(resultados -> {
+            // Actualizar UI en el hilo de JavaFX
+            Platform.runLater(() -> {
+                resultadosProductosTableView.setItems(FXCollections.observableArrayList(resultados));
+                buscarProductoButton.setDisable(false);
+                buscarProductoButton.setText("Buscar");
+
+                // Mostrar mensaje informativo
+                if (resultados.isEmpty()) {
+                    navegacionServicio.mostrarAlertaInformacion(
+                            "Búsqueda sin resultados",
+                            "No se encontraron productos para: " + termino);
+                } else {
+                    System.out.println("Encontrados " + resultados.size() + " productos para: " + termino);
+                }
+            });
+        }).exceptionally(e -> {
+            Platform.runLater(() -> {
+                navegacionServicio.mostrarAlertaError(
+                        "Error en búsqueda",
+                        "Se produjo un error al buscar productos: " + e.getMessage());
+                buscarProductoButton.setDisable(false);
+                buscarProductoButton.setText("Buscar");
+            });
+            return null;
+        });
     }
 
     /**
@@ -770,6 +804,27 @@ public class ComprasController extends BaseController {
      * Muestra el panel de búsqueda de productos
      */
     private void mostrarPanelBuscarProducto() {
+        // Limpiar búsqueda anterior
+        buscarProductoField.clear();
+        resultadosProductosTableView.setItems(FXCollections.observableArrayList());
+
+        // Cargar algunos productos populares por defecto
+        try {
+            List<Producto> productosPopulares = productoServicio.obtenerTodosProductos().stream()
+                    .limit(15)  // Mostrar los primeros 15 productos
+                    .collect(Collectors.toList());
+
+            if (!productosPopulares.isEmpty()) {
+                resultadosProductosTableView.setItems(FXCollections.observableArrayList(productosPopulares));
+                System.out.println("Cargados " + productosPopulares.size() + " productos populares");
+            } else {
+                System.out.println("No se encontraron productos populares");
+            }
+        } catch (Exception e) {
+            System.err.println("Error cargando productos populares: " + e.getMessage());
+        }
+
+        // Mostrar panel de búsqueda
         agregarProductoPane.setVisible(true);
         agregarProductoPane.setManaged(true);
         EstilosApp.aplicarEstiloTarjeta(agregarProductoPane);
