@@ -106,7 +106,6 @@ public class MercadonaApiServicio {
     /**
      * Busca productos en Mercadona con caché y control de tasa
      */
-    // En el método buscarProductos
     public CompletableFuture<List<Producto>> buscarProductos(String termino) {
         return CompletableFuture.supplyAsync(() -> {
             if (!apiDisponible) {
@@ -308,7 +307,8 @@ public class MercadonaApiServicio {
                     "python", pythonScriptPath, "search", "pan",
                     "--postcode", codigoPostal, "--limit", "1"
             );
-            pb.redirectErrorStream(true);
+            // pb.redirectErrorStream(true); // ELIMINADO
+            pb.redirectError(ProcessBuilder.Redirect.INHERIT); // Opcional: ver logs en consola
 
             Process process = pb.start();
             StringBuilder output = new StringBuilder();
@@ -339,7 +339,8 @@ public class MercadonaApiServicio {
     }
 
     private String ejecutarProcesoConBuilder(ProcessBuilder processBuilder) throws IOException, InterruptedException {
-        processBuilder.redirectErrorStream(true);
+        // processBuilder.redirectErrorStream(true); // ELIMINADO
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT); // Opcional: ver logs en consola
 
         // Establecer variables de entorno para UTF-8
         processBuilder.environment().put("PYTHONIOENCODING", "utf-8");

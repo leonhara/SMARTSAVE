@@ -7,10 +7,11 @@ import logging
 import traceback
 import os
 
-# Configurar logging
+# Configurar logging SOLO a stderr
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stderr
 )
 logger = logging.getLogger('mercadona_bridge')
 
@@ -21,6 +22,7 @@ try:
 except ImportError as e:
     error_msg = "mercapy no está instalado o no puede ser importado"
     logger.error(f"{error_msg}: {str(e)}")
+    # SOLO el JSON va a stdout
     print(json.dumps({"success": False, "error": error_msg}))
     sys.exit(1)
 
@@ -290,10 +292,10 @@ def main():
             logger.error(f"Resultado inválido, se esperaba un diccionario pero se obtuvo: {type(result)}")
             result = {"success": False, "error": "Resultado de procesamiento inválido"}
 
-        # Usar ensure_ascii=False para manejar caracteres especiales correctamente
+        # SOLO ESTE print envía el JSON a stdout
         output = json.dumps(result, ensure_ascii=False, indent=2)
         print(output)
-        logger.info(f"Proceso completado exitosamente. Tamaño de la respuesta: {len(output)} caracteres")
+        # logger.info(...) irá a stderr
     except Exception as e:
         error_details = traceback.format_exc()
         logger.error(f"Error en función main: {str(e)}\n{error_details}")
