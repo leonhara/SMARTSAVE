@@ -399,8 +399,10 @@ public class MercadonaApiServicio {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.println("Error parseando productos de Mercadona: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error inesperado parseando productos de Mercadona: " + e.getMessage());
         }
 
         return productos;
