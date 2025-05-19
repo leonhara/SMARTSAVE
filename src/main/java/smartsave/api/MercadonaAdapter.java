@@ -67,19 +67,15 @@ public class MercadonaAdapter {
                 return CACHE_PRODUCTOS.get(idMercadona);
             }
 
-            // Limpiar caché periódicamente
             limpiarCacheAntigua();
 
-            // Extraer datos del JSON
             String nombre = productNode.has("name") ? productNode.get("name").asText() : "";
             String marca = productNode.has("brand") ? productNode.get("brand").asText() : "Mercadona";
             String categoriaOriginal = productNode.has("category") ? productNode.get("category").asText() : "";
             double precio = productNode.has("unit_price") ? productNode.get("unit_price").asDouble() : 0.0;
 
-            // Transformar la categoría a nuestro sistema
             String categoriaAdaptada = mapearCategoria(categoriaOriginal);
 
-            // Crear el producto usando BigDecimal directamente
             Producto producto = new Producto();
             producto.setNombre(limpiarTexto(nombre));
             producto.setMarca(limpiarTexto(marca));
@@ -88,18 +84,34 @@ public class MercadonaAdapter {
             producto.setSupermercado("Mercadona");
             producto.setDisponible(true);
 
-            // Generar ID único para productos de Mercadona
+            // Usa el ID real de Mercadona como Long, truncando decimales si los hubiera
             if (idMercadona != null) {
-                Long idUnico = Math.abs((long) idMercadona.hashCode()) + 100000L;
-                producto.setId(idUnico);
+                try {
+                    Long idReal;
+                    if (idMercadona.contains(".")) {
+                        idReal = (long) Double.parseDouble(idMercadona);
+                    } else {
+                        idReal = Long.parseLong(idMercadona);
+                    }
+                    producto.setId(idReal);
+                } catch (NumberFormatException e) {
+                    System.err.println("ID Mercadona no convertible a Long: " + idMercadona);
+                    return null;
+                }
             }
 
-            // Añadir información nutricional estimada
             configurarInfoNutricional(producto, categoriaAdaptada);
 
-            // Guardar en caché
             if (idMercadona != null) {
                 CACHE_PRODUCTOS.put(idMercadona, producto);
+            }
+
+            // Validación de campos obligatorios antes de devolver el producto
+            if (producto.getNombre().isEmpty() || producto.getMarca().isEmpty() ||
+                    producto.getCategoria().isEmpty() || producto.getPrecioBD() == null ||
+                    producto.getSupermercado().isEmpty()) {
+                System.err.println("Producto Mercadona con campos obligatorios vacíos: " + producto);
+                return null;
             }
 
             return producto;
