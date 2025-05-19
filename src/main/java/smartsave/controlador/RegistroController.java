@@ -2,10 +2,7 @@ package smartsave.controlador;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
@@ -13,14 +10,18 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import smartsave.modelo.Usuario;
+import smartsave.servicio.NavegacionServicio;
 import smartsave.servicio.UsuarioServicio;
 import smartsave.utilidad.EstilosApp;
 import smartsave.utilidad.ValidacionUtil;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * Controlador para la vista de Registro de Usuario
+ * No extiende BaseController porque la pantalla de registro es diferente estructuralmente
+ */
 public class RegistroController implements Initializable {
 
     // Referencias FXML
@@ -47,8 +48,9 @@ public class RegistroController implements Initializable {
     @FXML private Label passwordLabel;
     @FXML private Label confirmPasswordLabel;
 
-    // Servicio para operaciones con usuarios
-    private UsuarioServicio usuarioServicio = new UsuarioServicio();
+    // Servicios
+    private final UsuarioServicio usuarioServicio = new UsuarioServicio();
+    private final NavegacionServicio navegacionServicio = NavegacionServicio.getInstancia();
 
     // Variables para permitir el arrastre de la ventana
     private double offsetX = 0;
@@ -69,6 +71,9 @@ public class RegistroController implements Initializable {
         configurarValidacion();
     }
 
+    /**
+     * Aplica estilos a todos los componentes de la pantalla
+     */
     private void aplicarEstilos() {
         // Aplicar estilos al tema oscuro con neón
         EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
@@ -105,6 +110,9 @@ public class RegistroController implements Initializable {
         EstilosApp.aplicarEstiloHipervinculo(loginLink);
     }
 
+    /**
+     * Configura los botones de la ventana
+     */
     private void configurarBotonesVentana() {
         // Configurar los símbolos de los botones de ventana
         minimizeButton.setText("—");
@@ -117,26 +125,15 @@ public class RegistroController implements Initializable {
         closeButton.setMinWidth(30);
     }
 
+    /**
+     * Configura la validación de los campos del formulario
+     */
     private void configurarValidacion() {
         // Validación de email en tiempo real
         emailField.textProperty().addListener((observable, valorAnterior, valorNuevo) -> {
             if (!ValidacionUtil.esEmailValido(valorNuevo) && !valorNuevo.isEmpty()) {
-                // Resaltar con borde rojo cuando el email es inválido
-                emailField.setBorder(new Border(new BorderStroke(
-                        Color.rgb(255, 50, 50, 0.8),
-                        BorderStrokeStyle.SOLID,
-                        new CornerRadii(5),
-                        new BorderWidths(1.5)
-                )));
-
-                // Efecto de resplandor rojo
-                DropShadow sombraError = new DropShadow();
-                sombraError.setColor(Color.rgb(255, 0, 0, 0.5));
-                sombraError.setRadius(10);
-                sombraError.setSpread(0.1);
-                emailField.setEffect(sombraError);
+                aplicarEstiloError(emailField);
             } else {
-                // Restaurar estilo normal
                 EstilosApp.aplicarEstiloCampoTexto(emailField);
             }
         });
@@ -144,22 +141,8 @@ public class RegistroController implements Initializable {
         // Validación de contraseña en tiempo real
         passwordField.textProperty().addListener((observable, valorAnterior, valorNuevo) -> {
             if (valorNuevo.length() < 6 && !valorNuevo.isEmpty()) {
-                // Resaltar con borde rojo cuando la contraseña es demasiado corta
-                passwordField.setBorder(new Border(new BorderStroke(
-                        Color.rgb(255, 50, 50, 0.8),
-                        BorderStrokeStyle.SOLID,
-                        new CornerRadii(5),
-                        new BorderWidths(1.5)
-                )));
-
-                // Efecto de resplandor rojo
-                DropShadow sombraError = new DropShadow();
-                sombraError.setColor(Color.rgb(255, 0, 0, 0.5));
-                sombraError.setRadius(10);
-                sombraError.setSpread(0.1);
-                passwordField.setEffect(sombraError);
+                aplicarEstiloError(passwordField);
             } else {
-                // Restaurar estilo normal
                 EstilosApp.aplicarEstiloCampoContraseña(passwordField);
             }
         });
@@ -167,27 +150,36 @@ public class RegistroController implements Initializable {
         // Validar que las contraseñas coincidan
         confirmPasswordField.textProperty().addListener((observable, valorAnterior, valorNuevo) -> {
             if (!valorNuevo.equals(passwordField.getText()) && !valorNuevo.isEmpty()) {
-                // Resaltar con borde rojo cuando las contraseñas no coinciden
-                confirmPasswordField.setBorder(new Border(new BorderStroke(
-                        Color.rgb(255, 50, 50, 0.8),
-                        BorderStrokeStyle.SOLID,
-                        new CornerRadii(5),
-                        new BorderWidths(1.5)
-                )));
-
-                // Efecto de resplandor rojo
-                DropShadow sombraError = new DropShadow();
-                sombraError.setColor(Color.rgb(255, 0, 0, 0.5));
-                sombraError.setRadius(10);
-                sombraError.setSpread(0.1);
-                confirmPasswordField.setEffect(sombraError);
+                aplicarEstiloError(confirmPasswordField);
             } else {
-                // Restaurar estilo normal
                 EstilosApp.aplicarEstiloCampoContraseña(confirmPasswordField);
             }
         });
     }
 
+    /**
+     * Aplica estilo de error a un campo
+     */
+    private void aplicarEstiloError(Control campo) {
+        // Resaltar con borde rojo cuando hay error
+        campo.setBorder(new Border(new BorderStroke(
+                Color.rgb(255, 50, 50, 0.8),
+                BorderStrokeStyle.SOLID,
+                new CornerRadii(5),
+                new BorderWidths(1.5)
+        )));
+
+        // Efecto de resplandor rojo
+        DropShadow sombraError = new DropShadow();
+        sombraError.setColor(Color.rgb(255, 0, 0, 0.5));
+        sombraError.setRadius(10);
+        sombraError.setSpread(0.1);
+        campo.setEffect(sombraError);
+    }
+
+    /**
+     * Configura el arrastre de la ventana
+     */
     private void configurarVentanaArrastrable() {
         titleBar.setOnMousePressed(evento -> {
             offsetX = evento.getSceneX();
@@ -201,12 +193,18 @@ public class RegistroController implements Initializable {
         });
     }
 
+    /**
+     * Maneja la acción de minimizar la ventana
+     */
     @FXML
     private void handleMinimizeAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
         escenario.setIconified(true);
     }
 
+    /**
+     * Maneja la acción de maximizar/restaurar la ventana
+     */
     @FXML
     private void handleMaximizeAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
@@ -220,12 +218,18 @@ public class RegistroController implements Initializable {
         }
     }
 
+    /**
+     * Maneja la acción de cerrar la ventana
+     */
     @FXML
     private void handleCloseAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
         escenario.close();
     }
 
+    /**
+     * Maneja la acción del botón de registro
+     */
     @FXML
     private void handleRegistroButtonAction(ActionEvent evento) {
         // Obtener valores de los campos
@@ -285,37 +289,30 @@ public class RegistroController implements Initializable {
         }
     }
 
+    /**
+     * Maneja la acción del enlace para ir a login
+     */
     @FXML
     private void handleLoginLinkAction(ActionEvent evento) {
         irALogin();
     }
 
+    /**
+     * Navega a la pantalla de login
+     */
     private void irALogin() {
         try {
-            // Cargar la vista de login
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
-            Parent raizLogin = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaLogin = new Scene(raizLogin);
-            escenaLogin.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
             Stage escenarioActual = (Stage) mainPane.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaLogin);
-            escenarioActual.setTitle("SmartSave - Login");
-
-            // Centrar en pantalla
-            escenarioActual.centerOnScreen();
-
-        } catch (IOException e) {
+            navegacionServicio.navegarALogin(escenarioActual);
+        } catch (Exception e) {
             mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación",
                     "Error al cargar la pantalla de login: " + e.getMessage());
         }
     }
 
+    /**
+     * Muestra una alerta estilizada
+     */
     private void mostrarAlerta(Alert.AlertType tipo, String titulo, String mensaje) {
         Alert alerta = new Alert(tipo);
         alerta.setTitle(titulo);

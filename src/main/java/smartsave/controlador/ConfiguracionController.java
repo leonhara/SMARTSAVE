@@ -8,9 +8,6 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import smartsave.utilidad.EstilosApp;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 /**
  * Controlador para la vista de Configuración
  * Extiende BaseController para heredar funcionalidad común
@@ -21,10 +18,7 @@ public class ConfiguracionController extends BaseController {
     @FXML private ComboBox<String> temaComboBox;
     @FXML private ComboBox<String> idiomaComboBox;
 
-    @FXML private Button copiaSeguridad;
-    @FXML private Button exportarDatos;
     @FXML private Button cambiarContrasena;
-    @FXML private Label fechaUltimaCopia;
 
     @FXML private Label versionLabel;
     @FXML private Label autorLabel;
@@ -33,9 +27,6 @@ public class ConfiguracionController extends BaseController {
     @FXML private Button licenciaButton;
     @FXML private Button privacidadButton;
     @FXML private Button acercaDeButton;
-
-    @FXML private Button guardarConfiguracion;
-    @FXML private Button restablecerConfiguracion;
 
     /**
      * Inicialización específica del controlador de configuración
@@ -65,14 +56,10 @@ public class ConfiguracionController extends BaseController {
         EstilosApp.aplicarEstiloComboBox(idiomaComboBox);
 
         // Aplicar estilos a los botones
-        EstilosApp.aplicarEstiloBotonPrimario(copiaSeguridad);
-        EstilosApp.aplicarEstiloBotonPrimario(exportarDatos);
         EstilosApp.aplicarEstiloBotonPrimario(cambiarContrasena);
         EstilosApp.aplicarEstiloBotonPrimario(licenciaButton);
         EstilosApp.aplicarEstiloBotonPrimario(privacidadButton);
         EstilosApp.aplicarEstiloBotonPrimario(acercaDeButton);
-        EstilosApp.aplicarEstiloBotonPrimario(guardarConfiguracion);
-        EstilosApp.aplicarEstiloBotonPrimario(restablecerConfiguracion);
 
         // Aplicar estilos a las etiquetas de información
         estilizarEtiquetasInformacion();
@@ -96,7 +83,6 @@ public class ConfiguracionController extends BaseController {
         autorLabel.setStyle(estiloEtiquetaInfo);
         fechaCompilacionLabel.setStyle(estiloEtiquetaInfo);
         centroLabel.setStyle(estiloEtiquetaInfo);
-        fechaUltimaCopia.setStyle(estiloEtiquetaInfo);
     }
 
     /**
