@@ -4,44 +4,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import smartsave.modelo.Transaccion;
-import smartsave.servicio.NavegacionServicio;
-import smartsave.utilidad.EstilosApp;
+import smartsave.servicio.TransaccionServicio;
 
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
 
-public class DashboardController implements Initializable {
-
-    // Referencias a elementos principales del layout (mantener nombres FXML originales)
-    @FXML private BorderPane mainPane;
-    @FXML private HBox titleBar;
-    @FXML private VBox sideMenu;
-
-    // Referencias a elementos del menú y controles
-    @FXML private Button dashboardButton;
-    @FXML private Button transactionsButton;
-    @FXML private Button nutritionButton;
-    @FXML private Button shoppingButton;
-    @FXML private Button savingsButton;
-    @FXML private Button reportsButton;
-    @FXML private Button settingsButton;
-    @FXML private Button profileButton;
-    @FXML private Button logoutButton;
-    @FXML private Button minimizeButton;
-    @FXML private Button maximizeButton;
-    @FXML private Button closeButton;
+/**
+ * Controlador para la vista de Dashboard
+ * Extiende de BaseController para heredar funcionalidad común
+ */
+public class DashboardController extends BaseController {
 
     // Referencias a los gráficos
     @FXML private PieChart expensesPieChart;
@@ -70,87 +49,92 @@ public class DashboardController implements Initializable {
     @FXML private ProgressBar goal2Progress;
     @FXML private ProgressBar goal3Progress;
 
-    // Servicio de navegación
-    private final NavegacionServicio navegacionServicio = NavegacionServicio.getInstancia();
+    // Botones específicos del dashboard
+    @FXML private Button viewAllTransactionsButton;
+    @FXML private Button addGoalButton;
 
-    // Variables para permitir el arrastre de la ventana
-    private double offsetX = 0;
-    private double offsetY = 0;
+    // Servicio para datos de transacciones
+    private final TransaccionServicio transaccionServicio = new TransaccionServicio();
 
+    /**
+     * Inicialización específica del dashboard
+     * Implementa el método abstracto de BaseController
+     */
     @Override
-    public void initialize(URL ubicacion, ResourceBundle recursos) {
-        // Aplicar estilos neón oscuros a los componentes
-        aplicarEstilos();
+    protected void inicializarControlador() {
+        // Destacar botón activo en la navegación
+        activarBoton(dashboardButton);
 
-        // Configurar el arrastre de la ventana
-        configurarVentanaArrastrable();
-
-        // Configurar botones de navegación
-        configurarBotonesNavegacion();
+        // Configurar tabla de transacciones
+        configurarTablaTransacciones();
 
         // Cargar datos de ejemplo
         cargarDatosDeMuestra();
     }
 
-    private void aplicarEstilos() {
-        // Aplicar estilos al tema oscuro con neón
-        EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
-        EstilosApp.aplicarEstiloBarraTitulo(titleBar);
-        EstilosApp.aplicarEstiloMenuLateral(sideMenu);
+    /**
+     * Configura las columnas y formato de la tabla de transacciones
+     */
+    private void configurarTablaTransacciones() {
+        // Configurar columnas de la tabla
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+        descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        categoryColumn.setCellValueFactory(new PropertyValueFactory<>("categoria"));
+        amountColumn.setCellValueFactory(new PropertyValueFactory<>("monto"));
+        typeColumn.setCellValueFactory(new PropertyValueFactory<>("tipo"));
 
-        // Aplicar estilos a los botones de la ventana
-        EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(maximizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(closeButton);
-
-        // Aplicar estilos a los botones de navegación
-        EstilosApp.aplicarEstiloBotonNavegacion(dashboardButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(transactionsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(nutritionButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(shoppingButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(savingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(reportsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(settingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(profileButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(logoutButton);
-
-        // Destacar el botón de dashboard como seleccionado
-        dashboardButton.getStyleClass().add("selected");
-
-        // Aplicar estilos a los gráficos
-        EstilosApp.aplicarEstiloGrafico(expensesPieChart);
-        EstilosApp.aplicarEstiloGrafico(evolutionLineChart);
-
-        // Aplicar estilos a la tabla
-        EstilosApp.aplicarEstiloTabla(transactionsTable);
+        // Formatear celdas de fecha y monto con colores según tipo
+        formatearCeldasTabla();
     }
 
-    private void configurarVentanaArrastrable() {
-        titleBar.setOnMousePressed(evento -> {
-            offsetX = evento.getSceneX();
-            offsetY = evento.getSceneY();
+    /**
+     * Aplica formato visual a las celdas de la tabla
+     */
+    private void formatearCeldasTabla() {
+        // Formato de fecha
+        dateColumn.setCellFactory(column -> new TableCell<>() {
+            private final java.time.format.DateTimeFormatter formatter =
+                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            @Override
+            protected void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(formatter.format(item));
+                }
+            }
         });
 
-        titleBar.setOnMouseDragged(evento -> {
-            Stage escenario = (Stage) titleBar.getScene().getWindow();
-            escenario.setX(evento.getScreenX() - offsetX);
-            escenario.setY(evento.getScreenY() - offsetY);
+        // Formato de monto con colores según tipo (ingreso/gasto)
+        amountColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("€%.2f", item));
+
+                    // Colorear según sea ingreso o gasto
+                    int index = getIndex();
+                    if (index >= 0 && index < getTableView().getItems().size()) {
+                        Transaccion transaccion = getTableView().getItems().get(index);
+                        if ("Ingreso".equals(transaccion.getTipo())) {
+                            setTextFill(javafx.scene.paint.Color.rgb(100, 220, 100)); // Verde para ingresos
+                        } else {
+                            setTextFill(javafx.scene.paint.Color.rgb(220, 100, 100)); // Rojo para gastos
+                        }
+                    }
+                }
+            }
         });
     }
 
-    private void configurarBotonesNavegacion() {
-        // Configurar acción al seleccionar botones del menú
-        dashboardButton.setOnAction(this::handleDashboardAction);
-        transactionsButton.setOnAction(this::handleTransactionsAction);
-        nutritionButton.setOnAction(this::handleNutritionAction);
-        shoppingButton.setOnAction(this::handleShoppingAction);
-        savingsButton.setOnAction(this::handleSavingsAction);
-        reportsButton.setOnAction(this::handleReportsAction);
-        settingsButton.setOnAction(this::handleSettingsAction);
-        profileButton.setOnAction(this::handleProfileAction);
-        logoutButton.setOnAction(this::handleLogoutAction);
-    }
-
+    /**
+     * Carga datos de muestra para el dashboard
+     */
     private void cargarDatosDeMuestra() {
         // Cargar datos para el gráfico de distribución de gastos
         ObservableList<PieChart.Data> datosGraficoTorta = FXCollections.observableArrayList(
@@ -163,42 +147,60 @@ public class DashboardController implements Initializable {
         expensesPieChart.setData(datosGraficoTorta);
 
         // Cargar datos para el gráfico de evolución
+        cargarGraficoEvolucion();
+
+        // Cargar datos para la tabla de transacciones
+        cargarTransaccionesRecientes();
+    }
+
+    /**
+     * Carga el gráfico de evolución con series de datos
+     */
+    private void cargarGraficoEvolucion() {
+        // Serie de ingresos
         XYChart.Series<String, Number> serieIngresos = new XYChart.Series<>();
         serieIngresos.setName("Ingresos");
-        serieIngresos.getData().add(new XYChart.Data<>("Ene", 2000));
-        serieIngresos.getData().add(new XYChart.Data<>("Feb", 2000));
-        serieIngresos.getData().add(new XYChart.Data<>("Mar", 2200));
-        serieIngresos.getData().add(new XYChart.Data<>("Abr", 2200));
-        serieIngresos.getData().add(new XYChart.Data<>("May", 2200));
-        serieIngresos.getData().add(new XYChart.Data<>("Jun", 2500));
+        serieIngresos.getData().addAll(
+                new XYChart.Data<>("Ene", 2000),
+                new XYChart.Data<>("Feb", 2000),
+                new XYChart.Data<>("Mar", 2200),
+                new XYChart.Data<>("Abr", 2200),
+                new XYChart.Data<>("May", 2200),
+                new XYChart.Data<>("Jun", 2500)
+        );
 
+        // Serie de gastos
         XYChart.Series<String, Number> serieGastos = new XYChart.Series<>();
         serieGastos.setName("Gastos");
-        serieGastos.getData().add(new XYChart.Data<>("Ene", 1800));
-        serieGastos.getData().add(new XYChart.Data<>("Feb", 1700));
-        serieGastos.getData().add(new XYChart.Data<>("Mar", 1900));
-        serieGastos.getData().add(new XYChart.Data<>("Abr", 1600));
-        serieGastos.getData().add(new XYChart.Data<>("May", 1550));
-        serieGastos.getData().add(new XYChart.Data<>("Jun", 1500));
+        serieGastos.getData().addAll(
+                new XYChart.Data<>("Ene", 1800),
+                new XYChart.Data<>("Feb", 1700),
+                new XYChart.Data<>("Mar", 1900),
+                new XYChart.Data<>("Abr", 1600),
+                new XYChart.Data<>("May", 1550),
+                new XYChart.Data<>("Jun", 1500)
+        );
 
+        // Serie de ahorros
         XYChart.Series<String, Number> serieAhorros = new XYChart.Series<>();
         serieAhorros.setName("Ahorros");
-        serieAhorros.getData().add(new XYChart.Data<>("Ene", 200));
-        serieAhorros.getData().add(new XYChart.Data<>("Feb", 300));
-        serieAhorros.getData().add(new XYChart.Data<>("Mar", 300));
-        serieAhorros.getData().add(new XYChart.Data<>("Abr", 600));
-        serieAhorros.getData().add(new XYChart.Data<>("May", 650));
-        serieAhorros.getData().add(new XYChart.Data<>("Jun", 1000));
+        serieAhorros.getData().addAll(
+                new XYChart.Data<>("Ene", 200),
+                new XYChart.Data<>("Feb", 300),
+                new XYChart.Data<>("Mar", 300),
+                new XYChart.Data<>("Abr", 600),
+                new XYChart.Data<>("May", 650),
+                new XYChart.Data<>("Jun", 1000)
+        );
 
+        // Agregar todas las series al gráfico
         evolutionLineChart.getData().addAll(serieIngresos, serieGastos, serieAhorros);
+    }
 
-        // Configurar tabla de transacciones
-        dateColumn.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-        descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
-        categoryColumn.setCellValueFactory(new PropertyValueFactory<>("categoria"));
-        amountColumn.setCellValueFactory(new PropertyValueFactory<>("monto"));
-        typeColumn.setCellValueFactory(new PropertyValueFactory<>("tipo"));
-
+    /**
+     * Carga transacciones recientes para la tabla
+     */
+    private void cargarTransaccionesRecientes() {
         // Datos de ejemplo para la tabla
         ObservableList<Transaccion> transacciones = FXCollections.observableArrayList(
                 new Transaccion(LocalDate.now().minusDays(1), "Supermercado El Corte Inglés", "Alimentos", 75.32, "Gasto"),
@@ -208,113 +210,41 @@ public class DashboardController implements Initializable {
                 new Transaccion(LocalDate.now().minusDays(12), "Dividendos Acciones", "Inversiones", 125.75, "Ingreso")
         );
 
+        // Cargar la tabla
         transactionsTable.setItems(transacciones);
     }
 
-    // Métodos de gestión de navegación simplificados usando NavegacionServicio
-
-    @FXML
-    private void handleMinimizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setIconified(true);
-    }
-
-    @FXML
-    private void handleMaximizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setMaximized(!escenario.isMaximized());
-
-        // Cambiar el símbolo del botón según el estado
-        if (escenario.isMaximized()) {
-            maximizeButton.setText("❐");  // Símbolo para restaurar
-        } else {
-            maximizeButton.setText("□");  // Símbolo para maximizar
-        }
-    }
-
-    @FXML
-    private void handleCloseAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.close();
-    }
-
-    @FXML
-    private void handleDashboardAction(ActionEvent evento) {
-        // Ya estamos en el dashboard, solo actualizamos el estilo
+    /**
+     * Sobrescribe el método de navegación al dashboard para no hacer nada
+     * Ya que estamos en el dashboard
+     */
+    @Override
+    public void handleDashboardAction(ActionEvent evento) {
+        // Ya estamos en el dashboard, solo refrescamos la vista si es necesario
         activarBoton(dashboardButton);
+        cargarDatosDeMuestra();
     }
 
-    @FXML
-    private void handleTransactionsAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) transactionsButton.getScene().getWindow();
-        navegacionServicio.navegarATransacciones(escenarioActual);
-    }
-
-    @FXML
-    private void handleNutritionAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
-        navegacionServicio.navegarANutricion(escenarioActual);
-    }
-
-    @FXML
-    private void handleShoppingAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
-        navegacionServicio.navegarACompras(escenarioActual);
-    }
-
-    @FXML
-    private void handleSavingsAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) savingsButton.getScene().getWindow();
-        navegacionServicio.navegarAAhorro(escenarioActual);
-    }
-
-    @FXML
-    private void handleReportsAction(ActionEvent evento) {
-        // Cambiar a la vista de informes
-        activarBoton(reportsButton);
-        navegacionServicio.mostrarAlertaNoImplementado("Informes");
-    }
-
-    @FXML
-    private void handleSettingsAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) settingsButton.getScene().getWindow();
-        navegacionServicio.navegarAConfiguracion(escenarioActual);
-    }
-
-    @FXML
-    private void handleProfileAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) profileButton.getScene().getWindow();
-        navegacionServicio.navegarAPerfil(escenarioActual);
-    }
-
-    @FXML
-    private void handleLogoutAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
-        navegacionServicio.confirmarCerrarSesion(escenarioActual);
-    }
-
+    /**
+     * Manejador para ver todas las transacciones
+     */
     @FXML
     private void handleViewAllTransactionsAction(ActionEvent evento) {
-        navegacionServicio.mostrarAlertaNoImplementado("Ver Todas las Transacciones");
+        navegacionServicio.navegarATransacciones(obtenerEscenarioActual());
     }
 
+    /**
+     * Manejador para añadir un nuevo objetivo
+     */
     @FXML
     private void handleAddGoalAction(ActionEvent evento) {
         navegacionServicio.mostrarAlertaNoImplementado("Añadir Objetivo");
     }
 
-    private void activarBoton(Button botonActivo) {
-        // Quitar la clase 'selected' de todos los botones
-        dashboardButton.getStyleClass().remove("selected");
-        transactionsButton.getStyleClass().remove("selected");
-        nutritionButton.getStyleClass().remove("selected");
-        shoppingButton.getStyleClass().remove("selected");
-        savingsButton.getStyleClass().remove("selected");
-        reportsButton.getStyleClass().remove("selected");
-        settingsButton.getStyleClass().remove("selected");
-        profileButton.getStyleClass().remove("selected");
-
-        // Añadir la clase 'selected' al botón activo
-        botonActivo.getStyleClass().add("selected");
+    /**
+     * Método auxiliar para obtener el escenario actual
+     */
+    private javafx.stage.Stage obtenerEscenarioActual() {
+        return (javafx.stage.Stage) mainPane.getScene().getWindow();
     }
 }

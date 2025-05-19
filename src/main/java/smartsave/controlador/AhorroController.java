@@ -4,42 +4,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 import smartsave.modelo.ModalidadAhorro;
 import smartsave.servicio.ModalidadAhorroServicio;
-import smartsave.servicio.NavegacionServicio;
-import smartsave.servicio.TransaccionServicio;
 import smartsave.utilidad.EstilosApp;
 
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class AhorroController implements Initializable {
-
-    // Referencias a elementos principales del layout
-    @FXML private BorderPane mainPane;
-    @FXML private HBox titleBar;
-    @FXML private VBox sideMenu;
-
-    // Referencias a los elementos de menú
-    @FXML private Button dashboardButton;
-    @FXML private Button transactionsButton;
-    @FXML private Button nutritionButton;
-    @FXML private Button shoppingButton;
-    @FXML private Button savingsButton;
-    @FXML private Button reportsButton;
-    @FXML private Button settingsButton;
-    @FXML private Button profileButton;
-    @FXML private Button logoutButton;
-    @FXML private Button minimizeButton;
-    @FXML private Button maximizeButton;
-    @FXML private Button closeButton;
+/**
+ * Controlador para la vista de Modalidades de Ahorro
+ * Extiende BaseController para heredar funcionalidad común
+ */
+public class AhorroController extends BaseController {
 
     // Referencias a elementos específicos de la pantalla de ahorro
     @FXML private ListView<ModalidadAhorro> modalidadesListView;
@@ -65,67 +46,37 @@ public class AhorroController implements Initializable {
     @FXML private PieChart distribucionGastosChart;
 
     // Servicios
-    private ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
-    private TransaccionServicio transaccionServicio = new TransaccionServicio();
-    private final NavegacionServicio navegacionServicio = NavegacionServicio.getInstancia();
+    private final ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
 
     // Variables de estado
     private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
     private ModalidadAhorro modalidadSeleccionada = null;
     private boolean modalidadAplicada = false;
 
-    // Variables para permitir el arrastre de la ventana
-    private double offsetX = 0;
-    private double offsetY = 0;
-
+    /**
+     * Inicialización específica del controlador de ahorro
+     * Implementación del método abstracto de BaseController
+     */
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        // Aplicar estilos
-        aplicarEstilos();
-
-        // Configurar el arrastre de la ventana
-        configurarVentanaArrastrable();
-
-        // Configurar botones de navegación
-        configurarBotonesNavegacion();
+    protected void inicializarControlador() {
+        // Destacar el botón de ahorros como seleccionado
+        activarBoton(savingsButton);
 
         // Inicializar pantalla de modalidades de ahorro
         inicializarPantallaAhorro();
 
         // Cargar datos
         cargarModalidades();
+
+        // Aplicar estilos personalizados
+        aplicarEstilosComponentes();
     }
 
-    private void aplicarEstilos() {
-        // Aplicar estilos al tema oscuro con neón
-        EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
-        EstilosApp.aplicarEstiloBarraTitulo(titleBar);
-        EstilosApp.aplicarEstiloMenuLateral(sideMenu);
-
-        // Aplicar estilos a los botones de la ventana
-        EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(maximizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(closeButton);
-
-        // Aplicar estilos a los botones de navegación
-        EstilosApp.aplicarEstiloBotonNavegacion(dashboardButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(transactionsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(nutritionButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(shoppingButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(savingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(reportsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(settingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(profileButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(logoutButton);
-
-        // Destacar el botón de ahorros como seleccionado
-        savingsButton.getStyleClass().add("selected");
-
-        // Aplicar estilos a los botones principales
-        EstilosApp.aplicarEstiloBotonPrimario(aplicarModalidadButton);
-        EstilosApp.aplicarEstiloBotonPrimario(calcularButton);
-
-        // Aplicar estilos a ListView y TextArea
+    /**
+     * Aplica estilos a los componentes específicos de esta pantalla
+     */
+    private void aplicarEstilosComponentes() {
+        // Aplicar estilos al ListView y TextArea
         modalidadesListView.setStyle(
                 "-fx-background-color: rgba(30, 30, 40, 0.7); " +
                         "-fx-background-radius: 5px; " +
@@ -142,46 +93,29 @@ public class AhorroController implements Initializable {
                         "-fx-text-fill: white;"
         );
 
-        descripcionModalidadTextArea.setStyle(
-                "-fx-background-color: rgba(40, 40, 50, 0.7); " +
-                        "-fx-text-fill: rgb(230, 230, 250); " +
-                        "-fx-border-color: rgba(80, 80, 120, 0.5); " +
-                        "-fx-border-radius: 5px;"
-        );
+        // Aplicar estilos a TextArea
+        EstilosApp.aplicarEstiloTextArea(descripcionModalidadTextArea);
 
         // Aplicar estilos a los campos de texto
         EstilosApp.aplicarEstiloCampoTexto(presupuestoEjemploField);
 
+        // Aplicar estilos a los botones principales
+        EstilosApp.aplicarEstiloBotonPrimario(aplicarModalidadButton);
+        EstilosApp.aplicarEstiloBotonPrimario(calcularButton);
+
         // Aplicar estilos al gráfico
         EstilosApp.aplicarEstiloGrafico(distribucionGastosChart);
+
+        // Aplicar estilos a los paneles
+        if (resultadoCalculoPane.isVisible()) {
+            EstilosApp.aplicarEstiloTarjeta(resultadoCalculoPane);
+        }
+        EstilosApp.aplicarEstiloTarjeta(ejemploCalculoPane);
     }
 
-    private void configurarVentanaArrastrable() {
-        titleBar.setOnMousePressed(evento -> {
-            offsetX = evento.getSceneX();
-            offsetY = evento.getSceneY();
-        });
-
-        titleBar.setOnMouseDragged(evento -> {
-            Stage escenario = (Stage) titleBar.getScene().getWindow();
-            escenario.setX(evento.getScreenX() - offsetX);
-            escenario.setY(evento.getScreenY() - offsetY);
-        });
-    }
-
-    private void configurarBotonesNavegacion() {
-        // Configurar acción al seleccionar botones del menú
-        dashboardButton.setOnAction(this::handleDashboardAction);
-        transactionsButton.setOnAction(this::handleTransactionsAction);
-        nutritionButton.setOnAction(this::handleNutritionAction);
-        shoppingButton.setOnAction(this::handleShoppingAction);
-        savingsButton.setOnAction(this::handleSavingsAction);
-        reportsButton.setOnAction(this::handleReportsAction);
-        settingsButton.setOnAction(this::handleSettingsAction);
-        profileButton.setOnAction(this::handleProfileAction);
-        logoutButton.setOnAction(this::handleLogoutAction);
-    }
-
+    /**
+     * Inicializa la pantalla de ahorro
+     */
     private void inicializarPantallaAhorro() {
         // Configurar la selección de modalidad
         modalidadesListView.getSelectionModel().selectedItemProperty().addListener(
@@ -280,6 +214,9 @@ public class AhorroController implements Initializable {
         resultadoCalculoPane.setManaged(false);
     }
 
+    /**
+     * Carga las modalidades de ahorro desde el servicio
+     */
     private void cargarModalidades() {
         // Obtener todas las modalidades
         List<ModalidadAhorro> modalidades = modalidadServicio.obtenerTodasModalidades();
@@ -293,6 +230,9 @@ public class AhorroController implements Initializable {
         }
     }
 
+    /**
+     * Muestra los detalles de la modalidad seleccionada
+     */
     private void mostrarDetalleModalidad(ModalidadAhorro modalidad) {
         modalidadSeleccionada = modalidad;
 
@@ -349,6 +289,9 @@ public class AhorroController implements Initializable {
         aplicarModalidadButton.setDisable(modalidadAplicada);
     }
 
+    /**
+     * Manejador para el cálculo de ejemplo con presupuesto personalizado
+     */
     @FXML
     private void handleCalcularEjemplo(ActionEvent event) {
         if (modalidadSeleccionada == null) {
@@ -393,11 +336,17 @@ public class AhorroController implements Initializable {
             resultadoCalculoPane.setVisible(true);
             resultadoCalculoPane.setManaged(true);
 
+            // Aplicar estilo a la tarjeta de resultados
+            EstilosApp.aplicarEstiloTarjeta(resultadoCalculoPane);
+
         } catch (NumberFormatException e) {
             navegacionServicio.mostrarAlertaError("Formato incorrecto", "Por favor, ingresa un valor numérico válido.");
         }
     }
 
+    /**
+     * Manejador para aplicar la modalidad seleccionada
+     */
     @FXML
     private void handleAplicarModalidad(ActionEvent event) {
         if (modalidadSeleccionada == null) {
@@ -412,131 +361,18 @@ public class AhorroController implements Initializable {
         aplicarModalidadButton.setText("Modalidad Aplicada");
         aplicarModalidadButton.setDisable(true);
 
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle("Modalidad Aplicada");
-        alerta.setHeaderText(null);
-        alerta.setContentText("La modalidad de ahorro '" + modalidadSeleccionada.getNombre() +
-                "' ha sido aplicada correctamente. Se utilizará en tus recomendaciones de compra y presupuesto.");
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alerta.showAndWait();
+        navegacionServicio.mostrarAlertaInformacion("Modalidad Aplicada",
+                "La modalidad de ahorro '" + modalidadSeleccionada.getNombre() +
+                        "' ha sido aplicada correctamente. Se utilizará en tus recomendaciones de compra y presupuesto.");
     }
 
-    @FXML
-    private void handleMinimizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setIconified(true);
-    }
-
-    @FXML
-    private void handleMaximizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setMaximized(!escenario.isMaximized());
-
-        // Cambiar el símbolo del botón según el estado
-        if (escenario.isMaximized()) {
-            maximizeButton.setText("❐");  // Símbolo para restaurar
-        } else {
-            maximizeButton.setText("□");  // Símbolo para maximizar
-        }
-    }
-
-    @FXML
-    private void handleCloseAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.close();
-    }
-
-    // Métodos de navegación simplificados con NavegacionServicio
-
-    @FXML
-    private void handleDashboardAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
-        navegacionServicio.navegarADashboard(escenarioActual);
-    }
-
-    @FXML
-    private void handleTransactionsAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) transactionsButton.getScene().getWindow();
-        navegacionServicio.navegarATransacciones(escenarioActual);
-    }
-
-    @FXML
-    private void handleNutritionAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
-        navegacionServicio.navegarANutricion(escenarioActual);
-    }
-
-    @FXML
-    private void handleShoppingAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
-        navegacionServicio.navegarACompras(escenarioActual);
-    }
-
-    @FXML
-    private void handleSavingsAction(ActionEvent evento) {
+    /**
+     * Sobrescribe el método de navegación a ahorros
+     * Ya que estamos en la vista de modalidades de ahorro
+     */
+    @Override
+    public void handleSavingsAction(ActionEvent evento) {
         // Ya estamos en la vista de modalidades de ahorro, solo activamos el botón
         activarBoton(savingsButton);
-    }
-
-    @FXML
-    private void handleReportsAction(ActionEvent evento) {
-        // Cambiar a la vista de informes
-        activarBoton(reportsButton);
-        navegacionServicio.mostrarAlertaNoImplementado("Informes");
-    }
-
-    @FXML
-    private void handleSettingsAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) settingsButton.getScene().getWindow();
-        navegacionServicio.navegarAConfiguracion(escenarioActual);
-    }
-
-    @FXML
-    private void handleProfileAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) profileButton.getScene().getWindow();
-        navegacionServicio.navegarAPerfil(escenarioActual);
-    }
-
-    @FXML
-    private void handleLogoutAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
-        navegacionServicio.confirmarCerrarSesion(escenarioActual);
-    }
-
-    private void activarBoton(Button botonActivo) {
-        // Quitar la clase 'selected' de todos los botones
-        dashboardButton.getStyleClass().remove("selected");
-        transactionsButton.getStyleClass().remove("selected");
-        nutritionButton.getStyleClass().remove("selected");
-        shoppingButton.getStyleClass().remove("selected");
-        savingsButton.getStyleClass().remove("selected");
-        reportsButton.getStyleClass().remove("selected");
-        settingsButton.getStyleClass().remove("selected");
-        profileButton.getStyleClass().remove("selected");
-
-        // Añadir la clase 'selected' al botón activo
-        botonActivo.getStyleClass().add("selected");
     }
 }

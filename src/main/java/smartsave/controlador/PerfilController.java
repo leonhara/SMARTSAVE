@@ -2,10 +2,6 @@ package smartsave.controlador;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -20,33 +16,17 @@ import smartsave.servicio.TransaccionServicio;
 import smartsave.utilidad.EstilosApp;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.net.URL;
 
-public class PerfilController implements Initializable {
-
-    // Referencias a elementos principales del layout
-    @FXML private BorderPane mainPane;
-    @FXML private HBox titleBar;
-    @FXML private VBox sideMenu;
-
-    // Referencias a los elementos de menú
-    @FXML private Button dashboardButton;
-    @FXML private Button transactionsButton;
-    @FXML private Button nutritionButton;
-    @FXML private Button shoppingButton;
-    @FXML private Button savingsButton;
-    @FXML private Button reportsButton;
-    @FXML private Button settingsButton;
-    @FXML private Button profileButton;
-    @FXML private Button logoutButton;
-    @FXML private Button minimizeButton;
-    @FXML private Button maximizeButton;
-    @FXML private Button closeButton;
+/**
+ * Controlador para la vista de Perfil de Usuario
+ * Extiende BaseController para heredar funcionalidad común
+ */
+public class PerfilController extends BaseController {
 
     // Referencias a elementos del perfil
     @FXML private Circle profilePhotoCircle;
@@ -76,95 +56,113 @@ public class PerfilController implements Initializable {
     @FXML private Button eliminarCuentaButton;
 
     // Servicios
-    private UsuarioServicio usuarioServicio = new UsuarioServicio();
-    private TransaccionServicio transaccionServicio = new TransaccionServicio();
+    private final UsuarioServicio usuarioServicio = new UsuarioServicio();
+    private final TransaccionServicio transaccionServicio = new TransaccionServicio();
 
     // Variables de estado
     private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
     private Usuario usuarioActual;
 
-    // Variables para permitir el arrastre de la ventana
-    private double offsetX = 0;
-    private double offsetY = 0;
-
+    /**
+     * Inicialización específica del controlador de perfil
+     * Implementación del método abstracto de BaseController
+     */
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        // Aplicar estilos
-        aplicarEstilos();
-
-        // Configurar el arrastre de la ventana
-        configurarVentanaArrastrable();
-
-        // Configurar botones de navegación
-        configurarBotonesNavegacion();
+    protected void inicializarControlador() {
+        // Destacar el botón de perfil como seleccionado
+        activarBoton(profileButton);
 
         // Cargar datos del usuario
         cargarDatosUsuario();
 
         // Cargar datos financieros
         cargarDatosFinancieros();
+
+        // Aplicar estilos personalizados
+        aplicarEstilosComponentes();
     }
 
-    private void aplicarEstilos() {
-        // Aplicar estilos al tema oscuro con neón
-        EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
-        EstilosApp.aplicarEstiloBarraTitulo(titleBar);
-        EstilosApp.aplicarEstiloMenuLateral(sideMenu);
-
-        // Aplicar estilos a los botones de la ventana
-        EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(maximizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(closeButton);
-
-        // Aplicar estilos a los botones de navegación
-        EstilosApp.aplicarEstiloBotonNavegacion(dashboardButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(transactionsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(nutritionButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(shoppingButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(savingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(reportsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(settingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(profileButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(logoutButton);
-
-        // Destacar el botón de perfil como seleccionado
-        profileButton.getStyleClass().add("selected");
-
+    /**
+     * Aplica estilos a los componentes específicos de esta pantalla
+     */
+    private void aplicarEstilosComponentes() {
         // Aplicar estilos a los botones principales
         EstilosApp.aplicarEstiloBotonPrimario(cambiarFotoButton);
         EstilosApp.aplicarEstiloBotonPrimario(editarDatosButton);
         EstilosApp.aplicarEstiloBotonPrimario(cambiarModalidadButton);
         EstilosApp.aplicarEstiloBotonPrimario(configurarPerfilButton);
         EstilosApp.aplicarEstiloBotonPrimario(exportarDatosButton);
-        EstilosApp.aplicarEstiloBotonPrimario(eliminarCuentaButton);
-    }
 
-    private void configurarVentanaArrastrable() {
-        titleBar.setOnMousePressed(evento -> {
-            offsetX = evento.getSceneX();
-            offsetY = evento.getSceneY();
+        // Estilo especial para el botón de eliminar cuenta (rojo)
+        eliminarCuentaButton.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, rgb(255,50,50), rgb(200,50,50)); " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-size: 13px; " +
+                        "-fx-padding: 8px 20px; " +
+                        "-fx-background-radius: 5px; " +
+                        "-fx-cursor: hand;"
+        );
+
+        // Efecto hover para el botón de eliminar
+        eliminarCuentaButton.setOnMouseEntered(e -> {
+            eliminarCuentaButton.setStyle(
+                    "-fx-background-color: linear-gradient(to bottom, rgb(255,70,70), rgb(220,70,70)); " +
+                            "-fx-text-fill: white; " +
+                            "-fx-font-size: 13px; " +
+                            "-fx-padding: 8px 20px; " +
+                            "-fx-background-radius: 5px; " +
+                            "-fx-cursor: hand;"
+            );
         });
 
-        titleBar.setOnMouseDragged(evento -> {
-            Stage escenario = (Stage) titleBar.getScene().getWindow();
-            escenario.setX(evento.getScreenX() - offsetX);
-            escenario.setY(evento.getScreenY() - offsetY);
+        eliminarCuentaButton.setOnMouseExited(e -> {
+            eliminarCuentaButton.setStyle(
+                    "-fx-background-color: linear-gradient(to bottom, rgb(255,50,50), rgb(200,50,50)); " +
+                            "-fx-text-fill: white; " +
+                            "-fx-font-size: 13px; " +
+                            "-fx-padding: 8px 20px; " +
+                            "-fx-background-radius: 5px; " +
+                            "-fx-cursor: hand;"
+            );
         });
+
+        // Aplicar estilos a los paneles
+        estilizarPanelesDeDatos();
     }
 
-    private void configurarBotonesNavegacion() {
-        // Configurar acción al seleccionar botones del menú
-        dashboardButton.setOnAction(this::handleDashboardAction);
-        transactionsButton.setOnAction(this::handleTransactionsAction);
-        nutritionButton.setOnAction(this::handleNutritionAction);
-        shoppingButton.setOnAction(this::handleShoppingAction);
-        savingsButton.setOnAction(this::handleSavingsAction);
-        reportsButton.setOnAction(this::handleReportsAction);
-        settingsButton.setOnAction(this::handleSettingsAction);
-        profileButton.setOnAction(this::handleProfileAction);
-        logoutButton.setOnAction(this::handleLogoutAction);
+    /**
+     * Aplica estilos a los paneles de datos
+     */
+    private void estilizarPanelesDeDatos() {
+        // Encontrar todos los paneles VBox que contengan datos
+        if (nombreCompletoLabel.getParent() instanceof VBox) {
+            EstilosApp.aplicarEstiloTarjeta((Pane) nombreCompletoLabel.getParent());
+        }
+
+        if (modalidadActualLabel.getParent() instanceof VBox) {
+            EstilosApp.aplicarEstiloTarjeta((Pane) modalidadActualLabel.getParent());
+        }
+
+        if (balanceActualLabel.getParent() instanceof VBox) {
+            EstilosApp.aplicarEstiloTarjeta((Pane) balanceActualLabel.getParent());
+        }
+
+        // Estilizar etiquetas con valores importantes
+        balanceActualLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        totalAhorradoLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        ingresosMesLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        gastosMesLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        // Colorear según valores
+        if (balanceActualLabel.getText().startsWith("€") && !balanceActualLabel.getText().equals("€0.00")) {
+            double valor = Double.parseDouble(balanceActualLabel.getText().substring(1).replace(",", "."));
+            balanceActualLabel.setTextFill(valor >= 0 ? Color.rgb(100, 220, 100) : Color.rgb(220, 100, 100));
+        }
     }
 
+    /**
+     * Carga los datos del usuario desde el servicio
+     */
     private void cargarDatosUsuario() {
         // Cargar datos del usuario actual
         usuarioActual = usuarioServicio.obtenerUsuarioPorId(usuarioIdActual);
@@ -203,6 +201,9 @@ public class PerfilController implements Initializable {
         }
     }
 
+    /**
+     * Carga los datos financieros del usuario
+     */
     private void cargarDatosFinancieros() {
         // Calcular días usando la app
         if (usuarioActual != null && usuarioActual.getFechaRegistro() != null) {
@@ -229,224 +230,13 @@ public class PerfilController implements Initializable {
         if (balance >= 0) {
             balanceActualLabel.setTextFill(Color.rgb(100, 220, 100)); // Verde
         } else {
-            balanceActualLabel.setTextFill(Color.rgb(255, 100, 100)); // Rojo
+            balanceActualLabel.setTextFill(Color.rgb(220, 100, 100)); // Rojo
         }
     }
 
-    // Manejadores de eventos
-
-    @FXML
-    private void handleMinimizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setIconified(true);
-    }
-
-    @FXML
-    private void handleMaximizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setMaximized(!escenario.isMaximized());
-
-        // Cambiar el símbolo del botón según el estado
-        if (escenario.isMaximized()) {
-            maximizeButton.setText("❐");  // Símbolo para restaurar
-        } else {
-            maximizeButton.setText("□");  // Símbolo para maximizar
-        }
-    }
-
-    @FXML
-    private void handleCloseAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.close();
-    }
-
-    @FXML
-    private void handleDashboardAction(ActionEvent evento) {
-        try {
-            // Cargar la vista del dashboard
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
-            Parent raizDashboard = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaDashboard = new Scene(raizDashboard);
-            escenaDashboard.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaDashboard);
-            escenarioActual.setTitle("SmartSave - Dashboard");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar el dashboard: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleTransactionsAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de transacciones
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/transacciones.fxml"));
-            Parent raizTransacciones = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaTransacciones = new Scene(raizTransacciones);
-            escenaTransacciones.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) transactionsButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaTransacciones);
-            escenarioActual.setTitle("SmartSave - Gestión de Ingresos y Gastos");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de transacciones: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleNutritionAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de perfil nutricional
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/nutricion.fxml"));
-            Parent raizNutricion = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaNutricion = new Scene(raizNutricion);
-            escenaNutricion.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaNutricion);
-            escenarioActual.setTitle("SmartSave - Perfil Nutricional");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de perfil nutricional: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleShoppingAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de plan de compras
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/compras.fxml"));
-            Parent raizCompras = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaCompras = new Scene(raizCompras);
-            escenaCompras.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaCompras);
-            escenarioActual.setTitle("SmartSave - Plan de Compras");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de plan de compras: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleSavingsAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de modalidades de ahorro
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/ahorro.fxml"));
-            Parent raizAhorro = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaAhorro = new Scene(raizAhorro);
-            escenaAhorro.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) savingsButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaAhorro);
-            escenarioActual.setTitle("SmartSave - Modalidades de Ahorro");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de modalidades de ahorro: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleReportsAction(ActionEvent evento) {
-        // Cambiar a la vista de informes
-        activarBoton(reportsButton);
-        mostrarAlertaNoImplementado("Informes");
-    }
-
-    @FXML
-    private void handleSettingsAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de configuración
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/configuracion.fxml"));
-            Parent raizConfiguracion = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaConfiguracion = new Scene(raizConfiguracion);
-            escenaConfiguracion.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) settingsButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaConfiguracion);
-            escenarioActual.setTitle("SmartSave - Configuración");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de configuración: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleProfileAction(ActionEvent evento) {
-        // Ya estamos en la vista de perfil, solo actualizamos los datos
-        cargarDatosUsuario();
-        cargarDatosFinancieros();
-        activarBoton(profileButton);
-    }
-
-    @FXML
-    private void handleLogoutAction(ActionEvent evento) {
-        // Mostrar confirmación antes de cerrar sesión
-        Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
-        alerta.setTitle("Cerrar Sesión");
-        alerta.setHeaderText(null);
-        alerta.setContentText("¿Estás seguro que deseas cerrar la sesión?");
-
-        estilizarAlerta(alerta);
-
-        alerta.showAndWait().ifPresent(respuesta -> {
-            if (respuesta == ButtonType.OK) {
-                try {
-                    // Volver a la pantalla de login
-                    FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
-                    Parent raizLogin = cargador.load();
-
-                    Scene escenaLogin = new Scene(raizLogin);
-                    escenaLogin.setFill(Color.TRANSPARENT);
-
-                    Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
-                    escenarioActual.setScene(escenaLogin);
-                    escenarioActual.setTitle("SmartSave - Login");
-                    escenarioActual.centerOnScreen();
-
-                } catch (IOException e) {
-                    mostrarAlerta(Alert.AlertType.ERROR, "Error al volver a la pantalla de login", e.getMessage());
-                }
-            }
-        });
-    }
-
-    // Manejadores específicos del perfil
-
+    /**
+     * Manejador para cambiar la foto de perfil
+     */
     @FXML
     private void handleCambiarFotoAction(ActionEvent evento) {
         FileChooser fileChooser = new FileChooser();
@@ -465,15 +255,18 @@ public class PerfilController implements Initializable {
                 profilePhoto.setImage(imagen);
 
                 // En un caso real, aquí se guardaría la imagen en el servidor o base de datos
-                mostrarAlerta(Alert.AlertType.INFORMATION, "Foto actualizada",
+                navegacionServicio.mostrarAlertaInformacion("Foto actualizada",
                         "Tu foto de perfil ha sido actualizada correctamente.");
             } catch (Exception e) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error al cargar imagen",
+                navegacionServicio.mostrarAlertaError("Error al cargar imagen",
                         "No se pudo cargar la imagen seleccionada: " + e.getMessage());
             }
         }
     }
 
+    /**
+     * Manejador para editar datos personales
+     */
     @FXML
     private void handleEditarDatosAction(ActionEvent evento) {
         // Crear diálogo para editar datos personales
@@ -498,6 +291,11 @@ public class PerfilController implements Initializable {
         TextField emailField = new TextField();
         emailField.setPromptText("Email");
 
+        // Aplicar estilos a los campos
+        EstilosApp.aplicarEstiloCampoTexto(nombreField);
+        EstilosApp.aplicarEstiloCampoTexto(apellidosField);
+        EstilosApp.aplicarEstiloCampoTexto(emailField);
+
         // Cargar datos actuales
         if (usuarioActual != null) {
             nombreField.setText(usuarioActual.getNombre());
@@ -516,7 +314,7 @@ public class PerfilController implements Initializable {
         nombreField.requestFocus();
 
         // Estilizar el diálogo
-        estilizarDialog(dialog);
+        navegacionServicio.estilizarDialog(dialog);
 
         // Convertir el resultado cuando se presiona el botón guardar
         dialog.setResultConverter(dialogButton -> {
@@ -533,12 +331,12 @@ public class PerfilController implements Initializable {
 
             // Validar datos
             if (nombre.isEmpty() || apellidos.isEmpty() || email.isEmpty()) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error", "Todos los campos son obligatorios.");
+                navegacionServicio.mostrarAlertaError("Error", "Todos los campos son obligatorios.");
                 return;
             }
 
             if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error", "El email no tiene un formato válido.");
+                navegacionServicio.mostrarAlertaError("Error", "El email no tiene un formato válido.");
                 return;
             }
 
@@ -550,15 +348,17 @@ public class PerfilController implements Initializable {
             if (usuarioServicio.actualizarUsuario(usuarioActual)) {
                 // Recargar datos en la interfaz
                 cargarDatosUsuario();
-                mostrarAlerta(Alert.AlertType.INFORMATION, "Datos actualizados",
+                navegacionServicio.mostrarAlertaInformacion("Datos actualizados",
                         "Tus datos personales han sido actualizados correctamente.");
             } else {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudieron actualizar los datos.");
+                navegacionServicio.mostrarAlertaError("Error", "No se pudieron actualizar los datos.");
             }
         });
     }
 
-
+    /**
+     * Manejador para cambiar la modalidad de ahorro
+     */
     @FXML
     private void handleCambiarModalidadAction(ActionEvent evento) {
         // Crear diálogo para cambiar modalidad de ahorro
@@ -569,44 +369,32 @@ public class PerfilController implements Initializable {
         dialog.setContentText("Modalidad:");
 
         // Estilizar diálogo
-        estilizarDialog(dialog);
+        navegacionServicio.estilizarDialog(dialog);
 
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(modalidad -> {
             usuarioActual.setModalidadAhorroSeleccionada(modalidad);
             if (usuarioServicio.actualizarUsuario(usuarioActual)) {
                 cargarDatosUsuario();
-                mostrarAlerta(Alert.AlertType.INFORMATION, "Modalidad actualizada",
+                navegacionServicio.mostrarAlertaInformacion("Modalidad actualizada",
                         "Tu modalidad de ahorro ha sido cambiada a: " + modalidad);
             } else {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo cambiar la modalidad.");
+                navegacionServicio.mostrarAlertaError("Error", "No se pudo cambiar la modalidad.");
             }
         });
     }
 
+    /**
+     * Manejador para configurar el perfil
+     */
     @FXML
     private void handleConfigurarPerfilAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de configuración
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/configuracion.fxml"));
-            Parent raizConfiguracion = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaConfiguracion = new Scene(raizConfiguracion);
-            escenaConfiguracion.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) configurarPerfilButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaConfiguracion);
-            escenarioActual.setTitle("SmartSave - Configuración");
-
-        } catch (IOException e) {
-            mostrarAlerta(Alert.AlertType.ERROR, "Error de navegación", "Error al cargar la pantalla de configuración: " + e.getMessage());
-        }
+        navegacionServicio.navegarAConfiguracion(obtenerEscenarioActual());
     }
 
+    /**
+     * Manejador para exportar datos del perfil
+     */
     @FXML
     private void handleExportarDatosAction(ActionEvent evento) {
         FileChooser fileChooser = new FileChooser();
@@ -616,7 +404,7 @@ public class PerfilController implements Initializable {
                 new FileChooser.ExtensionFilter("Archivo CSV", "*.csv")
         );
 
-        Stage stage = (Stage) exportarDatosButton.getScene().getWindow();
+        Stage stage = obtenerEscenarioActual();
         File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {
@@ -625,14 +413,20 @@ public class PerfilController implements Initializable {
                 Thread.sleep(1000);
 
                 // En un caso real, aquí se exportarían los datos del perfil
-                mostrarAlerta(Alert.AlertType.INFORMATION, "Datos exportados",
+                navegacionServicio.mostrarAlertaInformacion("Datos exportados",
                         "Los datos de tu perfil han sido exportados correctamente a:\n" + file.getAbsolutePath());
             } catch (InterruptedException e) {
-                mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al exportar los datos: " + e.getMessage());
+                navegacionServicio.mostrarAlertaError("Error", "Error al exportar los datos: " + e.getMessage());
             }
         }
     }
 
+    /**
+     * Manejador para eliminar la cuenta de usuario
+     */
+    /**
+     * Manejador para eliminar la cuenta de usuario
+     */
     @FXML
     private void handleEliminarCuentaAction(ActionEvent evento) {
         // Mostrar diálogo de confirmación doble
@@ -643,7 +437,9 @@ public class PerfilController implements Initializable {
                 "Esta acción NO SE PUEDE DESHACER.\n\n" +
                 "¿Deseas continuar?");
 
-        estilizarAlerta(confirmacion);
+        // Usar el método correcto para estilizar el diálogo
+        DialogPane dialogPane = confirmacion.getDialogPane();
+        EstilosApp.aplicarEstiloDialogPane(dialogPane);
 
         confirmacion.showAndWait().ifPresent(respuesta -> {
             if (respuesta == ButtonType.OK) {
@@ -653,7 +449,8 @@ public class PerfilController implements Initializable {
                 dialog.setHeaderText("Para confirmar la eliminación, escribe: ELIMINAR");
                 dialog.setContentText("Texto de confirmación:");
 
-                estilizarDialog(dialog);
+                // Usar el método correcto para estilizar el diálogo
+                navegacionServicio.estilizarDialog(dialog);
 
                 Optional<String> result = dialog.showAndWait();
                 result.ifPresent(texto -> {
@@ -662,32 +459,18 @@ public class PerfilController implements Initializable {
                             // Simular eliminación de cuenta
                             Thread.sleep(2000);
 
-                            mostrarAlerta(Alert.AlertType.INFORMATION, "Cuenta eliminada",
+                            navegacionServicio.mostrarAlertaInformacion("Cuenta eliminada",
                                     "Tu cuenta ha sido eliminada correctamente.\n" +
                                             "Gracias por usar SmartSave.");
 
                             // Redirigir al login
-                            try {
-                                FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
-                                Parent raizLogin = cargador.load();
-
-                                Scene escenaLogin = new Scene(raizLogin);
-                                escenaLogin.setFill(Color.TRANSPARENT);
-
-                                Stage escenarioActual = (Stage) eliminarCuentaButton.getScene().getWindow();
-                                escenarioActual.setScene(escenaLogin);
-                                escenarioActual.setTitle("SmartSave - Login");
-                                escenarioActual.centerOnScreen();
-
-                            } catch (IOException e) {
-                                mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al volver al login: " + e.getMessage());
-                            }
+                            navegacionServicio.navegarALogin(obtenerEscenarioActual());
 
                         } catch (InterruptedException e) {
-                            mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al eliminar la cuenta.");
+                            navegacionServicio.mostrarAlertaError("Error", "Error al eliminar la cuenta.");
                         }
                     } else {
-                        mostrarAlerta(Alert.AlertType.WARNING, "Texto incorrecto",
+                        navegacionServicio.mostrarAlertaError("Texto incorrecto",
                                 "El texto de confirmación no es correcto. Eliminación cancelada.");
                     }
                 });
@@ -695,122 +478,22 @@ public class PerfilController implements Initializable {
         });
     }
 
-    private void activarBoton(Button botonActivo) {
-        // Quitar la clase 'selected' de todos los botones
-        dashboardButton.getStyleClass().remove("selected");
-        transactionsButton.getStyleClass().remove("selected");
-        nutritionButton.getStyleClass().remove("selected");
-        shoppingButton.getStyleClass().remove("selected");
-        savingsButton.getStyleClass().remove("selected");
-        reportsButton.getStyleClass().remove("selected");
-        settingsButton.getStyleClass().remove("selected");
-        profileButton.getStyleClass().remove("selected");
-
-        // Añadir la clase 'selected' al botón activo
-        botonActivo.getStyleClass().add("selected");
+    /**
+     * Sobrescribe el método de navegación a perfil
+     * Ya que estamos en la vista de perfil
+     */
+    @Override
+    public void handleProfileAction(ActionEvent evento) {
+        // Ya estamos en la vista de perfil, solo recargamos los datos
+        cargarDatosUsuario();
+        cargarDatosFinancieros();
+        activarBoton(profileButton);
     }
 
-    private void mostrarAlertaNoImplementado(String caracteristica) {
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle(caracteristica + " - En desarrollo");
-        alerta.setHeaderText(null);
-        alerta.setContentText("Esta funcionalidad aún no está implementada.");
-
-        estilizarAlerta(alerta);
-        alerta.showAndWait();
-    }
-
-    private void mostrarAlerta(Alert.AlertType tipo, String titulo, String mensaje) {
-        Alert alerta = new Alert(tipo);
-        alerta.setTitle(titulo);
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-
-        estilizarAlerta(alerta);
-        alerta.showAndWait();
-    }
-
-    private void estilizarDialog(Dialog<?> dialog) {
-        DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-
-            // Efectos de hover
-            node.setOnMouseEntered(e ->
-                    node.setStyle(
-                            "-fx-background-color: #35354A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #FF00FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-
-            node.setOnMouseExited(e ->
-                    node.setStyle(
-                            "-fx-background-color: #25253A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #4050FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-        });
-    }
-
-    private void estilizarAlerta(Alert alerta) {
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-
-            // Efectos de hover
-            node.setOnMouseEntered(e ->
-                    node.setStyle(
-                            "-fx-background-color: #35354A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #FF00FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-
-            node.setOnMouseExited(e ->
-                    node.setStyle(
-                            "-fx-background-color: #25253A; " +
-                                    "-fx-text-fill: white; " +
-                                    "-fx-border-color: #4050FF; " +
-                                    "-fx-border-width: 1px;"
-                    )
-            );
-        });
+    /**
+     * Método auxiliar para obtener el escenario actual
+     */
+    private Stage obtenerEscenarioActual() {
+        return (Stage) mainPane.getScene().getWindow();
     }
 }

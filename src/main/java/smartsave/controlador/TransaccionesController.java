@@ -5,15 +5,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 import smartsave.modelo.Transaccion;
-import smartsave.servicio.NavegacionServicio;
 import smartsave.servicio.TransaccionServicio;
 import smartsave.utilidad.EstilosApp;
 
@@ -24,26 +21,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class TransaccionesController implements Initializable {
-
-    // Referencias a elementos principales del layout
-    @FXML private BorderPane mainPane;
-    @FXML private HBox titleBar;
-    @FXML private VBox sideMenu;
-
-    // Referencias a los elementos de menú
-    @FXML private Button dashboardButton;
-    @FXML private Button transactionsButton;
-    @FXML private Button nutritionButton;
-    @FXML private Button shoppingButton;
-    @FXML private Button savingsButton;
-    @FXML private Button reportsButton;
-    @FXML private Button settingsButton;
-    @FXML private Button profileButton;
-    @FXML private Button logoutButton;
-    @FXML private Button minimizeButton;
-    @FXML private Button maximizeButton;
-    @FXML private Button closeButton;
+/**
+ * Controlador para la gestión de transacciones (ingresos y gastos)
+ * Extiende BaseController para heredar funcionalidad común
+ */
+public class TransaccionesController extends BaseController {
 
     // Referencias a elementos de resumen financiero
     @FXML private Label ingresosTotalLabel;
@@ -79,29 +61,22 @@ public class TransaccionesController implements Initializable {
     @FXML private Button guardarButton;
     @FXML private Button cancelarButton;
 
-    // Servicios
-    private TransaccionServicio transaccionServicio = new TransaccionServicio();
-    private final NavegacionServicio navegacionServicio = NavegacionServicio.getInstancia();
+    // Servicio de transacciones
+    private final TransaccionServicio transaccionServicio = new TransaccionServicio();
 
     // Variables de estado
     private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
     private Transaccion transaccionEnEdicion = null;
     private boolean modoEdicion = false;
 
-    // Variables para permitir el arrastre de la ventana
-    private double offsetX = 0;
-    private double offsetY = 0;
-
+    /**
+     * Inicialización específica del controlador de transacciones
+     * Implementación del método abstracto de BaseController
+     */
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        // Aplicar estilos
-        aplicarEstilos();
-
-        // Configurar el arrastre de la ventana
-        configurarVentanaArrastrable();
-
-        // Configurar botones de navegación
-        configurarBotonesNavegacion();
+    protected void inicializarControlador() {
+        // Destacar botón activo
+        activarBoton(transactionsButton);
 
         // Inicializar combos de filtros
         inicializarFiltros();
@@ -114,82 +89,53 @@ public class TransaccionesController implements Initializable {
 
         // Cargar datos iniciales
         cargarDatos();
+
+        // Ocultar formulario inicialmente
+        mostrarFormularioTransaccion(false);
+
+        // Aplicar estilos de manera centralizada
+        aplicarEstilosComponentes();
     }
 
-    private void aplicarEstilos() {
-        // Aplicar estilos al tema oscuro con neón
-        EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
-        EstilosApp.aplicarEstiloBarraTitulo(titleBar);
-        EstilosApp.aplicarEstiloMenuLateral(sideMenu);
+    /**
+     * Aplica estilos a todos los componentes usando EstilosApp
+     */
+    private void aplicarEstilosComponentes() {
+        // Aplicar estilos a las tarjetas de resumen
+        EstilosApp.aplicarEstiloTarjeta((Pane)ingresosTotalLabel.getParent());
+        EstilosApp.aplicarEstiloTarjeta((Pane)gastosTotalLabel.getParent());
+        EstilosApp.aplicarEstiloTarjeta((Pane)balanceLabel.getParent());
 
-        // Aplicar estilos a los botones de la ventana
-        EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(maximizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(closeButton);
+        // Aplicar estilos a los ComboBox
+        EstilosApp.aplicarEstiloComboBox(periodoComboBox);
+        EstilosApp.aplicarEstiloComboBox(tipoFiltroComboBox);
+        EstilosApp.aplicarEstiloComboBox(categoriaFiltroComboBox);
+        EstilosApp.aplicarEstiloComboBox(tipoComboBox);
+        EstilosApp.aplicarEstiloComboBox(categoriaComboBox);
 
-        // Aplicar estilos a los botones de navegación
-        EstilosApp.aplicarEstiloBotonNavegacion(dashboardButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(transactionsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(nutritionButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(shoppingButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(savingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(reportsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(settingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(profileButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(logoutButton);
+        // Aplicar estilos a los campos de texto
+        EstilosApp.aplicarEstiloCampoTexto(descripcionField);
+        EstilosApp.aplicarEstiloCampoTexto(montoField);
 
-        // Destacar el botón de transacciones como seleccionado
-        transactionsButton.getStyleClass().add("selected");
+        // Aplicar estilos al DatePicker
+        EstilosApp.aplicarEstiloDatePicker(fechaPicker);
 
-        // Aplicar estilos a los gráficos
+        // Aplicar estilos a los botones
+        EstilosApp.aplicarEstiloBotonPrimario(nuevaTransaccionButton);
+        EstilosApp.aplicarEstiloBotonPrimario(guardarButton);
+
+        // Aplicar estilos al gráfico
         EstilosApp.aplicarEstiloGrafico(gastosPorCategoriaChart);
 
-        // Aplicar estilos a la tabla
-        EstilosApp.aplicarEstiloTabla(transaccionesTable);
-
-        // Estilizar panel de formulario
-        if (transaccionFormPanel != null) {
-            transaccionFormPanel.setBackground(new Background(new BackgroundFill(
-                    Color.rgb(30, 30, 40, 0.95),
-                    new CornerRadii(10),
-                    null
-            )));
-            transaccionFormPanel.setBorder(new Border(new BorderStroke(
-                    Color.rgb(120, 80, 200, 0.7),
-                    BorderStrokeStyle.SOLID,
-                    new CornerRadii(10),
-                    new BorderWidths(1)
-            )));
-            transaccionFormPanel.setEffect(new javafx.scene.effect.DropShadow(10, Color.rgb(0, 0, 0, 0.5)));
+        // Aplicar estilos al panel de formulario
+        if (transaccionFormPanel.isVisible()) {
+            EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel);
         }
     }
 
-    private void configurarVentanaArrastrable() {
-        titleBar.setOnMousePressed(evento -> {
-            offsetX = evento.getSceneX();
-            offsetY = evento.getSceneY();
-        });
-
-        titleBar.setOnMouseDragged(evento -> {
-            Stage escenario = (Stage) titleBar.getScene().getWindow();
-            escenario.setX(evento.getScreenX() - offsetX);
-            escenario.setY(evento.getScreenY() - offsetY);
-        });
-    }
-
-    private void configurarBotonesNavegacion() {
-        // Configurar acción al seleccionar botones del menú
-        dashboardButton.setOnAction(this::handleDashboardAction);
-        transactionsButton.setOnAction(this::handleTransactionsAction);
-        nutritionButton.setOnAction(this::handleNutritionAction);
-        shoppingButton.setOnAction(this::handleShoppingAction);
-        savingsButton.setOnAction(this::handleSavingsAction);
-        reportsButton.setOnAction(this::handleReportsAction);
-        settingsButton.setOnAction(this::handleSettingsAction);
-        profileButton.setOnAction(this::handleProfileAction);
-        logoutButton.setOnAction(this::handleLogoutAction);
-    }
-
+    /**
+     * Inicializa los filtros de la pantalla
+     */
     private void inicializarFiltros() {
         // Inicializar combo de períodos
         periodoComboBox.setItems(FXCollections.observableArrayList(
@@ -203,15 +149,29 @@ public class TransaccionesController implements Initializable {
         ));
         tipoFiltroComboBox.getSelectionModel().selectFirst();
 
-        // Inicializar combo de categoría (se llenará con todas las categorías)
+        // Inicializar combo de categoría
         categoriaFiltroComboBox.setItems(FXCollections.observableArrayList("Todas"));
         categoriaFiltroComboBox.getItems().addAll(transaccionServicio.obtenerCategoriasGastos());
         categoriaFiltroComboBox.getItems().addAll(transaccionServicio.obtenerCategoriasIngresos());
         categoriaFiltroComboBox.getSelectionModel().selectFirst();
     }
 
+    /**
+     * Configura la tabla de transacciones y sus columnas
+     */
     private void configurarTablaTransacciones() {
-        // Configurar columnas de la tabla
+        // Configurar columnas básicas
+        configurarColumnasBasicas();
+
+        // Configurar columna de acciones
+        configurarColumnaAcciones();
+    }
+
+    /**
+     * Configura las columnas básicas de la tabla
+     */
+    private void configurarColumnasBasicas() {
+        // Columna de fecha
         fechaColumn.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         fechaColumn.setCellFactory(column -> new TableCell<>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -227,9 +187,11 @@ public class TransaccionesController implements Initializable {
             }
         });
 
+        // Columnas de texto simple
         descripcionColumn.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
         categoriaColumn.setCellValueFactory(new PropertyValueFactory<>("categoria"));
 
+        // Columna de monto formateada
         montoColumn.setCellValueFactory(new PropertyValueFactory<>("monto"));
         montoColumn.setCellFactory(column -> new TableCell<>() {
             @Override
@@ -240,7 +202,7 @@ public class TransaccionesController implements Initializable {
                 } else {
                     setText(String.format("€%.2f", item));
 
-                    // Colorear según sea ingreso o gasto
+                    // Colorear según tipo
                     Transaccion transaccion = getTableView().getItems().get(getIndex());
                     if ("Ingreso".equals(transaccion.getTipo())) {
                         setTextFill(Color.rgb(100, 220, 100)); // Verde para ingresos
@@ -251,6 +213,7 @@ public class TransaccionesController implements Initializable {
             }
         });
 
+        // Columna de tipo con colores
         tipoColumn.setCellValueFactory(new PropertyValueFactory<>("tipo"));
         tipoColumn.setCellFactory(column -> new TableCell<>() {
             @Override
@@ -270,8 +233,12 @@ public class TransaccionesController implements Initializable {
                 }
             }
         });
+    }
 
-        // Configurar columna de acciones (editar/eliminar)
+    /**
+     * Configura la columna de acciones (editar/eliminar)
+     */
+    private void configurarColumnaAcciones() {
         accionesColumn.setCellFactory(param -> new TableCell<>() {
             private final Button btnEditar = new Button("✏️");
             private final Button btnEliminar = new Button("🗑️");
@@ -279,39 +246,19 @@ public class TransaccionesController implements Initializable {
 
             {
                 // Estilizar botones de acción
-                btnEditar.setStyle(
-                        "-fx-background-color: transparent; " +
-                                "-fx-cursor: hand; " +
-                                "-fx-padding: 2;"
-                );
-                btnEliminar.setStyle(
-                        "-fx-background-color: transparent; " +
-                                "-fx-cursor: hand; " +
-                                "-fx-padding: 2;"
-                );
+                btnEditar.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 2;");
+                btnEliminar.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 2;");
 
                 // Efectos de hover
                 btnEditar.setOnMouseEntered(e -> btnEditar.setStyle(
-                        "-fx-background-color: rgba(80, 80, 130, 0.3); " +
-                                "-fx-cursor: hand; " +
-                                "-fx-padding: 2;"
-                ));
+                        "-fx-background-color: rgba(80, 80, 130, 0.3); -fx-cursor: hand; -fx-padding: 2;"));
                 btnEditar.setOnMouseExited(e -> btnEditar.setStyle(
-                        "-fx-background-color: transparent; " +
-                                "-fx-cursor: hand; " +
-                                "-fx-padding: 2;"
-                ));
+                        "-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 2;"));
 
                 btnEliminar.setOnMouseEntered(e -> btnEliminar.setStyle(
-                        "-fx-background-color: rgba(130, 80, 80, 0.3); " +
-                                "-fx-cursor: hand; " +
-                                "-fx-padding: 2;"
-                ));
+                        "-fx-background-color: rgba(130, 80, 80, 0.3); -fx-cursor: hand; -fx-padding: 2;"));
                 btnEliminar.setOnMouseExited(e -> btnEliminar.setStyle(
-                        "-fx-background-color: transparent; " +
-                                "-fx-cursor: hand; " +
-                                "-fx-padding: 2;"
-                ));
+                        "-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 2;"));
 
                 // Acciones de los botones
                 btnEditar.setOnAction(event -> {
@@ -330,38 +277,23 @@ public class TransaccionesController implements Initializable {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(pane);
-                }
+                setGraphic(empty ? null : pane);
             }
         });
     }
 
+    /**
+     * Inicializa el formulario de transacción
+     */
     private void inicializarFormularioTransaccion() {
         // Inicializar combos del formulario
         tipoComboBox.setItems(FXCollections.observableArrayList("Ingreso", "Gasto"));
+        tipoComboBox.getSelectionModel().selectFirst();
 
         // Por defecto, mostrar categorías de gastos
         categoriaComboBox.setItems(FXCollections.observableArrayList(
                 transaccionServicio.obtenerCategoriasGastos()
         ));
-
-        // Configurar acción al cambiar el tipo
-        tipoComboBox.setOnAction(event -> {
-            String tipoSeleccionado = tipoComboBox.getValue();
-            if ("Ingreso".equals(tipoSeleccionado)) {
-                categoriaComboBox.setItems(FXCollections.observableArrayList(
-                        transaccionServicio.obtenerCategoriasIngresos()
-                ));
-            } else {
-                categoriaComboBox.setItems(FXCollections.observableArrayList(
-                        transaccionServicio.obtenerCategoriasGastos()
-                ));
-            }
-            categoriaComboBox.getSelectionModel().selectFirst();
-        });
 
         // Configurar validación del campo de monto
         montoField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -374,78 +306,117 @@ public class TransaccionesController implements Initializable {
         fechaPicker.setValue(LocalDate.now());
     }
 
-    private void cargarDatos() {
-        // Obtener período seleccionado
-        String periodoSeleccionado = periodoComboBox.getValue();
-        LocalDate fechaInicio = null;
-        LocalDate fechaFin = LocalDate.now();
+    /**
+     * Manejador para el cambio en el tipo de transacción en el formulario
+     */
+    @FXML
+    private void handleTipoSeleccionado(ActionEvent event) {
+        String tipoSeleccionado = tipoComboBox.getValue();
 
-        // Determinar fechas según período
-        switch (periodoSeleccionado) {
-            case "Este Mes":
-                fechaInicio = LocalDate.now().withDayOfMonth(1);
-                break;
-            case "Mes Anterior":
-                fechaInicio = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-                fechaFin = LocalDate.now().withDayOfMonth(1).minusDays(1);
-                break;
-            case "Últimos 3 Meses":
-                fechaInicio = LocalDate.now().minusMonths(3);
-                break;
-            case "Este Año":
-                fechaInicio = LocalDate.now().withDayOfYear(1);
-                break;
-            default: // Todos
-                fechaInicio = LocalDate.of(2000, 1, 1); // Fecha lejana pasada
-                break;
+        // Actualizar las categorías según el tipo seleccionado
+        if ("Ingreso".equals(tipoSeleccionado)) {
+            categoriaComboBox.setItems(FXCollections.observableArrayList(
+                    transaccionServicio.obtenerCategoriasIngresos()
+            ));
+        } else {
+            categoriaComboBox.setItems(FXCollections.observableArrayList(
+                    transaccionServicio.obtenerCategoriasGastos()
+            ));
         }
 
-        // Crear variables finales para usar en lambdas
-        final LocalDate inicio = fechaInicio;
-        final LocalDate fin = fechaFin;
+        categoriaComboBox.getSelectionModel().selectFirst();
+    }
 
-        // Obtener los tipo seleccionado
+    /**
+     * Carga los datos según los filtros seleccionados
+     */
+    private void cargarDatos() {
+        // Obtener parámetros de filtro
+        LocalDate fechaInicio = obtenerFechaInicio();
+        LocalDate fechaFin = LocalDate.now();
         String tipoSeleccionado = tipoFiltroComboBox.getValue();
-
-        // Obtener las categoría seleccionada
         String categoriaSeleccionada = categoriaFiltroComboBox.getValue();
 
         // Cargar transacciones según filtros
-        List<Transaccion> transacciones;
-
-        if ("Todas".equals(categoriaSeleccionada)) {
-            if ("Todos".equals(tipoSeleccionado)) {
-                transacciones = transaccionServicio.obtenerTransaccionesPorPeriodo(usuarioIdActual, inicio, fin);
-            } else {
-                String tipo = "Ingresos".equals(tipoSeleccionado) ? "Ingreso" : "Gasto";
-                transacciones = transaccionServicio.obtenerTransaccionesPorTipo(usuarioIdActual, tipo);
-                // Filtrar por fecha ya que el método por tipo no filtra por fecha
-                transacciones = transacciones.stream()
-                        .filter(t -> !t.getFecha().isBefore(inicio) && !t.getFecha().isAfter(fin))
-                        .toList();
-            }
-        } else {
-            transacciones = transaccionServicio.obtenerTransaccionesPorCategoria(usuarioIdActual, categoriaSeleccionada);
-            // Filtrar por fecha y tipo
-            final String tipoFiltro = "Ingresos".equals(tipoSeleccionado) ? "Ingreso" :
-                    "Gastos".equals(tipoSeleccionado) ? "Gasto" : null;
-
-            transacciones = transacciones.stream()
-                    .filter(t -> !t.getFecha().isBefore(inicio) && !t.getFecha().isAfter(fin))
-                    .filter(t -> tipoFiltro == null || t.getTipo().equals(tipoFiltro))
-                    .toList();
-        }
+        List<Transaccion> transacciones = filtrarTransacciones(fechaInicio, fechaFin, tipoSeleccionado, categoriaSeleccionada);
 
         // Actualizar tabla
         transaccionesTable.setItems(FXCollections.observableArrayList(transacciones));
 
         // Actualizar resumen financiero
-        actualizarResumenFinanciero(inicio, fin);
+        actualizarResumenFinanciero(fechaInicio, fechaFin);
 
         // Actualizar gráfico de distribución
-        actualizarGraficoDistribucion(inicio, fin);
+        actualizarGraficoDistribucion(fechaInicio, fechaFin);
     }
 
+    /**
+     * Determina la fecha de inicio según el período seleccionado
+     */
+    private LocalDate obtenerFechaInicio() {
+        String periodoSeleccionado = periodoComboBox.getValue();
+        switch (periodoSeleccionado) {
+            case "Este Mes":
+                return LocalDate.now().withDayOfMonth(1);
+            case "Mes Anterior":
+                return LocalDate.now().minusMonths(1).withDayOfMonth(1);
+            case "Últimos 3 Meses":
+                return LocalDate.now().minusMonths(3);
+            case "Este Año":
+                return LocalDate.now().withDayOfYear(1);
+            default: // Todos
+                return LocalDate.of(2000, 1, 1); // Fecha lejana pasada
+        }
+    }
+
+    /**
+     * Filtra las transacciones según los criterios seleccionados
+     */
+    private List<Transaccion> filtrarTransacciones(LocalDate fechaInicio, LocalDate fechaFin,
+                                                   String tipoSeleccionado, String categoriaSeleccionada) {
+        List<Transaccion> transacciones;
+
+        if ("Todas".equals(categoriaSeleccionada)) {
+            if ("Todos".equals(tipoSeleccionado)) {
+                transacciones = transaccionServicio.obtenerTransaccionesPorPeriodo(usuarioIdActual, fechaInicio, fechaFin);
+            } else {
+                String tipo = "Ingresos".equals(tipoSeleccionado) ? "Ingreso" : "Gasto";
+                transacciones = transaccionServicio.obtenerTransaccionesPorTipo(usuarioIdActual, tipo);
+                // Filtrar por fecha
+                transacciones = transacciones.stream()
+                        .filter(t -> !t.getFecha().isBefore(fechaInicio) && !t.getFecha().isAfter(fechaFin))
+                        .toList();
+            }
+        } else {
+            transacciones = transaccionServicio.obtenerTransaccionesPorCategoria(usuarioIdActual, categoriaSeleccionada);
+            // Filtrar por fecha y tipo
+            final String tipoFiltro = determinarTipoFiltro(tipoSeleccionado);
+
+            transacciones = transacciones.stream()
+                    .filter(t -> !t.getFecha().isBefore(fechaInicio) && !t.getFecha().isAfter(fechaFin))
+                    .filter(t -> tipoFiltro == null || t.getTipo().equals(tipoFiltro))
+                    .toList();
+        }
+
+        return transacciones;
+    }
+
+    /**
+     * Determina el tipo de filtro a aplicar
+     */
+    private String determinarTipoFiltro(String tipoSeleccionado) {
+        if ("Ingresos".equals(tipoSeleccionado)) {
+            return "Ingreso";
+        } else if ("Gastos".equals(tipoSeleccionado)) {
+            return "Gasto";
+        } else {
+            return null; // Sin filtro de tipo
+        }
+    }
+
+    /**
+     * Actualiza el resumen financiero con los totales del período
+     */
     private void actualizarResumenFinanciero(LocalDate fechaInicio, LocalDate fechaFin) {
         // Obtener totales del período
         double totalIngresos = transaccionServicio.obtenerTotalIngresos(usuarioIdActual, fechaInicio, fechaFin);
@@ -458,22 +429,26 @@ public class TransaccionesController implements Initializable {
         balanceLabel.setText(String.format("€%.2f", balance));
 
         // Colorear balance según sea positivo o negativo
-        if (balance >= 0) {
-            balanceLabel.setTextFill(Color.rgb(100, 220, 100)); // Verde para balance positivo
-        } else {
-            balanceLabel.setTextFill(Color.rgb(220, 100, 100)); // Rojo para balance negativo
-        }
+        balanceLabel.setTextFill(balance >= 0 ?
+                Color.rgb(100, 220, 100) :   // Verde
+                Color.rgb(220, 100, 100));   // Rojo
     }
 
+    /**
+     * Actualiza el gráfico de distribución de gastos
+     */
     private void actualizarGraficoDistribucion(LocalDate fechaInicio, LocalDate fechaFin) {
         // Obtener gastos por categoría
-        Map<String, Double> gastosPorCategoria = transaccionServicio.obtenerGastosPorCategoria(usuarioIdActual, fechaInicio, fechaFin);
+        Map<String, Double> gastosPorCategoria = transaccionServicio.obtenerGastosPorCategoria(
+                usuarioIdActual, fechaInicio, fechaFin);
 
         // Crear datos para el gráfico
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 
         for (Map.Entry<String, Double> entry : gastosPorCategoria.entrySet()) {
-            pieChartData.add(new PieChart.Data(entry.getKey() + " - €" + String.format("%.2f", entry.getValue()), entry.getValue()));
+            pieChartData.add(new PieChart.Data(
+                    entry.getKey() + " - €" + String.format("%.2f", entry.getValue()),
+                    entry.getValue()));
         }
 
         // Si no hay datos, mostrar mensaje
@@ -490,21 +465,33 @@ public class TransaccionesController implements Initializable {
         });
     }
 
+    /**
+     * Manejador para cambio en combo de período
+     */
     @FXML
     private void handlePeriodoSeleccionado(ActionEvent event) {
         cargarDatos();
     }
 
+    /**
+     * Manejador para cambio en combo de tipo
+     */
     @FXML
     private void handleTipoFiltroSeleccionado(ActionEvent event) {
         cargarDatos();
     }
 
+    /**
+     * Manejador para cambio en combo de categoría
+     */
     @FXML
     private void handleCategoriaFiltroSeleccionada(ActionEvent event) {
         cargarDatos();
     }
 
+    /**
+     * Manejador para crear nueva transacción
+     */
     @FXML
     private void handleNuevaTransaccion(ActionEvent event) {
         // Resetear formulario
@@ -521,8 +508,14 @@ public class TransaccionesController implements Initializable {
 
         // Mostrar panel
         mostrarFormularioTransaccion(true);
+
+        // Aplicar estilos al panel
+        EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel);
     }
 
+    /**
+     * Prepara el formulario para editar una transacción
+     */
     private void editarTransaccion(Transaccion transaccion) {
         // Preparar modo edición
         modoEdicion = true;
@@ -550,8 +543,14 @@ public class TransaccionesController implements Initializable {
 
         // Mostrar panel
         mostrarFormularioTransaccion(true);
+
+        // Aplicar estilos al panel
+        EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel);
     }
 
+    /**
+     * Elimina una transacción tras confirmar
+     */
     private void eliminarTransaccion(Transaccion transaccion) {
         // Usar el servicio de navegación para confirmar la eliminación
         boolean confirmado = navegacionServicio.confirmarEliminarTransaccion();
@@ -573,39 +572,30 @@ public class TransaccionesController implements Initializable {
         }
     }
 
+    /**
+     * Guarda una transacción nueva o editada
+     */
     @FXML
     private void handleGuardarTransaccion(ActionEvent event) {
         // Validar campos
-        if (tipoComboBox.getValue() == null ||
-                fechaPicker.getValue() == null ||
-                descripcionField.getText().trim().isEmpty() ||
-                categoriaComboBox.getValue() == null ||
-                montoField.getText().trim().isEmpty()) {
-
-            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos.");
+        if (!validarCamposTransaccion()) {
             return;
         }
 
-        // Validar formato del monto
-        double monto;
-        try {
-            monto = Double.parseDouble(montoField.getText().trim());
-            if (monto <= 0) {
-                navegacionServicio.mostrarAlertaError("Monto inválido", "El monto debe ser mayor que cero.");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            navegacionServicio.mostrarAlertaError("Monto inválido", "Por favor, ingresa un valor numérico válido.");
-            return;
-        }
+        // Obtener valores del formulario
+        String tipo = tipoComboBox.getValue();
+        LocalDate fecha = fechaPicker.getValue();
+        String descripcion = descripcionField.getText().trim();
+        String categoria = categoriaComboBox.getValue();
+        double monto = Double.parseDouble(montoField.getText().trim());
 
         // Crear o actualizar transacción
         if (modoEdicion && transaccionEnEdicion != null) {
             // Actualizar transacción existente
-            transaccionEnEdicion.setTipo(tipoComboBox.getValue());
-            transaccionEnEdicion.setFecha(fechaPicker.getValue());
-            transaccionEnEdicion.setDescripcion(descripcionField.getText().trim());
-            transaccionEnEdicion.setCategoria(categoriaComboBox.getValue());
+            transaccionEnEdicion.setTipo(tipo);
+            transaccionEnEdicion.setFecha(fecha);
+            transaccionEnEdicion.setDescripcion(descripcion);
+            transaccionEnEdicion.setCategoria(categoria);
             transaccionEnEdicion.setMonto(monto);
 
             boolean actualizada = transaccionServicio.actualizarTransaccion(transaccionEnEdicion);
@@ -619,14 +609,7 @@ public class TransaccionesController implements Initializable {
             }
         } else {
             // Crear nueva transacción
-            Transaccion nuevaTransaccion = new Transaccion(
-                    fechaPicker.getValue(),
-                    descripcionField.getText().trim(),
-                    categoriaComboBox.getValue(),
-                    monto,
-                    tipoComboBox.getValue()
-            );
-
+            Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, categoria, monto, tipo);
             transaccionServicio.agregarTransaccion(nuevaTransaccion, usuarioIdActual);
             navegacionServicio.mostrarAlertaInformacion("Transacción registrada",
                     "La transacción ha sido registrada correctamente.");
@@ -639,116 +622,60 @@ public class TransaccionesController implements Initializable {
         cargarDatos();
     }
 
+    /**
+     * Valida los campos del formulario de transacción
+     */
+    private boolean validarCamposTransaccion() {
+        // Validar campos
+        if (tipoComboBox.getValue() == null ||
+                fechaPicker.getValue() == null ||
+                descripcionField.getText().trim().isEmpty() ||
+                categoriaComboBox.getValue() == null ||
+                montoField.getText().trim().isEmpty()) {
+
+            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos.");
+            return false;
+        }
+
+        // Validar formato del monto
+        try {
+            double monto = Double.parseDouble(montoField.getText().trim());
+            if (monto <= 0) {
+                navegacionServicio.mostrarAlertaError("Monto inválido", "El monto debe ser mayor que cero.");
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            navegacionServicio.mostrarAlertaError("Monto inválido", "Por favor, ingresa un valor numérico válido.");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Cancela la edición de la transacción
+     */
     @FXML
     private void handleCancelarTransaccion(ActionEvent event) {
         mostrarFormularioTransaccion(false);
     }
 
-    @FXML
-    private void handleTipoSeleccionado(ActionEvent event) {
-        // Ya está configurado en inicializarFormularioTransaccion()
-    }
-
+    /**
+     * Muestra u oculta el formulario de transacción
+     */
     private void mostrarFormularioTransaccion(boolean mostrar) {
         transaccionFormPanel.setVisible(mostrar);
         transaccionFormPanel.setManaged(mostrar);
     }
 
-    // Métodos de control de ventana
-    @FXML
-    private void handleMinimizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setIconified(true);
-    }
-
-    @FXML
-    private void handleMaximizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setMaximized(!escenario.isMaximized());
-
-        // Cambiar el símbolo del botón según el estado
-        if (escenario.isMaximized()) {
-            maximizeButton.setText("❐");  // Símbolo para restaurar
-        } else {
-            maximizeButton.setText("□");  // Símbolo para maximizar
-        }
-    }
-
-    @FXML
-    private void handleCloseAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.close();
-    }
-
-    // Métodos de navegación con NavegacionServicio
-    @FXML
-    private void handleDashboardAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
-        navegacionServicio.navegarADashboard(escenarioActual);
-    }
-
-    @FXML
-    private void handleTransactionsAction(ActionEvent evento) {
+    /**
+     * Sobrescribe el método de navegación a transacciones
+     * Ya que estamos en la pantalla de transacciones
+     */
+    @Override
+    public void handleTransactionsAction(ActionEvent evento) {
         // Ya estamos en la vista de transacciones, solo actualizamos los datos
-        cargarDatos();
         activarBoton(transactionsButton);
-    }
-
-    @FXML
-    private void handleNutritionAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
-        navegacionServicio.navegarANutricion(escenarioActual);
-    }
-
-    @FXML
-    private void handleShoppingAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) shoppingButton.getScene().getWindow();
-        navegacionServicio.navegarACompras(escenarioActual);
-    }
-
-    @FXML
-    private void handleSavingsAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) savingsButton.getScene().getWindow();
-        navegacionServicio.navegarAAhorro(escenarioActual);
-    }
-
-    @FXML
-    private void handleReportsAction(ActionEvent evento) {
-        // Cambiar a la vista de informes
-        activarBoton(reportsButton);
-        navegacionServicio.mostrarAlertaNoImplementado("Informes");
-    }
-
-    @FXML
-    private void handleSettingsAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) settingsButton.getScene().getWindow();
-        navegacionServicio.navegarAConfiguracion(escenarioActual);
-    }
-
-    @FXML
-    private void handleProfileAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) profileButton.getScene().getWindow();
-        navegacionServicio.navegarAPerfil(escenarioActual);
-    }
-
-    @FXML
-    private void handleLogoutAction(ActionEvent evento) {
-        Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
-        navegacionServicio.confirmarCerrarSesion(escenarioActual);
-    }
-
-    private void activarBoton(Button botonActivo) {
-        // Quitar la clase 'selected' de todos los botones
-        dashboardButton.getStyleClass().remove("selected");
-        transactionsButton.getStyleClass().remove("selected");
-        nutritionButton.getStyleClass().remove("selected");
-        shoppingButton.getStyleClass().remove("selected");
-        savingsButton.getStyleClass().remove("selected");
-        reportsButton.getStyleClass().remove("selected");
-        settingsButton.getStyleClass().remove("selected");
-        profileButton.getStyleClass().remove("selected");
-
-        // Añadir la clase 'selected' al botón activo
-        botonActivo.getStyleClass().add("selected");
+        cargarDatos();
     }
 }

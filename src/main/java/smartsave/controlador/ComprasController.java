@@ -6,11 +6,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
@@ -21,31 +16,17 @@ import smartsave.modelo.*;
 import smartsave.servicio.*;
 import smartsave.utilidad.EstilosApp;
 
-import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.ResourceBundle;
 
-public class ComprasController implements Initializable {
-    // Referencias a elementos principales del layout
-    @FXML private BorderPane mainPane;
-    @FXML private HBox titleBar;
-    @FXML private VBox sideMenu;
-
-    // Referencias a los elementos de menú
-    @FXML private Button dashboardButton;
-    @FXML private Button transactionsButton;
-    @FXML private Button nutritionButton;
-    @FXML private Button shoppingButton;
-    @FXML private Button savingsButton;
-    @FXML private Button reportsButton;
-    @FXML private Button settingsButton;
-    @FXML private Button profileButton;
-    @FXML private Button logoutButton;
-    @FXML private Button minimizeButton;
-    @FXML private Button maximizeButton;
-    @FXML private Button closeButton;
+/**
+ * Controlador para la vista de Plan de Compras
+ * Extiende BaseController para heredar funcionalidad común
+ */
+public class ComprasController extends BaseController {
 
     // Referencias a elementos de la lista de compras
     @FXML private ComboBox<String> filtroListasComboBox;
@@ -98,65 +79,48 @@ public class ComprasController implements Initializable {
     @FXML private Button cerrarBusquedaButton;
 
     // Servicios
-    private ListaCompraServicio listaCompraServicio = new ListaCompraServicio();
-    private ProductoServicio productoServicio = new ProductoServicio();
+    private final ListaCompraServicio listaCompraServicio = new ListaCompraServicio();
+    private final ProductoServicio productoServicio = new ProductoServicio();
 
     // Variables de estado
     private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
     private ListaCompra listaSeleccionada = null;
     private boolean modoEdicion = false;
 
-    // Variables para permitir el arrastre de la ventana
-    private double offsetX = 0;
-    private double offsetY = 0;
-
+    /**
+     * Inicialización específica del controlador de compras
+     * Implementación del método abstracto de BaseController
+     */
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        // Aplicar estilos
-        aplicarEstilos();
-
-        // Configurar el arrastre de la ventana
-        configurarVentanaArrastrable();
-
-        // Configurar botones de navegación
-        configurarBotonesNavegacion();
+    protected void inicializarControlador() {
+        // Destacar el botón de plan de compras como seleccionado
+        activarBoton(shoppingButton);
 
         // Inicializar pantalla de listas de compra
         inicializarPantallaCompras();
 
         // Cargar datos
         cargarListasCompra();
+
+        // Aplicar estilos personalizados
+        aplicarEstilosComponentes();
     }
 
-    private void aplicarEstilos() {
-        // Aplicar estilos al tema oscuro con neón
-        EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
-        EstilosApp.aplicarEstiloBarraTitulo(titleBar);
-        EstilosApp.aplicarEstiloMenuLateral(sideMenu);
-
-        // Aplicar estilos a los botones de la ventana
-        EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(maximizeButton);
-        EstilosApp.aplicarEstiloBotonVentana(closeButton);
-
-        // Aplicar estilos a los botones de navegación
-        EstilosApp.aplicarEstiloBotonNavegacion(dashboardButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(transactionsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(nutritionButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(shoppingButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(savingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(reportsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(settingsButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(profileButton);
-        EstilosApp.aplicarEstiloBotonNavegacion(logoutButton);
-
-        // Destacar el botón de plan de compras como seleccionado
-        shoppingButton.getStyleClass().add("selected");
+    /**
+     * Aplica estilos a los componentes específicos de esta pantalla
+     */
+    private void aplicarEstilosComponentes() {
+        // Aplicar estilos a los ComboBox
+        EstilosApp.aplicarEstiloComboBox(filtroListasComboBox);
+        EstilosApp.aplicarEstiloComboBox(modalidadComboBox);
 
         // Aplicar estilos a los campos de texto
         EstilosApp.aplicarEstiloCampoTexto(nombreListaField);
         EstilosApp.aplicarEstiloCampoTexto(presupuestoField);
         EstilosApp.aplicarEstiloCampoTexto(buscarProductoField);
+
+        // Aplicar estilos al DatePicker
+        EstilosApp.aplicarEstiloDatePicker(fechaPlanificadaPicker);
 
         // Aplicar estilos a las tablas
         EstilosApp.aplicarEstiloTabla(productosTableView);
@@ -164,9 +128,25 @@ public class ComprasController implements Initializable {
 
         // Aplicar estilos a los botones principales
         EstilosApp.aplicarEstiloBotonPrimario(crearListaButton);
-        EstilosApp.aplicarEstiloBotonPrimario(guardarListaButton);
+        EstilosApp.aplicarEstiloBotonPrimario(editarListaButton);
+        EstilosApp.aplicarEstiloBotonPrimario(eliminarListaButton);
         EstilosApp.aplicarEstiloBotonPrimario(agregarProductoButton);
+        EstilosApp.aplicarEstiloBotonPrimario(guardarListaButton);
+        EstilosApp.aplicarEstiloBotonPrimario(cancelarListaButton);
+        EstilosApp.aplicarEstiloBotonPrimario(buscarProductoButton);
+        EstilosApp.aplicarEstiloBotonPrimario(cerrarBusquedaButton);
 
+        // Aplicar estilos a los ListView
+        estilizarListView();
+
+        // Aplicar estilos a los paneles
+        estilizarPaneles();
+    }
+
+    /**
+     * Aplica estilos a los ListView
+     */
+    private void estilizarListView() {
         // Estilo para ListView
         listasCompraListView.setStyle(
                 "-fx-background-color: rgba(30, 30, 40, 0.7); " +
@@ -177,32 +157,27 @@ public class ComprasController implements Initializable {
         );
     }
 
-    private void configurarVentanaArrastrable() {
-        titleBar.setOnMousePressed(evento -> {
-            offsetX = evento.getSceneX();
-            offsetY = evento.getSceneY();
-        });
+    /**
+     * Aplica estilos a los paneles
+     */
+    private void estilizarPaneles() {
+        // Aplicar estilos a los paneles principales
+        if (detalleListaPane.isVisible()) {
+            EstilosApp.aplicarEstiloTarjeta(detalleListaPane);
+        }
 
-        titleBar.setOnMouseDragged(evento -> {
-            Stage escenario = (Stage) titleBar.getScene().getWindow();
-            escenario.setX(evento.getScreenX() - offsetX);
-            escenario.setY(evento.getScreenY() - offsetY);
-        });
+        if (crearListaPane.isVisible()) {
+            EstilosApp.aplicarEstiloTarjeta(crearListaPane);
+        }
+
+        if (agregarProductoPane.isVisible()) {
+            EstilosApp.aplicarEstiloTarjeta(agregarProductoPane);
+        }
     }
 
-    private void configurarBotonesNavegacion() {
-        // Configurar acción al seleccionar botones del menú
-        dashboardButton.setOnAction(this::handleDashboardAction);
-        transactionsButton.setOnAction(this::handleTransactionsAction);
-        nutritionButton.setOnAction(this::handleNutritionAction);
-        shoppingButton.setOnAction(this::handleShoppingAction);
-        savingsButton.setOnAction(this::handleSavingsAction);
-        reportsButton.setOnAction(this::handleReportsAction);
-        settingsButton.setOnAction(this::handleSettingsAction);
-        profileButton.setOnAction(this::handleProfileAction);
-        logoutButton.setOnAction(this::handleLogoutAction);
-    }
-
+    /**
+     * Inicializa la pantalla de listas de compra
+     */
     private void inicializarPantallaCompras() {
         // Configurar combo de filtro de listas
         filtroListasComboBox.setItems(FXCollections.observableArrayList("Todas", "Activas", "Completadas"));
@@ -218,6 +193,24 @@ public class ComprasController implements Initializable {
         });
 
         // Configurar celda personalizada para ListView
+        configurarCeldaListaCompra();
+
+        // Configurar tabla de productos
+        configurarTablaProductos();
+
+        // Configurar panel de crear lista
+        configurarPanelCrearLista();
+
+        // Inicialmente ocultar paneles
+        ocultarDetalleLista();
+        ocultarPanelCrearLista();
+        ocultarPanelBuscarProducto();
+    }
+
+    /**
+     * Configura la celda personalizada para el ListView de listas de compra
+     */
+    private void configurarCeldaListaCompra() {
         listasCompraListView.setCellFactory(param -> new ListCell<ListaCompra>() {
             @Override
             protected void updateItem(ListaCompra item, boolean empty) {
@@ -230,7 +223,7 @@ public class ComprasController implements Initializable {
                 } else {
                     // Crear contenido de la celda
                     VBox contenido = new VBox(5);
-                    contenido.setPadding(new Insets(5, 10, 5, 10));
+                    contenido.setPadding(new javafx.geometry.Insets(5, 10, 5, 10));
 
                     // Nombre de la lista
                     Label nombreLabel = new Label(item.getNombre());
@@ -275,8 +268,12 @@ public class ComprasController implements Initializable {
                 }
             }
         });
+    }
 
-        // Configurar tabla de productos
+    /**
+     * Configura la tabla de productos
+     */
+    private void configurarTablaProductos() {
         compradoColumn.setCellValueFactory(new PropertyValueFactory<>("comprado"));
         compradoColumn.setCellFactory(col -> new TableCell<ItemCompra, Boolean>() {
             private final CheckBox checkBox = new CheckBox();
@@ -314,7 +311,16 @@ public class ComprasController implements Initializable {
         totalColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getPrecioTotal())));
 
-        // Columna de acciones para productos
+        configurarColumnaAccionesProductos();
+
+        // Configurar tabla de resultados de búsqueda
+        configurarTablaResultadosBusqueda();
+    }
+
+    /**
+     * Configura la columna de acciones para la tabla de productos
+     */
+    private void configurarColumnaAccionesProductos() {
         accionesColumn.setCellFactory(param -> new TableCell<ItemCompra, Void>() {
             private final Button btnAumentar = new Button("+");
             private final Button btnDisminuir = new Button("-");
@@ -366,8 +372,12 @@ public class ComprasController implements Initializable {
                 }
             }
         });
+    }
 
-        // Configurar panel de crear lista
+    /**
+     * Configura el panel de creación de lista
+     */
+    private void configurarPanelCrearLista() {
         modalidadComboBox.setItems(FXCollections.observableArrayList("Máximo", "Equilibrado", "Estándar"));
         modalidadComboBox.getSelectionModel().select("Equilibrado");
 
@@ -377,8 +387,12 @@ public class ComprasController implements Initializable {
                 presupuestoField.setText(oldValue);
             }
         });
+    }
 
-        // Configurar tabla de resultados de búsqueda
+    /**
+     * Configura la tabla de resultados de búsqueda
+     */
+    private void configurarTablaResultadosBusqueda() {
         productoNombreColumn.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         productoMarcaColumn.setCellValueFactory(new PropertyValueFactory<>("marca"));
         productoCategoriaColumn.setCellValueFactory(new PropertyValueFactory<>("categoria"));
@@ -399,7 +413,7 @@ public class ComprasController implements Initializable {
                     Producto producto = getTableView().getItems().get(getIndex());
                     listaCompraServicio.agregarProductoALista(listaSeleccionada, producto.getId(), 1);
                     mostrarDetalleLista(listaSeleccionada);
-                    mostrarAlertaInformacion("Producto añadido",
+                    navegacionServicio.mostrarAlertaInformacion("Producto añadido",
                             "El producto ha sido añadido a la lista de compra.");
                 });
             }
@@ -414,13 +428,11 @@ public class ComprasController implements Initializable {
                 }
             }
         });
-
-        // Inicialmente ocultar paneles
-        ocultarDetalleLista();
-        ocultarPanelCrearLista();
-        ocultarPanelBuscarProducto();
     }
 
+    /**
+     * Carga las listas de compra según el filtro seleccionado
+     */
     private void cargarListasCompra() {
         // Obtener listas según filtro seleccionado
         String filtro = filtroListasComboBox.getValue();
@@ -446,6 +458,9 @@ public class ComprasController implements Initializable {
         }
     }
 
+    /**
+     * Muestra el detalle de la lista seleccionada
+     */
     private void mostrarDetalleLista(ListaCompra lista) {
         // Recargar la lista con items actualizados SIEMPRE
         ListaCompra listaActualizada = listaCompraServicio.obtenerListaCompra(lista.getId(), usuarioIdActual);
@@ -460,6 +475,7 @@ public class ComprasController implements Initializable {
         // Mostrar panel de detalle
         detalleListaPane.setVisible(true);
         detalleListaPane.setManaged(true);
+        EstilosApp.aplicarEstiloTarjeta(detalleListaPane);
 
         // Actualizar datos básicos
         nombreListaLabel.setText(listaActualizada.getNombre());
@@ -496,12 +512,18 @@ public class ComprasController implements Initializable {
         });
     }
 
+    /**
+     * Oculta el panel de detalle de lista
+     */
     private void ocultarDetalleLista() {
         detalleListaPane.setVisible(false);
         detalleListaPane.setManaged(false);
         listaSeleccionada = null;
     }
 
+    /**
+     * Actualiza el resumen de la lista seleccionada
+     */
     private void actualizarResumenLista() {
         if (listaSeleccionada != null) {
             // Calcular coste total
@@ -527,11 +549,17 @@ public class ComprasController implements Initializable {
         }
     }
 
+    /**
+     * Manejador para el cambio en el filtro de listas
+     */
     @FXML
     private void handleFiltroListas(ActionEvent event) {
         cargarListasCompra();
     }
 
+    /**
+     * Manejador para crear una nueva lista
+     */
     @FXML
     private void handleCrearLista(ActionEvent event) {
         // Mostrar panel de creación de lista
@@ -548,6 +576,9 @@ public class ComprasController implements Initializable {
         mostrarPanelCrearLista();
     }
 
+    /**
+     * Manejador para editar una lista
+     */
     @FXML
     private void handleEditarLista(ActionEvent event) {
         if (listaSeleccionada == null) {
@@ -569,20 +600,25 @@ public class ComprasController implements Initializable {
         mostrarPanelCrearLista();
     }
 
+    /**
+     * Manejador para eliminar una lista
+     */
     @FXML
     private void handleEliminarLista(ActionEvent event) {
         if (listaSeleccionada == null) {
             return;
         }
 
-        if (mostrarConfirmacion("Eliminar Lista",
-                "¿Estás seguro de que deseas eliminar esta lista de compra?")) {
+        if (navegacionServicio.confirmarEliminarLista()) {
             listaCompraServicio.eliminarListaCompra(listaSeleccionada.getId(), usuarioIdActual);
             ocultarDetalleLista();
             cargarListasCompra();
         }
     }
 
+    /**
+     * Manejador para guardar la lista
+     */
     @FXML
     private void handleGuardarLista(ActionEvent event) {
         // Validar campos
@@ -590,7 +626,7 @@ public class ComprasController implements Initializable {
                 presupuestoField.getText().trim().isEmpty() ||
                 modalidadComboBox.getValue() == null) {
 
-            mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos obligatorios.");
+            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos obligatorios.");
             return;
         }
 
@@ -604,7 +640,7 @@ public class ComprasController implements Initializable {
 
             // Validar presupuesto
             if (presupuesto <= 0) {
-                mostrarAlertaError("Presupuesto inválido", "El presupuesto debe ser mayor que cero.");
+                navegacionServicio.mostrarAlertaError("Presupuesto inválido", "El presupuesto debe ser mayor que cero.");
                 return;
             }
 
@@ -618,7 +654,7 @@ public class ComprasController implements Initializable {
                 listaCompraServicio.actualizarListaCompra(listaSeleccionada);
                 mostrarDetalleLista(listaSeleccionada);
 
-                mostrarAlertaInformacion("Lista actualizada", "La lista de compra ha sido actualizada correctamente.");
+                navegacionServicio.mostrarAlertaInformacion("Lista actualizada", "La lista de compra ha sido actualizada correctamente.");
             } else {
                 // Crear nueva lista
                 ListaCompra nuevaLista;
@@ -641,22 +677,28 @@ public class ComprasController implements Initializable {
                 cargarListasCompra();
                 listasCompraListView.getSelectionModel().select(nuevaLista);
 
-                mostrarAlertaInformacion("Lista creada", "La lista de compra ha sido creada correctamente.");
+                navegacionServicio.mostrarAlertaInformacion("Lista creada", "La lista de compra ha sido creada correctamente.");
             }
 
             // Ocultar panel
             ocultarPanelCrearLista();
 
         } catch (NumberFormatException e) {
-            mostrarAlertaError("Formato incorrecto", "Por favor, ingresa un presupuesto válido.");
+            navegacionServicio.mostrarAlertaError("Formato incorrecto", "Por favor, ingresa un presupuesto válido.");
         }
     }
 
+    /**
+     * Manejador para cancelar la creación/edición de lista
+     */
     @FXML
     private void handleCancelarLista(ActionEvent event) {
         ocultarPanelCrearLista();
     }
 
+    /**
+     * Manejador para cambiar estado de completada
+     */
     @FXML
     private void handleCompletadaChange(ActionEvent event) {
         if (listaSeleccionada != null) {
@@ -666,6 +708,9 @@ public class ComprasController implements Initializable {
         }
     }
 
+    /**
+     * Manejador para agregar producto a la lista
+     */
     @FXML
     private void handleAgregarProducto(ActionEvent event) {
         if (listaSeleccionada == null) {
@@ -680,6 +725,9 @@ public class ComprasController implements Initializable {
         mostrarPanelBuscarProducto();
     }
 
+    /**
+     * Manejador para buscar productos
+     */
     @FXML
     private void handleBuscarProducto(ActionEvent event) {
         String termino = buscarProductoField.getText().trim();
@@ -693,335 +741,63 @@ public class ComprasController implements Initializable {
         }
     }
 
+    /**
+     * Manejador para cerrar la búsqueda de productos
+     */
     @FXML
     private void handleCerrarBusqueda(ActionEvent event) {
         ocultarPanelBuscarProducto();
     }
 
+    /**
+     * Muestra el panel de creación/edición de lista
+     */
     private void mostrarPanelCrearLista() {
         crearListaPane.setVisible(true);
         crearListaPane.setManaged(true);
+        EstilosApp.aplicarEstiloTarjeta(crearListaPane);
     }
 
+    /**
+     * Oculta el panel de creación/edición de lista
+     */
     private void ocultarPanelCrearLista() {
         crearListaPane.setVisible(false);
         crearListaPane.setManaged(false);
     }
 
+    /**
+     * Muestra el panel de búsqueda de productos
+     */
     private void mostrarPanelBuscarProducto() {
         agregarProductoPane.setVisible(true);
         agregarProductoPane.setManaged(true);
+        EstilosApp.aplicarEstiloTarjeta(agregarProductoPane);
     }
 
+    /**
+     * Oculta el panel de búsqueda de productos
+     */
     private void ocultarPanelBuscarProducto() {
         agregarProductoPane.setVisible(false);
         agregarProductoPane.setManaged(false);
     }
 
-    @FXML
-    private void handleMinimizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setIconified(true);
+    /**
+     * Muestra un diálogo de confirmación
+     */
+    private boolean mostrarConfirmacion(String titulo, String mensaje) {
+        return navegacionServicio.confirmarAccion(titulo, mensaje);
     }
 
-    @FXML
-    private void handleMaximizeAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setMaximized(!escenario.isMaximized());
-
-        // Cambiar el símbolo del botón según el estado
-        if (escenario.isMaximized()) {
-            maximizeButton.setText("❐");  // Símbolo para restaurar
-        } else {
-            maximizeButton.setText("□");  // Símbolo para maximizar
-        }
-    }
-
-    @FXML
-    private void handleCloseAction(ActionEvent evento) {
-        Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.close();
-    }
-
-    @FXML
-    private void handleDashboardAction(ActionEvent evento) {
-        try {
-            // Cargar la vista del dashboard
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
-            Parent raizDashboard = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaDashboard = new Scene(raizDashboard);
-            escenaDashboard.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaDashboard);
-            escenarioActual.setTitle("SmartSave - Dashboard");
-
-        } catch (IOException e) {
-            mostrarAlertaError("Error de navegación", "Error al cargar el dashboard: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleTransactionsAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de transacciones
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/transacciones.fxml"));
-            Parent raizTransacciones = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaTransacciones = new Scene(raizTransacciones);
-            escenaTransacciones.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) transactionsButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaTransacciones);
-            escenarioActual.setTitle("SmartSave - Gestión de Ingresos y Gastos");
-
-        } catch (IOException e) {
-            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de transacciones: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleNutritionAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de perfil nutricional
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/nutricion.fxml"));
-            Parent raizNutricion = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaNutricion = new Scene(raizNutricion);
-            escenaNutricion.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) nutritionButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaNutricion);
-            escenarioActual.setTitle("SmartSave - Perfil Nutricional");
-
-        } catch (IOException e) {
-            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de perfil nutricional: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleShoppingAction(ActionEvent evento) {
+    /**
+     * Sobrescribe el método de navegación a compras
+     * Ya que estamos en la vista de plan de compras
+     */
+    @Override
+    public void handleShoppingAction(ActionEvent evento) {
         // Ya estamos en la vista de plan de compras, solo cargar datos
         cargarListasCompra();
         activarBoton(shoppingButton);
-    }
-
-    @FXML
-    private void handleSavingsAction(ActionEvent evento) {
-        try {
-            // Cargar la vista de modalidades de ahorro
-            FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/ahorro.fxml"));
-            Parent raizAhorro = cargador.load();
-
-            // Configurar la nueva escena
-            Scene escenaAhorro = new Scene(raizAhorro);
-            escenaAhorro.setFill(Color.TRANSPARENT);
-
-            // Obtener el escenario actual
-            Stage escenarioActual = (Stage) savingsButton.getScene().getWindow();
-
-            // Establecer la nueva escena
-            escenarioActual.setScene(escenaAhorro);
-            escenarioActual.setTitle("SmartSave - Modalidades de Ahorro");
-
-        } catch (IOException e) {
-            mostrarAlertaError("Error de navegación", "Error al cargar la pantalla de modalidades de ahorro: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void handleReportsAction(ActionEvent evento) {
-        // Cambiar a la vista de informes
-        activarBoton(reportsButton);
-        mostrarAlertaNoImplementado("Informes");
-    }
-
-    @FXML
-    private void handleSettingsAction(ActionEvent evento) {
-        // Cambiar a la vista de configuración
-        activarBoton(settingsButton);
-        mostrarAlertaNoImplementado("Configuración");
-    }
-
-    @FXML
-    private void handleProfileAction(ActionEvent evento) {
-        // Cambiar a la vista de perfil
-        activarBoton(profileButton);
-        mostrarAlertaNoImplementado("Mi Perfil");
-    }
-
-    @FXML
-    private void handleLogoutAction(ActionEvent evento) {
-        // Mostrar confirmación antes de cerrar sesión
-        if (mostrarConfirmacion("Cerrar Sesión", "¿Estás seguro que deseas cerrar la sesión?")) {
-            try {
-                // Volver a la pantalla de login
-                FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
-                Parent raizLogin = cargador.load();
-
-                Scene escenaLogin = new Scene(raizLogin);
-                escenaLogin.setFill(Color.TRANSPARENT);
-
-                Stage escenarioActual = (Stage) logoutButton.getScene().getWindow();
-                escenarioActual.setScene(escenaLogin);
-                escenarioActual.setTitle("SmartSave - Login");
-                escenarioActual.centerOnScreen();
-
-            } catch (IOException e) {
-                mostrarAlertaError("Error al volver a la pantalla de login", e.getMessage());
-            }
-        }
-    }
-
-    private void activarBoton(Button botonActivo) {
-        // Quitar la clase 'selected' de todos los botones
-        dashboardButton.getStyleClass().remove("selected");
-        transactionsButton.getStyleClass().remove("selected");
-        nutritionButton.getStyleClass().remove("selected");
-        shoppingButton.getStyleClass().remove("selected");
-        savingsButton.getStyleClass().remove("selected");
-        reportsButton.getStyleClass().remove("selected");
-        settingsButton.getStyleClass().remove("selected");
-        profileButton.getStyleClass().remove("selected");
-
-        // Añadir la clase 'selected' al botón activo
-        botonActivo.getStyleClass().add("selected");
-    }
-
-    private void mostrarAlertaNoImplementado(String caracteristica) {
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle(caracteristica + " - En desarrollo");
-        alerta.setHeaderText(null);
-        alerta.setContentText("Esta funcionalidad aún no está implementada.");
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alerta.showAndWait();
-    }
-
-    private void mostrarAlertaError(String titulo, String mensaje) {
-        Alert alerta = new Alert(Alert.AlertType.ERROR);
-        alerta.setTitle(titulo);
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alerta.showAndWait();
-    }
-
-    private void mostrarAlertaInformacion(String titulo, String mensaje) {
-        Alert alerta = new Alert(Alert.AlertType.INFORMATION);
-        alerta.setTitle(titulo);
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        alerta.showAndWait();
-    }
-
-    private boolean mostrarConfirmacion(String titulo, String mensaje) {
-        Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
-        alerta.setTitle(titulo);
-        alerta.setHeaderText(null);
-        alerta.setContentText(mensaje);
-
-        // Estilizar alerta
-        DialogPane dialogPane = alerta.getDialogPane();
-        dialogPane.setStyle(
-                "-fx-background-color: #1A1A25; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-border-color: #FF00FF; " +
-                        "-fx-border-width: 1px;"
-        );
-
-        dialogPane.lookupAll(".label").forEach(node ->
-                node.setStyle("-fx-text-fill: white;")
-        );
-
-        dialogPane.lookupAll(".button").forEach(node -> {
-            node.setStyle(
-                    "-fx-background-color: #25253A; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-border-color: #4050FF; " +
-                            "-fx-border-width: 1px;"
-            );
-        });
-
-        return alerta.showAndWait().filter(r -> r == ButtonType.OK).isPresent();
     }
 }

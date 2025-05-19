@@ -5,6 +5,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -216,6 +217,81 @@ public class NavegacionServicio {
      */
     private void estilizarAlerta(Alert alerta) {
         DialogPane dialogPane = alerta.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: #1A1A25; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-border-color: #FF00FF; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        dialogPane.lookupAll(".label").forEach(node ->
+                node.setStyle("-fx-text-fill: white;")
+        );
+
+        dialogPane.lookupAll(".button").forEach(node -> {
+            node.setStyle(
+                    "-fx-background-color: #25253A; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-border-color: #4050FF; " +
+                            "-fx-border-width: 1px;"
+            );
+
+            // Efectos de hover
+            node.setOnMouseEntered(e ->
+                    node.setStyle(
+                            "-fx-background-color: #35354A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #FF00FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+
+            node.setOnMouseExited(e ->
+                    node.setStyle(
+                            "-fx-background-color: #25253A; " +
+                                    "-fx-text-fill: white; " +
+                                    "-fx-border-color: #4050FF; " +
+                                    "-fx-border-width: 1px;"
+                    )
+            );
+        });
+    }
+
+    /**
+     * Muestra un diálogo de confirmación genérico
+     * @param titulo Título del diálogo
+     * @param mensaje Mensaje a mostrar
+     * @return true si el usuario confirmó, false en caso contrario
+     */
+    public boolean confirmarAccion(String titulo, String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+
+        estilizarDialog(alerta);
+
+        return alerta.showAndWait()
+                .filter(respuesta -> respuesta == ButtonType.OK)
+                .isPresent();
+    }
+
+    /**
+     * Muestra un diálogo de confirmación para eliminar una lista
+     * @return true si el usuario confirmó, false en caso contrario
+     */
+    public boolean confirmarEliminarLista() {
+        return confirmarAccion("Eliminar Lista",
+                "¿Estás seguro de que deseas eliminar esta lista de compra?");
+    }
+
+    // Agregar al NavegacionServicio
+
+    /**
+     * Estiliza un diálogo general (para usarse con cualquier tipo de diálogo)
+     */
+    public void estilizarDialog(Dialog<?> dialog) {
+        DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.setStyle(
                 "-fx-background-color: #1A1A25; " +
                         "-fx-text-fill: white; " +
