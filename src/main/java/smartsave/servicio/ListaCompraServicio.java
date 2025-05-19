@@ -176,80 +176,220 @@ public class ListaCompraServicio {
      * @return La lista actualizada
      */
     public ListaCompra agregarProductoALista(ListaCompra lista, Long productoId, int cantidad) {
+        System.out.println("Iniciando adición de producto ID: " + productoId);
+
+        Session session = null;
         Transaction transaction = null;
-        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
+
+        try {
+            // Abrir una nueva sesión
+            session = HibernateConfig.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
-            // 1. Obtener la lista actualizada
-            ListaCompra listaActualizada = session.createQuery(
-                            "FROM ListaCompra l WHERE l.id = :listaId",
-                            ListaCompra.class)
-                    .setParameter("listaId", lista.getId())
-                    .uniqueResult();
-
-            if (listaActualizada == null) {
-                if (transaction != null) {
-                    transaction.rollback();
-                }
-                throw new RuntimeException("Lista no encontrada con ID: " + lista.getId());
-            }
-
-            // 2. Verificar si el producto ya existe en la base de datos
+            // 1. Verificar si el producto ya existe en la base de datos
             Producto producto = session.get(Producto.class, productoId);
+            System.out.println("Producto encontrado en BD: " + (producto != null ? "Sí" : "No"));
 
-            // 3. Si no existe, podría ser un producto de Mercadona
+            // 2. Si no existe, obtener los datos del producto de Mercadona
             if (producto == null) {
-                producto = buscarProductoMercadona(productoId);
+                System.out.println("Buscando información real del producto en Mercadona...");
 
-                if (producto == null) {
-                    if (transaction != null) {
-                        transaction.rollback();
+                // Obtener información del producto de Mercadona
+                Producto productoMercadona = obtenerProductoMercadona(productoId);
+
+                if (productoMercadona != null) {
+                    System.out.println("Producto encontrado en Mercadona: " + productoMercadona.getNombre());
+
+                    // Usar los datos reales del producto
+                    producto = new Producto();
+                    producto.setNombre(productoMercadona.getNombre());
+                    producto.setMarca(productoMercadona.getMarca());
+                    producto.setCategoria(productoMercadona.getCategoria());
+                    producto.setPrecio(productoMercadona.getPrecio());
+                    producto.setSupermercado("Mercadona");
+                    producto.setDisponible(true);
+
+                    // Copiar información nutricional si está disponible
+                    if (productoMercadona.getInfoNutricional() != null) {
+                        Producto.NutricionProducto info = new Producto.NutricionProducto();
+                        info.setCalorias(productoMercadona.getInfoNutricional().getCalorias());
+                        info.setProteinas(productoMercadona.getInfoNutricional().getProteinas());
+                        info.setCarbohidratos(productoMercadona.getInfoNutricional().getCarbohidratos());
+                        info.setGrasas(productoMercadona.getInfoNutricional().getGrasas());
+                        info.setFibra(productoMercadona.getInfoNutricional().getFibra());
+                        info.setSodio(productoMercadona.getInfoNutricional().getSodio());
+                        info.setAzucares(productoMercadona.getInfoNutricional().getAzucares());
+                        producto.setInfoNutricional(info);
                     }
-                    throw new RuntimeException("Producto no encontrado con ID: " + productoId);
+                } else {
+                    // Si no se encuentra, crear un producto básico
+                    System.out.println("No se encontró información en Mercadona, creando producto básico");
+                    producto = new Producto();
+                    producto.setNombre("Producto " + productoId);
+                    producto.setMarca("Mercadona");
+                    producto.setCategoria("Otros");
+                    producto.setPrecio(1.0);
+                    producto.setSupermercado("Mercadona");
+                    producto.setDisponible(true);
                 }
 
-                // Guardar el producto de Mercadona en la base de datos
-                session.persist(producto);
-                session.flush(); // Asegurar que se guarda inmediatamente
+                // Verificar que el precio no sea nulo
+                if (producto.getPrecioBD() == null) {
+                    System.out.println("Precio nulo detectado, estableciendo a 1.0");
+                    producto.setPrecioBD(BigDecimal.valueOf(1.0));
+                }
+
+                // Guardar el nuevo producto en la BD
+                System.out.println("Creando nuevo producto en la base de datos");
+                session.save(producto);
+                session.flush();
+
+                System.out.println("Nuevo producto guardado con ID generado: " + producto.getId());
+
+                // Usar el ID generado por la base de datos
+                productoId = producto.getId();
             }
 
-            // 4. Verificar si el producto ya está en la lista
-            ItemCompra itemExistente = session.createQuery(
-                            "FROM ItemCompra i WHERE i.lista.id = :listaId AND i.producto.id = :productoId",
-                            ItemCompra.class)
-                    .setParameter("listaId", listaActualizada.getId())
-                    .setParameter("productoId", productoId)
-                    .uniqueResult();
+            // 3. Verificar si el producto ya está en la lista
+            ItemCompra itemExistente = null;
+            try {
+                itemExistente = session.createQuery(
+                                "FROM ItemCompra i WHERE i.lista.id = :listaId AND i.producto.id = :productoId",
+                                ItemCompra.class)
+                        .setParameter("listaId", lista.getId())
+                        .setParameter("productoId", productoId)
+                        .uniqueResult();
+            } catch (Exception e) {
+                System.out.println("Error buscando item existente: " + e.getMessage());
+            }
+
+            System.out.println("Añadiendo item a lista ID: " + lista.getId());
 
             if (itemExistente != null) {
                 // Si ya existe, aumentar la cantidad
+                System.out.println("Item ya existe, actualizando cantidad");
                 itemExistente.setCantidad(itemExistente.getCantidad() + cantidad);
                 session.update(itemExistente);
             } else {
                 // Si no existe, crear nuevo item
-                ItemCompra nuevoItem = new ItemCompra(producto, cantidad);
-                nuevoItem.setLista(listaActualizada);
-                session.persist(nuevoItem);
+                System.out.println("Creando nuevo item para el producto");
+
+                // Obtener referencias frescas
+                ListaCompra listaFresca = session.get(ListaCompra.class, lista.getId());
+                Producto productoFresco = session.get(Producto.class, productoId);
+
+                if (listaFresca == null) {
+                    throw new RuntimeException("No se encontró la lista con ID: " + lista.getId());
+                }
+
+                if (productoFresco == null) {
+                    throw new RuntimeException("No se encontró el producto con ID: " + productoId);
+                }
+
+                ItemCompra nuevoItem = new ItemCompra(productoFresco, cantidad);
+                nuevoItem.setLista(listaFresca);
+
+                // Guardar el nuevo item
+                session.save(nuevoItem);
             }
 
-            session.flush();
+            // Confirmar la transacción
             transaction.commit();
+            transaction = null; // Marcar como completada para evitar rollback en finally
 
-            // 5. Recargar la lista completamente para asegurar consistencia
-            ListaCompra listaActual = obtenerListaCompra(lista.getId(), lista.getUsuarioId());
+            System.out.println("Ítem añadido correctamente");
 
-            // Actualizar caché
-            cacheListas.put(listaActual.getId(), listaActual);
+            // Limpiar caché para forzar recarga fresca
+            cacheListas.remove(lista.getId());
 
-            return listaActual;
+            // Recargar la lista actualizada
+            ListaCompra listaActualizada;
+            try (Session nuevaSesion = HibernateConfig.getSessionFactory().openSession()) {
+                listaActualizada = obtenerListaCompra(lista.getId(), lista.getUsuarioId());
+            }
+
+            return listaActualizada;
 
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
-            System.err.println("Error agregando producto a lista: " + e.getMessage());
+            System.out.println("Error durante la adición del producto: " + e.getMessage());
             e.printStackTrace();
+
+            if (transaction != null) {
+                try {
+                    if (session != null && session.isOpen() && transaction.isActive()) {
+                        transaction.rollback();
+                    }
+                } catch (Exception rollbackEx) {
+                    System.err.println("Error durante rollback: " + rollbackEx.getMessage());
+                }
+            }
+
             throw new RuntimeException("Error agregando producto a lista: " + e.getMessage(), e);
+        } finally {
+            if (session != null && session.isOpen()) {
+                try {
+                    session.close();
+                } catch (Exception closeEx) {
+                    System.err.println("Error cerrando sesión: " + closeEx.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Obtiene la información real de un producto de Mercadona usando el servicio de API
+     * @param productoId ID del producto a buscar
+     * @return Objeto Producto con la información real o null si no se encuentra
+     */
+    private Producto obtenerProductoMercadona(Long productoId) {
+        try {
+            ProductoServicio productoServicio = getProductoServicio();
+
+            if (!productoServicio.isApiMercadonaDisponible()) {
+                System.err.println("API de Mercadona no disponible");
+                return null;
+            }
+
+            // Buscar en resultados de búsqueda de términos comunes
+            List<String> terminosBusqueda = Arrays.asList("aceitunas", "pan", "leche", "fruta", "verdura", "carne", "pescado");
+            List<Producto> productosCandidatos = new ArrayList<>();
+
+            // Realizar búsquedas en paralelo
+            for (String termino : terminosBusqueda) {
+                try {
+                    CompletableFuture<List<Producto>> future = productoServicio.getMercadonaApiServicio()
+                            .buscarProductos(termino);
+                    List<Producto> resultados = future.get(5, TimeUnit.SECONDS);
+                    productosCandidatos.addAll(resultados);
+                } catch (Exception e) {
+                    System.err.println("Error en búsqueda de productos con término " + termino + ": " + e.getMessage());
+                }
+            }
+
+            // También buscar en productos nuevos
+            try {
+                CompletableFuture<List<Producto>> futureNuevos = productoServicio.getMercadonaApiServicio()
+                        .obtenerProductosNuevos();
+                List<Producto> nuevos = futureNuevos.get(5, TimeUnit.SECONDS);
+                productosCandidatos.addAll(nuevos);
+            } catch (Exception e) {
+                System.err.println("Error obteniendo productos nuevos: " + e.getMessage());
+            }
+
+            // Buscar el producto específico por ID
+            for (Producto candidato : productosCandidatos) {
+                if (candidato.getId() != null && candidato.getId().equals(productoId)) {
+                    System.out.println("Encontrado producto en API: " + candidato.getNombre());
+                    return candidato;
+                }
+            }
+
+            System.out.println("Producto con ID " + productoId + " no encontrado en los resultados de Mercadona");
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error general obteniendo producto Mercadona: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
     }
 
