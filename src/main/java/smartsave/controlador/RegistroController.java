@@ -93,8 +93,8 @@ public class RegistroController implements Initializable {
         EstilosApp.aplicarEstiloCampoTexto(nombreField);
         EstilosApp.aplicarEstiloCampoTexto(apellidosField);
         EstilosApp.aplicarEstiloCampoTexto(emailField);
-        EstilosApp.aplicarEstiloCampoContraseña(passwordField);
-        EstilosApp.aplicarEstiloCampoContraseña(confirmPasswordField);
+        EstilosApp.aplicarEstiloCampoContrasena(passwordField);
+        EstilosApp.aplicarEstiloCampoContrasena(confirmPasswordField);
 
         // Aplicar estilo al botón de registro
         EstilosApp.aplicarEstiloBotonPrimario(registroButton);
@@ -108,6 +108,15 @@ public class RegistroController implements Initializable {
 
         // Para hipervínculos
         EstilosApp.aplicarEstiloHipervinculo(loginLink);
+
+        for (javafx.scene.Node nodo : mainPane.lookupAll("Label")) {
+            if (nodo instanceof Label && nodo != titleLabel && nodo != subtitleLabel
+                    && nodo != nombreLabel && nodo != apellidosLabel
+                    && nodo != emailLabel && nodo != passwordLabel
+                    && nodo != confirmPasswordLabel) {
+                EstilosApp.aplicarEstiloEtiqueta((Label) nodo);
+            }
+        }
     }
 
     /**
@@ -143,7 +152,7 @@ public class RegistroController implements Initializable {
             if (valorNuevo.length() < 6 && !valorNuevo.isEmpty()) {
                 aplicarEstiloError(passwordField);
             } else {
-                EstilosApp.aplicarEstiloCampoContraseña(passwordField);
+                EstilosApp.aplicarEstiloCampoContrasena(passwordField);
             }
         });
 
@@ -152,7 +161,7 @@ public class RegistroController implements Initializable {
             if (!valorNuevo.equals(passwordField.getText()) && !valorNuevo.isEmpty()) {
                 aplicarEstiloError(confirmPasswordField);
             } else {
-                EstilosApp.aplicarEstiloCampoContraseña(confirmPasswordField);
+                EstilosApp.aplicarEstiloCampoContrasena(confirmPasswordField);
             }
         });
     }
@@ -236,11 +245,11 @@ public class RegistroController implements Initializable {
         String nombre = nombreField.getText().trim();
         String apellidos = apellidosField.getText().trim();
         String email = emailField.getText().trim();
-        String contraseña = passwordField.getText();
-        String confirmarContraseña = confirmPasswordField.getText();
+        String contrasena = passwordField.getText();
+        String confirmarContrasena = confirmPasswordField.getText();
 
         // Validar que no haya campos vacíos
-        if (nombre.isEmpty() || apellidos.isEmpty() || email.isEmpty() || contraseña.isEmpty()) {
+        if (nombre.isEmpty() || apellidos.isEmpty() || email.isEmpty() || contrasena.isEmpty()) {
             mostrarAlerta(Alert.AlertType.ERROR, "Error de validación", "Todos los campos son obligatorios.");
             return;
         }
@@ -252,14 +261,14 @@ public class RegistroController implements Initializable {
         }
 
         // Validar longitud mínima de contraseña
-        if (contraseña.length() < 6) {
+        if (contrasena.length() < 6) {
             mostrarAlerta(Alert.AlertType.ERROR, "Error de validación",
                     "La contraseña debe tener al menos 6 caracteres.");
             return;
         }
 
         // Validar que las contraseñas coincidan
-        if (!contraseña.equals(confirmarContraseña)) {
+        if (!contrasena.equals(confirmarContrasena)) {
             mostrarAlerta(Alert.AlertType.ERROR, "Error de validación",
                     "Las contraseñas no coinciden.");
             return;
@@ -267,7 +276,7 @@ public class RegistroController implements Initializable {
 
         try {
             // Crear nuevo usuario (en un entorno real, se haría hash de la contraseña)
-            Usuario nuevoUsuario = new Usuario(email, nombre, apellidos, contraseña);
+            Usuario nuevoUsuario = new Usuario(email, nombre, apellidos, contrasena);
 
             // Guardar usuario en la base de datos (simulado)
             boolean registroExitoso = usuarioServicio.registrarUsuario(nuevoUsuario);

@@ -9,18 +9,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-import javafx.util.Callback;
 import smartsave.modelo.*;
 import smartsave.servicio.*;
 import smartsave.utilidad.EstilosApp;
 
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -317,6 +312,8 @@ public class ComprasController extends BaseController {
 
         // Configurar tabla de resultados de búsqueda
         configurarTablaResultadosBusqueda();
+        EstilosApp.aplicarEstiloTabla(productosTableView);
+        EstilosApp.aplicarEstiloCabecerasTabla(productosTableView);
     }
 
     /**
@@ -356,8 +353,18 @@ public class ComprasController extends BaseController {
                     ItemCompra item = getTableView().getItems().get(getIndex());
                     if (mostrarConfirmacion("Eliminar Producto",
                             "¿Estás seguro de que deseas eliminar este producto de la lista?")) {
-                        listaCompraServicio.eliminarItemDeLista(listaSeleccionada, item.getId());
-                        mostrarDetalleLista(listaSeleccionada);
+                        // Guardar el ID de la lista antes de eliminar
+                        Long listaId = listaSeleccionada.getId();
+                        Long usuarioId = listaSeleccionada.getUsuarioId();
+
+                        // Eliminar item
+                        boolean eliminado = listaCompraServicio.eliminarItemDeLista(listaSeleccionada, item.getId());
+
+                        if (eliminado) {
+                            // Recargar la lista completa desde la base de datos
+                            listaSeleccionada = listaCompraServicio.obtenerListaCompra(listaId, usuarioId);
+                            mostrarDetalleLista(listaSeleccionada);
+                        }
                     }
                 });
 
@@ -402,18 +409,19 @@ public class ComprasController extends BaseController {
                 new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getPrecio())));
 
         productoAccionesColumn.setCellFactory(param -> new TableCell<Producto, Void>() {
-            private final Button btnAñadir = new Button("Añadir");
+            private final Button btnAnadir = new Button("Añadir");
 
             {
-                btnAñadir.setStyle(
+                btnAnadir.setStyle(
                         "-fx-background-color: rgba(100, 180, 100, 0.7); " +
                                 "-fx-text-fill: white; " +
                                 "-fx-cursor: hand;"
                 );
 
-                btnAñadir.setOnAction(event -> {
+                btnAnadir.setOnAction(event -> {
                     Producto producto = getTableView().getItems().get(getIndex());
-                    listaCompraServicio.agregarProductoALista(listaSeleccionada, producto.getId(), 1);
+                    // Pasar el producto completo al método
+                    listaCompraServicio.agregarProductoALista(listaSeleccionada, producto.getId(), producto, 1);
                     mostrarDetalleLista(listaSeleccionada);
                     navegacionServicio.mostrarAlertaInformacion("Producto añadido",
                             "El producto ha sido añadido a la lista de compra.");
@@ -426,10 +434,11 @@ public class ComprasController extends BaseController {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    setGraphic(btnAñadir);
+                    setGraphic(btnAnadir);
                 }
             }
         });
+        EstilosApp.aplicarEstiloCabecerasTabla(resultadosProductosTableView);
     }
 
     /**
@@ -744,6 +753,7 @@ public class ComprasController extends BaseController {
             if (termino.isEmpty()) {
                 resultados = productoServicio.obtenerTodosProductos();
             } else {
+                // Una sola búsqueda con el término específico
                 resultados = productoServicio.buscarProductos(termino);
             }
             return resultados;

@@ -95,10 +95,11 @@ public class NutricionController extends BaseController {
         EstilosApp.aplicarEstiloGrafico(macrosPieChart);
 
         // Aplicar estilos a los paneles
-        EstilosApp.aplicarEstiloTarjeta(restriccionesPane);
+//        EstilosApp.aplicarEstiloTarjeta(restriccionesPane);
 
         // Estilizar radio buttons
         estilizarRadioButtons();
+
     }
 
     /**
@@ -351,6 +352,7 @@ public class NutricionController extends BaseController {
 
         // Actualizar gráfico de macronutrientes
         actualizarGraficoMacros(macros);
+
     }
 
     /**

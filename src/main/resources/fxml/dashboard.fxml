@@ -140,8 +140,8 @@
                             <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Balance Actual" styleClass="card-title" />
-                        <Label fx:id="balanceAmount" text="€1,250.75" styleClass="card-amount" />
-                        <Label fx:id="balanceChange" text="+€125.50 (10%)" styleClass="card-change-positive" />
+                        <Label fx:id="balanceAmount" text="€0.00" styleClass="card-amount" />
+                        <Label fx:id="balanceChange" text="+€0.00 (0.0%)" styleClass="card-change-positive" />
                     </VBox>
 
                     <!-- Tarjeta: Gastos Mensuales -->
@@ -150,8 +150,8 @@
                             <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Gastos Mensuales" styleClass="card-title" />
-                        <Label fx:id="expensesAmount" text="€750.25" styleClass="card-amount" />
-                        <Label fx:id="expensesChange" text="-€50.75 (6.3%)" styleClass="card-change-negative" />
+                        <Label fx:id="expensesAmount" text="€0.00" styleClass="card-amount" />
+                        <Label fx:id="expensesChange" text="-€0.00 (0.0%)" styleClass="card-change-negative" />
                     </VBox>
 
                     <!-- Tarjeta: Ahorros -->
@@ -160,8 +160,8 @@
                             <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Ahorros" styleClass="card-title" />
-                        <Label fx:id="savingsAmount" text="€2,500.00" styleClass="card-amount" />
-                        <Label fx:id="savingsChange" text="+€300.00 (13.6%)" styleClass="card-change-positive" />
+                        <Label fx:id="savingsAmount" text="€0.00" styleClass="card-amount" />
+                        <Label fx:id="savingsChange" text="+€0.00 (0.0%)" styleClass="card-change-positive" />
                     </VBox>
 
                     <!-- Tarjeta: Nutrición -->
@@ -170,8 +170,8 @@
                             <Insets top="15" right="15" bottom="15" left="15" />
                         </padding>
                         <Label text="Balance Nutricional" styleClass="card-title" />
-                        <Label fx:id="nutritionScore" text="85/100" styleClass="card-amount" />
-                        <Label fx:id="nutritionStatus" text="Excelente" styleClass="card-status-good" />
+                        <Label fx:id="nutritionScore" text="--/100" styleClass="card-amount" />
+                        <Label fx:id="nutritionStatus" text="No definido" styleClass="card-status-good" />
                     </VBox>
                 </HBox>
 
@@ -208,11 +208,14 @@
                     <padding>
                         <Insets top="15" right="15" bottom="15" left="15" />
                     </padding>
-                    <HBox alignment="CENTER_LEFT" spacing="15">
-                        <Label text="Transacciones Recientes" styleClass="section-title" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="viewAllTransactionsButton" text="Ver Todas" onAction="#handleViewAllTransactionsAction" />
-                    </HBox>
+                    <BorderPane>
+                        <left>
+                            <Label text="Transacciones Recientes" styleClass="section-title" />
+                        </left>
+                        <right>
+                            <Button fx:id="viewAllTransactionsButton" text="Ver Todas" onAction="#handleViewAllTransactionsAction" />
+                        </right>
+                    </BorderPane>
 
                     <TableView fx:id="transactionsTable" prefHeight="200">
                         <columns>
@@ -223,53 +226,6 @@
                             <TableColumn fx:id="typeColumn" text="Tipo" prefWidth="80" />
                         </columns>
                     </TableView>
-                </VBox>
-
-                <!-- Objetivos de Ahorro -->
-                <VBox fx:id="savingGoalsContainer" styleClass="content-container">
-                    <padding>
-                        <Insets top="15" right="15" bottom="15" left="15" />
-                    </padding>
-                    <HBox alignment="CENTER_LEFT" spacing="15">
-                        <Label text="Objetivos de Ahorro" styleClass="section-title" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="addGoalButton" text="Añadir Objetivo" onAction="#handleAddGoalAction" />
-                    </HBox>
-
-                    <HBox spacing="15" alignment="CENTER">
-                        <!-- Objetivo 1 -->
-                        <VBox fx:id="goal1" styleClass="goal-card" prefWidth="200" prefHeight="150" alignment="CENTER">
-                            <padding>
-                                <Insets top="10" right="10" bottom="10" left="10" />
-                            </padding>
-                            <Label text="Viaje a Japón" styleClass="goal-title" />
-                            <ProgressBar fx:id="goal1Progress" progress="0.65" prefWidth="180" />
-                            <Label text="€3,250 / €5,000" styleClass="goal-amount" />
-                            <Label text="Faltan 5 meses" styleClass="goal-deadline" />
-                        </VBox>
-
-                        <!-- Objetivo 2 -->
-                        <VBox fx:id="goal2" styleClass="goal-card" prefWidth="200" prefHeight="150" alignment="CENTER">
-                            <padding>
-                                <Insets top="10" right="10" bottom="10" left="10" />
-                            </padding>
-                            <Label text="Laptop Nueva" styleClass="goal-title" />
-                            <ProgressBar fx:id="goal2Progress" progress="0.8" prefWidth="180" />
-                            <Label text="€1,200 / €1,500" styleClass="goal-amount" />
-                            <Label text="Faltan 2 meses" styleClass="goal-deadline" />
-                        </VBox>
-
-                        <!-- Objetivo 3 -->
-                        <VBox fx:id="goal3" styleClass="goal-card" prefWidth="200" prefHeight="150" alignment="CENTER">
-                            <padding>
-                                <Insets top="10" right="10" bottom="10" left="10" />
-                            </padding>
-                            <Label text="Fondo de Emergencia" styleClass="goal-title" />
-                            <ProgressBar fx:id="goal3Progress" progress="0.35" prefWidth="180" />
-                            <Label text="€2,100 / €6,000" styleClass="goal-amount" />
-                            <Label text="Sin fecha límite" styleClass="goal-deadline" />
-                        </VBox>
-                    </HBox>
                 </VBox>
             </VBox>
         </ScrollPane>

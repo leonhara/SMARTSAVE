@@ -6,8 +6,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -37,13 +35,8 @@
                 <Insets bottom="30" left="30" right="30" top="30" />
             </padding>
 
-            <!-- Icono de la aplicación -->
-            <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
-                <Image url="@../imagenes/app_icon.png" />
-            </ImageView>
-
             <Label fx:id="titleLabel" text="Crear cuenta en SmartSave" />
-            <Label fx:id="subtitleLabel" prefWidth="350.0" text="Completa tus datos para comenzar a optimizar tus finanzas" />
+            <Label fx:id="subtitleLabel" prefWidth="350.0" text="Completa tus datos para comenzar a ahorrar" />
 
             <GridPane alignment="CENTER" hgap="15" maxWidth="450" vgap="15">
                 <columnConstraints>

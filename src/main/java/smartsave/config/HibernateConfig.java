@@ -46,6 +46,7 @@ public class HibernateConfig {
             configuration.setProperty("hibernate.connection.username", "root");
             configuration.setProperty("hibernate.connection.password", "laco");
             configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
+            configuration.setProperty("hibernate.connection.provider_class", "com.zaxxer.hikari.hibernate.HikariConnectionProvider");
 
             // Configuración del esquema
             configuration.setProperty("hibernate.hbm2ddl.auto", "validate");

@@ -172,10 +172,11 @@ public class ListaCompraServicio {
      * Añade un producto a una lista de compra con manejo mejorado de productos de Mercadona
      * @param lista Lista de compra a modificar
      * @param productoId ID del producto a añadir
+     * @param producto Objeto Producto completo (opcional, puede ser null)
      * @param cantidad Cantidad del producto
      * @return La lista actualizada
      */
-    public ListaCompra agregarProductoALista(ListaCompra lista, Long productoId, int cantidad) {
+    public ListaCompra agregarProductoALista(ListaCompra lista, Long productoId, Producto productoCompleto, int cantidad) {
         System.out.println("Iniciando adición de producto ID: " + productoId);
 
         Session session = null;
@@ -190,47 +191,31 @@ public class ListaCompraServicio {
             Producto producto = session.get(Producto.class, productoId);
             System.out.println("Producto encontrado en BD: " + (producto != null ? "Sí" : "No"));
 
-            // 2. Si no existe, obtener los datos del producto de Mercadona
+            // 2. Si no existe, usar el producto completo proporcionado o buscar en Mercadona
             if (producto == null) {
-                System.out.println("Buscando información real del producto en Mercadona...");
-
-                // Obtener información del producto de Mercadona
-                Producto productoMercadona = obtenerProductoMercadona(productoId);
-
-                if (productoMercadona != null) {
-                    System.out.println("Producto encontrado en Mercadona: " + productoMercadona.getNombre());
-
-                    // Usar los datos reales del producto
-                    producto = new Producto();
-                    producto.setNombre(productoMercadona.getNombre());
-                    producto.setMarca(productoMercadona.getMarca());
-                    producto.setCategoria(productoMercadona.getCategoria());
-                    producto.setPrecio(productoMercadona.getPrecio());
-                    producto.setSupermercado("Mercadona");
-                    producto.setDisponible(true);
-
-                    // Copiar información nutricional si está disponible
-                    if (productoMercadona.getInfoNutricional() != null) {
-                        Producto.NutricionProducto info = new Producto.NutricionProducto();
-                        info.setCalorias(productoMercadona.getInfoNutricional().getCalorias());
-                        info.setProteinas(productoMercadona.getInfoNutricional().getProteinas());
-                        info.setCarbohidratos(productoMercadona.getInfoNutricional().getCarbohidratos());
-                        info.setGrasas(productoMercadona.getInfoNutricional().getGrasas());
-                        info.setFibra(productoMercadona.getInfoNutricional().getFibra());
-                        info.setSodio(productoMercadona.getInfoNutricional().getSodio());
-                        info.setAzucares(productoMercadona.getInfoNutricional().getAzucares());
-                        producto.setInfoNutricional(info);
-                    }
+                if (productoCompleto != null) {
+                    // Usar el producto proporcionado directamente
+                    System.out.println("Usando producto proporcionado: " + productoCompleto.getNombre());
+                    producto = productoCompleto;
                 } else {
-                    // Si no se encuentra, crear un producto básico
-                    System.out.println("No se encontró información en Mercadona, creando producto básico");
-                    producto = new Producto();
-                    producto.setNombre("Producto " + productoId);
-                    producto.setMarca("Mercadona");
-                    producto.setCategoria("Otros");
-                    producto.setPrecio(1.0);
-                    producto.setSupermercado("Mercadona");
-                    producto.setDisponible(true);
+                    System.out.println("Buscando información real del producto en Mercadona...");
+                    // Obtener información del producto de Mercadona
+                    Producto productoMercadona = obtenerProductoMercadona(productoId);
+
+                    if (productoMercadona != null) {
+                        System.out.println("Producto encontrado en Mercadona: " + productoMercadona.getNombre());
+                        producto = productoMercadona;
+                    } else {
+                        // Si no se encuentra, crear un producto básico
+                        System.out.println("No se encontró información en Mercadona, creando producto básico");
+                        producto = new Producto();
+                        producto.setNombre("Producto " + productoId);
+                        producto.setMarca("Mercadona");
+                        producto.setCategoria("Otros");
+                        producto.setPrecio(1.0);
+                        producto.setSupermercado("Mercadona");
+                        producto.setDisponible(true);
+                    }
                 }
 
                 // Verificar que el precio no sea nulo
@@ -249,6 +234,8 @@ public class ListaCompraServicio {
                 // Usar el ID generado por la base de datos
                 productoId = producto.getId();
             }
+
+            // El resto del método continúa igual...
 
             // 3. Verificar si el producto ya está en la lista
             ItemCompra itemExistente = null;
@@ -337,6 +324,18 @@ public class ListaCompraServicio {
     }
 
     /**
+     * Versión sobrecargada del método para mantener compatibilidad con el código existente
+     * @param lista Lista de compra a modificar
+     * @param productoId ID del producto a añadir
+     * @param cantidad Cantidad del producto
+     * @return La lista actualizada
+     */
+    public ListaCompra agregarProductoALista(ListaCompra lista, Long productoId, int cantidad) {
+        // Llama al nuevo método pasando null como producto completo
+        return agregarProductoALista(lista, productoId, null, cantidad);
+    }
+
+    /**
      * Obtiene la información real de un producto de Mercadona usando el servicio de API
      * @param productoId ID del producto a buscar
      * @return Objeto Producto con la información real o null si no se encuentra
@@ -350,45 +349,17 @@ public class ListaCompraServicio {
                 return null;
             }
 
-            // Buscar en resultados de búsqueda de términos comunes
-            List<String> terminosBusqueda = Arrays.asList("aceitunas", "pan", "leche", "fruta", "verdura", "carne", "pescado");
-            List<Producto> productosCandidatos = new ArrayList<>();
-
-            // Realizar búsquedas en paralelo
-            for (String termino : terminosBusqueda) {
-                try {
-                    CompletableFuture<List<Producto>> future = productoServicio.getMercadonaApiServicio()
-                            .buscarProductos(termino);
-                    List<Producto> resultados = future.get(5, TimeUnit.SECONDS);
-                    productosCandidatos.addAll(resultados);
-                } catch (Exception e) {
-                    System.err.println("Error en búsqueda de productos con término " + termino + ": " + e.getMessage());
-                }
+            // Primero intentar obtener el producto directamente usando el ID
+            Producto producto = buscarProductoMercadona(productoId);
+            if (producto != null) {
+                System.out.println("Encontrado producto en API: " + producto.getNombre());
+                return producto;
             }
 
-            // También buscar en productos nuevos
-            try {
-                CompletableFuture<List<Producto>> futureNuevos = productoServicio.getMercadonaApiServicio()
-                        .obtenerProductosNuevos();
-                List<Producto> nuevos = futureNuevos.get(5, TimeUnit.SECONDS);
-                productosCandidatos.addAll(nuevos);
-            } catch (Exception e) {
-                System.err.println("Error obteniendo productos nuevos: " + e.getMessage());
-            }
-
-            // Buscar el producto específico por ID
-            for (Producto candidato : productosCandidatos) {
-                if (candidato.getId() != null && candidato.getId().equals(productoId)) {
-                    System.out.println("Encontrado producto en API: " + candidato.getNombre());
-                    return candidato;
-                }
-            }
-
-            System.out.println("Producto con ID " + productoId + " no encontrado en los resultados de Mercadona");
+            System.out.println("Producto con ID " + productoId + " no encontrado");
             return null;
         } catch (Exception e) {
             System.err.println("Error general obteniendo producto Mercadona: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
@@ -407,30 +378,17 @@ public class ListaCompraServicio {
                 return null;
             }
 
-            // Buscar usando nuevos términos comunes de alimentación para aumentar probabilidades
-            CompletableFuture<List<Producto>> futureLeche = productoServicio.getMercadonaApiServicio().buscarProductos("leche");
-            CompletableFuture<List<Producto>> futurePan = productoServicio.getMercadonaApiServicio().buscarProductos("pan");
-            CompletableFuture<List<Producto>> futureFruta = productoServicio.getMercadonaApiServicio().buscarProductos("fruta");
+            // Obtener productos nuevos (una sola consulta en lugar de múltiples)
+            CompletableFuture<List<Producto>> futureProductos = productoServicio.getMercadonaApiServicio()
+                    .obtenerProductosNuevos();
 
-            // También obtener productos nuevos
-            CompletableFuture<List<Producto>> futureNuevos = productoServicio.getMercadonaApiServicio().obtenerProductosNuevos();
-
-            // Esperar a que se completen todas las búsquedas
-            CompletableFuture.allOf(futureLeche, futurePan, futureFruta, futureNuevos).join();
-
-            // Crear una lista con todos los productos encontrados
-            List<Producto> todosProductos = new ArrayList<>();
-            todosProductos.addAll(futureLeche.get());
-            todosProductos.addAll(futurePan.get());
-            todosProductos.addAll(futureFruta.get());
-            todosProductos.addAll(futureNuevos.get());
+            List<Producto> productos = futureProductos.get(10, TimeUnit.SECONDS);
 
             // Buscar el producto con el ID específico
-            return todosProductos.stream()
+            return productos.stream()
                     .filter(p -> p.getId() != null && p.getId().equals(productoId))
                     .findFirst()
                     .orElse(null);
-
         } catch (Exception e) {
             System.err.println("Error buscando producto de Mercadona: " + e.getMessage());
             return null;

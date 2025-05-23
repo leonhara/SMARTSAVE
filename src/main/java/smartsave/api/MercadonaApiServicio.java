@@ -128,35 +128,14 @@ public class MercadonaApiServicio {
             esperarControlTasa();
 
             try {
-                // Acortar término de búsqueda para mejorar resultados generales
-                String terminoBusqueda = terminoNormalizado;
-                if (terminoBusqueda.length() > 20) {
-                    terminoBusqueda = terminoBusqueda.substring(0, 20);
-                }
-
                 ProcessBuilder processBuilder = new ProcessBuilder(
-                        "python", pythonScriptPath, "search", terminoBusqueda,
+                        "python", pythonScriptPath, "search", terminoNormalizado,
                         "--postcode", codigoPostal,
                         "--limit", "25"
                 );
 
-                // Mejorar el logging de depuración
-                System.out.println("Ejecutando script Python: " + String.join(" ", processBuilder.command()));
-
                 String resultado = ejecutarProcesoConBuilder(processBuilder);
-
-                // Verificar la respuesta JSON antes de parsear
-                if (resultado == null || resultado.isEmpty()) {
-                    System.err.println("La respuesta del script Python está vacía");
-                    return new ArrayList<>();
-                }
-
-                // Imprimir una parte del resultado para depuración
-                System.out.println("Resultado del script (primeros 200 caracteres): " +
-                        (resultado.length() > 200 ? resultado.substring(0, 200) + "..." : resultado));
-
                 List<Producto> productos = parsearProductos(resultado);
-                System.out.println("Productos parseados de Mercadona: " + productos.size());
 
                 // Guardar en caché
                 searchCache.put(cacheKey, productos);
@@ -164,7 +143,6 @@ public class MercadonaApiServicio {
                 return productos;
             } catch (Exception e) {
                 System.err.println("Error al buscar productos de Mercadona: " + e.getMessage());
-                e.printStackTrace(); // Añadir stack trace para mejor diagnóstico
                 return new ArrayList<>();
             }
         }, executorService);

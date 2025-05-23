@@ -77,7 +77,7 @@ public class LoginController implements Initializable {
 
         // Aplicar estilos a los campos de entrada
         EstilosApp.aplicarEstiloCampoTexto(emailField);
-        EstilosApp.aplicarEstiloCampoContraseña(passwordField);
+        EstilosApp.aplicarEstiloCampoContrasena(passwordField);
 
         // Aplicar estilo al botón de inicio de sesión
         EstilosApp.aplicarEstiloBotonPrimario(loginButton);
@@ -111,10 +111,15 @@ public class LoginController implements Initializable {
         maximizeButton.setText("□");
         closeButton.setText("✕");
 
+        // Añadir estas líneas para asignar una fuente que contenga estos caracteres
+        minimizeButton.setStyle("-fx-font-family: 'Arial Unicode MS', 'Segoe UI Symbol';");
+        maximizeButton.setStyle("-fx-font-family: 'Arial Unicode MS', 'Segoe UI Symbol';");
+        closeButton.setStyle("-fx-font-family: 'Arial Unicode MS', 'Segoe UI Symbol';");
+
         // Asegurar que los botones sean del tamaño correcto
-        minimizeButton.setMinWidth(30);
-        maximizeButton.setMinWidth(30);
-        closeButton.setMinWidth(30);
+        minimizeButton.setMinWidth(20);
+        maximizeButton.setMinWidth(40);
+        closeButton.setMinWidth(20);
     }
 
     private void configurarValidacion() {
@@ -159,7 +164,7 @@ public class LoginController implements Initializable {
                 passwordField.setEffect(sombraError);
             } else {
                 // Restaurar estilo normal
-                EstilosApp.aplicarEstiloCampoContraseña(passwordField);
+                EstilosApp.aplicarEstiloCampoContrasena(passwordField);
             }
         });
     }

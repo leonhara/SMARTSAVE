@@ -49,10 +49,17 @@ def search_products(query, postcode, limit=20):
 
             # Obtener el nombre de la categoría de forma segura
             category_name = 'Sin categoría'
+            # Mejorar el manejo de errores para category_name
             try:
                 if hasattr(product, 'category') and product.category:
-                    if hasattr(product.category, 'name') and product.category.name:
+                    if isinstance(product.category, list) and len(product.category) > 0:
+                        category_name = product.category[0].name if hasattr(product.category[0], 'name') else 'Sin categoría'
+                    elif hasattr(product.category, 'name') and product.category.name:
                         category_name = product.category.name
+                    else:
+                        category_name = 'Sin categoría'
+                else:
+                    category_name = 'Sin categoría'
             except Exception as e:
                 logger.warning(f"Error al procesar category_name: {str(e)}")
                 category_name = 'Sin categoría'

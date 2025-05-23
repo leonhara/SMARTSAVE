@@ -5,7 +5,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
 import smartsave.utilidad.EstilosApp;
 
 /**
@@ -156,9 +155,9 @@ public class ConfiguracionController extends BaseController {
         confirmarContrasena.setPromptText("Confirmar nueva contraseña");
 
         // Aplicar estilos a los campos
-        EstilosApp.aplicarEstiloCampoContraseña(contrasenaActual);
-        EstilosApp.aplicarEstiloCampoContraseña(nuevaContrasena);
-        EstilosApp.aplicarEstiloCampoContraseña(confirmarContrasena);
+        EstilosApp.aplicarEstiloCampoContrasena(contrasenaActual);
+        EstilosApp.aplicarEstiloCampoContrasena(nuevaContrasena);
+        EstilosApp.aplicarEstiloCampoContrasena(confirmarContrasena);
 
         grid.add(new Label("Contraseña actual:"), 0, 0);
         grid.add(contrasenaActual, 1, 0);

@@ -1,10 +1,12 @@
 package smartsave.controlador;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import smartsave.servicio.NavegacionServicio;
 import smartsave.utilidad.EstilosApp;
@@ -55,6 +57,29 @@ public abstract class BaseController implements Initializable {
 
         // Inicialización específica del controlador (implementada por subclases)
         inicializarControlador();
+
+        Platform.runLater(() -> {
+            aplicarColorSoloASinColor();
+        });
+    }
+
+    private void aplicarColorSoloASinColor() {
+        mainPane.lookupAll(".label").forEach(nodo -> {
+            if (nodo instanceof Label) {
+                Label label = (Label) nodo;
+                Color colorActual = (Color) label.getTextFill();
+
+                // Solo cambiar si es específicamente GRIS (R≈G≈B)
+                boolean esGris = Math.abs(colorActual.getRed() - colorActual.getGreen()) < 0.1 &&
+                        Math.abs(colorActual.getGreen() - colorActual.getBlue()) < 0.1 &&
+                        Math.abs(colorActual.getRed() - colorActual.getBlue()) < 0.1 &&
+                        colorActual.getBrightness() < 0.9;
+
+                if (esGris) {
+                    label.setTextFill(EstilosApp.TEXTO_CLARO);
+                }
+            }
+        });
     }
 
     /**
@@ -75,6 +100,9 @@ public abstract class BaseController implements Initializable {
         EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
         EstilosApp.aplicarEstiloBotonVentana(maximizeButton);
         EstilosApp.aplicarEstiloBotonVentana(closeButton);
+
+        reportsButton.setVisible(false);
+        reportsButton.setManaged(false);
 
         // Estilos para botones de navegación
         EstilosApp.aplicarEstiloBotonNavegacion(dashboardButton);

@@ -1,5 +1,6 @@
 package smartsave.controlador;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -95,6 +96,7 @@ public class TransaccionesController extends BaseController {
 
         // Aplicar estilos de manera centralizada
         aplicarEstilosComponentes();
+
     }
 
     /**
@@ -157,57 +159,83 @@ public class TransaccionesController extends BaseController {
     }
 
     /**
-     * Configura la tabla de transacciones y sus columnas
-     */
-    private void configurarTablaTransacciones() {
-        // Configurar columnas básicas
-        configurarColumnasBasicas();
-
-        // Configurar columna de acciones
-        configurarColumnaAcciones();
-    }
-
-    /**
      * Configura las columnas básicas de la tabla
      */
     private void configurarColumnasBasicas() {
         // Columna de fecha
         fechaColumn.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-        fechaColumn.setCellFactory(column -> new TableCell<>() {
+        fechaColumn.setCellFactory(column -> new TableCell<Transaccion, LocalDate>() {
             private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
             @Override
             protected void updateItem(LocalDate item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    setStyle(""); // Limpia cualquier estilo en línea previo
                 } else {
                     setText(formatter.format(item));
+                    // Aplicar el color de texto base de tu tema si es necesario, o dejarlo vacío
+                    // para que herede de EstilosApp.aplicarEstiloTabla
+                    setStyle("-fx-text-fill: " + EstilosApp.toRgbString(EstilosApp.TEXTO_CLARO) + ";");
                 }
             }
         });
 
-        // Columnas de texto simple
         descripcionColumn.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        // Asegúrate de que las celdas de descripción y categoría también tengan un estilo de texto base
+        descripcionColumn.setCellFactory(col -> new TableCell<Transaccion, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+                setStyle(empty ? "" : "-fx-text-fill: " + EstilosApp.toRgbString(EstilosApp.TEXTO_CLARO) + ";");
+            }
+        });
+
         categoriaColumn.setCellValueFactory(new PropertyValueFactory<>("categoria"));
+        categoriaColumn.setCellFactory(col -> new TableCell<Transaccion, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+                setStyle(empty ? "" : "-fx-text-fill: " + EstilosApp.toRgbString(EstilosApp.TEXTO_CLARO) + ";");
+            }
+        });
+
 
         // Columna de monto formateada
         montoColumn.setCellValueFactory(new PropertyValueFactory<>("monto"));
-        montoColumn.setCellFactory(column -> new TableCell<>() {
+        montoColumn.setCellFactory(column -> new TableCell<Transaccion, Double>() {
+            // Define los colores como constantes para evitar crearlos en cada llamada
+            private final String colorIngreso = "-fx-text-fill: rgb(100, 220, 100);"; // Verde
+            private final String colorGasto = "-fx-text-fill: rgb(220, 100, 100);";   // Rojo
+            private final String colorDefecto = "-fx-text-fill: " + EstilosApp.toRgbString(EstilosApp.TEXTO_CLARO) + ";";
+
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
+
                 if (empty || item == null) {
                     setText(null);
+                    setStyle(colorDefecto); // Aplicar siempre un estilo base para limpiar
                 } else {
                     setText(String.format("€%.2f", item));
 
-                    // Colorear según tipo
-                    Transaccion transaccion = getTableView().getItems().get(getIndex());
-                    if ("Ingreso".equals(transaccion.getTipo())) {
-                        setTextFill(Color.rgb(100, 220, 100)); // Verde para ingresos
+                    Transaccion transaccion = getTableRow() != null ? (Transaccion) getTableRow().getItem() : null;
+                    if (transaccion == null && getIndex() >= 0 && getIndex() < getTableView().getItems().size()) {
+                        transaccion = getTableView().getItems().get(getIndex());
+                    }
+
+                    if (transaccion != null) {
+                        if ("Ingreso".equals(transaccion.getTipo())) {
+                            setStyle(colorIngreso);
+                        } else if ("Gasto".equals(transaccion.getTipo())) {
+                            setStyle(colorGasto);
+                        } else {
+                            setStyle(colorDefecto);
+                        }
                     } else {
-                        setTextFill(Color.rgb(220, 100, 100)); // Rojo para gastos
+                        setStyle(colorDefecto);
                     }
                 }
             }
@@ -215,24 +243,44 @@ public class TransaccionesController extends BaseController {
 
         // Columna de tipo con colores
         tipoColumn.setCellValueFactory(new PropertyValueFactory<>("tipo"));
-        tipoColumn.setCellFactory(column -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item);
+        tipoColumn.setCellFactory(column -> new TableCell<Transaccion, String>() {
+            private final String colorIngreso = "-fx-text-fill: rgb(100, 220, 100);";
+            private final String colorGasto = "-fx-text-fill: rgb(220, 100, 100);";
+            private final String colorDefecto = "-fx-text-fill: " + EstilosApp.toRgbString(EstilosApp.TEXTO_CLARO) + ";";
 
-                    // Colorear según tipo
-                    if ("Ingreso".equals(item)) {
-                        setTextFill(Color.rgb(100, 220, 100)); // Verde para ingresos
+            @Override
+            protected void updateItem(String tipo, boolean empty) {
+                super.updateItem(tipo, empty);
+
+                if (empty || tipo == null) {
+                    setText(null);
+                    setStyle(colorDefecto); // Aplicar siempre un estilo base para limpiar
+                } else {
+                    setText(tipo);
+                    if ("Ingreso".equals(tipo)) {
+                        setStyle(colorIngreso);
+                    } else if ("Gasto".equals(tipo)) {
+                        setStyle(colorGasto);
                     } else {
-                        setTextFill(Color.rgb(220, 100, 100)); // Rojo para gastos
+                        setStyle(colorDefecto);
                     }
                 }
             }
         });
+    }
+
+
+    /**
+     * Configura la tabla de transacciones y sus columnas
+     */
+    private void configurarTablaTransacciones() {
+        // Configurar columnas básicas
+        configurarColumnasBasicas();
+        configurarColumnaAcciones();
+
+        // Configurar columna de acciones
+        EstilosApp.aplicarEstiloTabla(transaccionesTable);
+        EstilosApp.aplicarEstiloCabecerasTabla(transaccionesTable);
     }
 
     /**

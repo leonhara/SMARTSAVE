@@ -1,5 +1,6 @@
 package smartsave.utilidad;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -36,6 +37,10 @@ public class EstilosApp {
     public static final Color NEON_AZUL = Color.rgb(80, 145, 255, 1.0);
     public static final Color NEON_MORADO = Color.rgb(160, 100, 255, 1.0);
     public static final Color TEXTO_CLARO = Color.rgb(230, 230, 250, 1.0);
+    public static final Color FONDO_CLARO_CONTROLES = Color.rgb(45, 45, 60, 0.95);
+    public static final Color BORDE_FOCO_CONTROLES = NEON_MORADO;
+    public static final Color BORDE_SUTIL_CONTROLES = Color.rgb(120, 100, 200, 0.5);
+
 
     // Gradientes pre-computados
     private static final LinearGradient GRADIENTE_NEON = crearGradienteNeon();
@@ -126,7 +131,7 @@ public class EstilosApp {
         } else if (nodo instanceof TextField) {
             aplicarEstiloCampoTexto((TextField) nodo);
         } else if (nodo instanceof PasswordField) {
-            aplicarEstiloCampoContraseña((PasswordField) nodo);
+            aplicarEstiloCampoContrasena((PasswordField) nodo);
         } else if (nodo instanceof Label) {
             aplicarEstiloSegunLabel((Label) nodo);
         } else if (nodo instanceof Hyperlink) {
@@ -248,50 +253,29 @@ public class EstilosApp {
      * Aplica estilo a los botones de la ventana (minimizar, maximizar, cerrar)
      */
     public static void aplicarEstiloBotonVentana(Button boton) {
-        boton.setFont(Font.font(FUENTE_MODERNA, FontWeight.BOLD, 11));
-        boton.setTextFill(TEXTO_CLARO);
-
-        // Estilo base
+        // Estilo inicial
         boton.setStyle(
                 "-fx-background-color: transparent; " +
                         "-fx-text-fill: white; " +
-                        "-fx-padding: 2 10; " +
+                        "-fx-font-family: 'Arial Unicode MS', 'Segoe UI Symbol'; " +
                         "-fx-cursor: hand;"
         );
 
-        // Efectos de hover
-        boton.setOnMouseEntered(e -> {
-            if (boton.getText().equals("✕")) {
-                // Rojo para el botón de cerrar
-                boton.setStyle(
-                        "-fx-background-color: rgba(255, 50, 50, 0.7); " +
-                                "-fx-text-fill: white; " +
-                                "-fx-padding: 2 10; " +
-                                "-fx-cursor: hand;"
-                );
-            } else {
-                // Normal para los otros botones
-                boton.setStyle(
-                        "-fx-background-color: rgba(255, 255, 255, 0.1); " +
-                                "-fx-text-fill: white; " +
-                                "-fx-padding: 2 10; " +
-                                "-fx-cursor: hand;"
-                );
-            }
-        });
+        // Efecto hover - asegúrate de incluir también la declaración de fuente aquí
+        boton.setOnMouseEntered(e -> boton.setStyle(
+                "-fx-background-color: rgba(100, 100, 150, 0.3); " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-family: 'Arial Unicode MS', 'Segoe UI Symbol'; " +
+                        "-fx-cursor: hand;"
+        ));
 
-        boton.setOnMouseExited(e -> {
-            boton.setStyle(
-                    "-fx-background-color: transparent; " +
-                            "-fx-text-fill: white; " +
-                            "-fx-padding: 2 10; " +
-                            "-fx-cursor: hand;"
-            );
-        });
-
-        // Tamaño consistente
-        boton.setMinSize(30, 25);
-        boton.setPrefSize(30, 25);
+        // Efecto salir del hover - mantener la declaración de fuente
+        boton.setOnMouseExited(e -> boton.setStyle(
+                "-fx-background-color: transparent; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-family: 'Arial Unicode MS', 'Segoe UI Symbol'; " +
+                        "-fx-cursor: hand;"
+        ));
     }
 
     /**
@@ -321,49 +305,67 @@ public class EstilosApp {
      * Aplica estilo a los botones principales
      */
     public static void aplicarEstiloBotonPrimario(Button boton) {
+        if (boton == null) {
+            System.err.println("EstilosApp: Intento de aplicar estilo a un botón null.");
+            return;
+        }
+
         boton.setFont(Font.font(FUENTE_MODERNA, FontWeight.NORMAL, 13));
-
-        // Fondo con gradiente neón
-        boton.setBackground(new Background(new BackgroundFill(
-                GRADIENTE_NEON,
-                new CornerRadii(5),
-                null
-        )));
-
-        // Sin borde
-        boton.setBorder(Border.EMPTY);
-
-        // Texto blanco
-        boton.setTextFill(Color.WHITE);
-
-        // Efecto de sombra
-        boton.setEffect((DropShadow) efectosCache.get("shadow-neon"));
-
-        // Padding
+        boton.setTextFill(Color.WHITE); // O TEXTO_CLARO. Asegurar que el texto sea visible.
         boton.setPadding(new Insets(8, 20, 8, 20));
 
-        // Efectos interactivos
+        // --- FORZAR EL FONDO CON GRADIENTE USANDO setStyle ---
+        // Esto tiene una precedencia muy alta y debería anular otros estilos de fondo.
+
+        // Convertir los colores del gradiente a formato CSS rgba o hex
+        String colorRosaCSS = String.format("rgba(%d, %d, %d, %.2f)",
+                (int) (NEON_ROSA.getRed() * 255),
+                (int) (NEON_ROSA.getGreen() * 255),
+                (int) (NEON_ROSA.getBlue() * 255),
+                NEON_ROSA.getOpacity());
+
+        String colorAzulCSS = String.format("rgba(%d, %d, %d, %.2f)",
+                (int) (NEON_AZUL.getRed() * 255),
+                (int) (NEON_AZUL.getGreen() * 255),
+                (int) (NEON_AZUL.getBlue() * 255),
+                NEON_AZUL.getOpacity());
+
+        // Crear la cadena del gradiente lineal para CSS
+        // "to right" es equivalente a los puntos (0,0) (1,0) que usaste en LinearGradient
+        String gradienteCssString = String.format("-fx-background-color: linear-gradient(to right, %s, %s);",
+                colorRosaCSS, colorAzulCSS);
+
+        // Aplicar el estilo del fondo y el radio de las esquinas.
+        // También reseteamos el borde por si acaso.
+        boton.setStyle(
+                gradienteCssString +
+                        " -fx-background-radius: 5px;" +
+                        " -fx-border-color: transparent;" + // Asegurar que no haya un borde que lo tape
+                        " -fx-border-width: 0;"
+        );
+
+        // Aplicar el efecto de sombra después de setStyle, ya que setStyle puede limpiar efectos.
+        boton.setEffect((DropShadow) efectosCache.get("shadow-neon"));
+
+        // --- FIN DEL CAMBIO PRINCIPAL ---
+
+        // Mantener los efectos de hover si ya funcionaban:
         boton.setOnMouseEntered(e -> {
-            // Aumentar brillo al pasar el ratón
             boton.setEffect((DropShadow) efectosCache.get("shadow-hover"));
         });
 
         boton.setOnMouseExited(e -> {
-            // Restaurar efecto original
             boton.setEffect((DropShadow) efectosCache.get("shadow-neon"));
         });
 
         boton.setOnMousePressed(e -> {
-            // Efecto al presionar
             boton.setEffect((DropShadow) efectosCache.get("shadow-pressed"));
         });
 
         boton.setOnMouseReleased(e -> {
             if (boton.isHover()) {
-                // Restaurar efecto hover
                 boton.setEffect((DropShadow) efectosCache.get("shadow-hover"));
             } else {
-                // Restaurar efecto original
                 boton.setEffect((DropShadow) efectosCache.get("shadow-neon"));
             }
         });
@@ -374,55 +376,53 @@ public class EstilosApp {
      */
     public static void aplicarEstiloCampoTexto(TextField campoTexto) {
         campoTexto.setFont(Font.font(FUENTE_MODERNA, 13));
-
-        // Fondo oscuro
-        campoTexto.setBackground(new Background(new BackgroundFill(
-                Color.rgb(35, 35, 45, 1.0),
-                new CornerRadii(5),
-                null
-        )));
-
-        // Borde neón sutil
-        campoTexto.setBorder(new Border(new BorderStroke(
-                Color.rgb(120, 100, 200, 0.5),
-                BorderStrokeStyle.SOLID,
-                new CornerRadii(5),
-                new BorderWidths(1)
-        )));
-
-        // Texto claro
-        campoTexto.setStyle("-fx-text-fill: rgb(230, 230, 250);");
-
-        // Padding
         campoTexto.setPadding(new Insets(8, 10, 8, 10));
 
-        // Efecto focus
+        // Estilo base en una sola cadena
+        String estiloBase = String.format(
+                "-fx-control-inner-background: %s; " +
+                        "-fx-background-color: %s; " +
+                        "-fx-text-fill: %s; " + // Para el texto que escribe el usuario
+                        "-fx-border-color: %s; " +
+                        "-fx-border-width: 1px; " +
+                        "-fx-border-radius: 5px; " +
+                        "-fx-background-radius: 5px; " +
+                        "-fx-prompt-text-fill: %s;", // <--- ESTA ES LA PARTE PARA EL TEXTO DE FONDO
+                toRgbString(FONDO_CLARO_CONTROLES),
+                toRgbString(FONDO_CLARO_CONTROLES),
+                toRgbString(TEXTO_CLARO),
+                toRgbString(BORDE_SUTIL_CONTROLES),
+                toRgbString(TEXTO_CLARO)
+        );
+
+        // Estilo con foco
+        String estiloFoco = String.format(
+                "-fx-control-inner-background: %s; " +
+                        "-fx-background-color: %s; " +
+                        "-fx-text-fill: %s; " +
+                        "-fx-border-color: %s; " +
+                        "-fx-border-width: 1.5px; " + // Borde más grueso en foco
+                        "-fx-border-radius: 5px;" +
+                        "-fx-background-radius: 5px;",
+                toRgbString(FONDO_CLARO_CONTROLES),
+                toRgbString(FONDO_CLARO_CONTROLES),
+                toRgbString(TEXTO_CLARO),
+                toRgbString(BORDE_FOCO_CONTROLES)
+        );
+
+        campoTexto.setStyle(estiloBase); // Aplicar el estilo base
+
         campoTexto.focusedProperty().addListener((observable, valorAnterior, valorNuevo) -> {
             if (valorNuevo) {
-                // Cuando tiene foco - borde neón más brillante
-                campoTexto.setBorder(new Border(new BorderStroke(
-                        NEON_MORADO,
-                        BorderStrokeStyle.SOLID,
-                        new CornerRadii(5),
-                        new BorderWidths(1.5)
-                )));
-
-                // Brillo interior
+                campoTexto.setStyle(estiloFoco); // Aplicar estilo de foco
+                // Efecto de sombra opcional para el foco
                 DropShadow sombraFoco = new DropShadow();
                 sombraFoco.setColor(Color.rgb(160, 100, 255, 0.4));
                 sombraFoco.setRadius(10);
                 sombraFoco.setSpread(0.1);
                 campoTexto.setEffect(sombraFoco);
             } else {
-                // Cuando pierde el foco - borde original
-                campoTexto.setBorder(new Border(new BorderStroke(
-                        Color.rgb(120, 100, 200, 0.5),
-                        BorderStrokeStyle.SOLID,
-                        new CornerRadii(5),
-                        new BorderWidths(1)
-                )));
-
-                // Sin efecto
+                campoTexto.setStyle(estiloBase); // Volver al estilo base
                 campoTexto.setEffect(null);
             }
         });
@@ -431,18 +431,18 @@ public class EstilosApp {
     /**
      * Aplica estilo al campo de contraseña
      */
-    public static void aplicarEstiloCampoContraseña(PasswordField campoContraseña) {
-        campoContraseña.setFont(Font.font(FUENTE_MODERNA, 13));
+    public static void aplicarEstiloCampoContrasena(PasswordField campoContrasena) {
+        campoContrasena.setFont(Font.font(FUENTE_MODERNA, 13));
 
         // Fondo oscuro
-        campoContraseña.setBackground(new Background(new BackgroundFill(
+        campoContrasena.setBackground(new Background(new BackgroundFill(
                 Color.rgb(35, 35, 45, 1.0),
                 new CornerRadii(5),
                 null
         )));
 
         // Borde neón sutil
-        campoContraseña.setBorder(new Border(new BorderStroke(
+        campoContrasena.setBorder(new Border(new BorderStroke(
                 Color.rgb(120, 100, 200, 0.5),
                 BorderStrokeStyle.SOLID,
                 new CornerRadii(5),
@@ -450,16 +450,16 @@ public class EstilosApp {
         )));
 
         // Texto claro
-        campoContraseña.setStyle("-fx-text-fill: rgb(230, 230, 250);");
+        campoContrasena.setStyle("-fx-text-fill: rgb(230, 230, 250);");
 
         // Padding
-        campoContraseña.setPadding(new Insets(8, 10, 8, 10));
+        campoContrasena.setPadding(new Insets(8, 10, 8, 10));
 
         // Efecto focus
-        campoContraseña.focusedProperty().addListener((observable, valorAnterior, valorNuevo) -> {
+        campoContrasena.focusedProperty().addListener((observable, valorAnterior, valorNuevo) -> {
             if (valorNuevo) {
                 // Cuando tiene foco - borde neón más brillante
-                campoContraseña.setBorder(new Border(new BorderStroke(
+                campoContrasena.setBorder(new Border(new BorderStroke(
                         NEON_MORADO,
                         BorderStrokeStyle.SOLID,
                         new CornerRadii(5),
@@ -471,10 +471,10 @@ public class EstilosApp {
                 sombraFoco.setColor(Color.rgb(160, 100, 255, 0.4));
                 sombraFoco.setRadius(10);
                 sombraFoco.setSpread(0.1);
-                campoContraseña.setEffect(sombraFoco);
+                campoContrasena.setEffect(sombraFoco);
             } else {
                 // Cuando pierde el foco - borde original
-                campoContraseña.setBorder(new Border(new BorderStroke(
+                campoContrasena.setBorder(new Border(new BorderStroke(
                         Color.rgb(120, 100, 200, 0.5),
                         BorderStrokeStyle.SOLID,
                         new CornerRadii(5),
@@ -482,7 +482,7 @@ public class EstilosApp {
                 )));
 
                 // Sin efecto
-                campoContraseña.setEffect(null);
+                campoContrasena.setEffect(null);
             }
         });
     }
@@ -674,15 +674,21 @@ public class EstilosApp {
         // Fondo transparente
         grafico.setStyle("-fx-background-color: transparent;");
 
-        // Color de texto claro
-        grafico.lookupAll(".chart-title").forEach(nodo ->
-                nodo.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;")
-        );
+        // Color de texto claro para el título del gráfico
+        grafico.lookupAll(".chart-title").forEach(nodo -> {
+            if (nodo instanceof Label) {
+                // Si tienes un método específico para el título, úsalo.
+                // De lo contrario, asegura que el texto sea blanco directamente.
+                ((Label) nodo).setTextFill(TEXTO_CLARO);
+            }
+        });
 
+        // Asegurarse de que las etiquetas del eje (si las hay) sean blancas
         grafico.lookupAll(".axis-label").forEach(nodo ->
-                nodo.setStyle("-fx-text-fill: rgb(200, 200, 220);")
+                nodo.setStyle("-fx-text-fill: white;")
         );
 
+        // Asegurarse de que la leyenda del gráfico sea blanca
         grafico.lookupAll(".chart-legend").forEach(nodo ->
                 nodo.setStyle("-fx-background-color: transparent; -fx-text-fill: white;")
         );
@@ -693,9 +699,19 @@ public class EstilosApp {
 
         // Estilos específicos para PieChart
         if (grafico instanceof PieChart) {
+            javafx.application.Platform.runLater(() -> {
+                grafico.lookupAll(".chart-pie-label").forEach(node -> {
+                    if (node instanceof javafx.scene.text.Text) {
+                        ((javafx.scene.text.Text) node).setFill(TEXTO_CLARO); // Forzar el color a blanco
+                        // Opcional: ajustar el tamaño o peso de la fuente si es necesario
+                        // ((javafx.scene.text.Text) node).setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+                    }
+                });
+            });
+
             ((PieChart) grafico).getData().forEach(dato -> {
-                // Añadir efecto neón a las secciones
-                dato.getNode().setEffect((Glow) efectosCache.get("glow-subtle"));
+                // Añadir efecto neón a las secciones (este código ya lo tenías)
+                dato.getNode().setEffect(new javafx.scene.effect.Glow(0.3));
             });
         }
 
@@ -703,7 +719,16 @@ public class EstilosApp {
         if (grafico instanceof LineChart) {
             grafico.lookupAll(".chart-series-line").forEach(nodo -> {
                 // Añadir efecto neón a las líneas
-                nodo.setEffect((Glow) efectosCache.get("glow-medium"));
+                nodo.setEffect(new javafx.scene.effect.Glow(0.3));
+            });
+            grafico.lookupAll(".axis-label").forEach(labelNode -> {
+                labelNode.setStyle("-fx-text-fill: white;");
+            });
+            grafico.lookupAll(".axis-tick-mark").forEach(tickNode -> {
+                tickNode.setStyle("-fx-stroke: white;");
+            });
+            grafico.lookupAll(".axis-tick-label").forEach(tickLabelNode -> {
+                tickLabelNode.setStyle("-fx-text-fill: white;");
             });
         }
     }
@@ -725,27 +750,29 @@ public class EstilosApp {
         tabla.lookupAll(".column-header").forEach(nodo ->
                 nodo.setStyle(
                         "-fx-background-color: rgba(60, 60, 80, 0.7); " +
-                                "-fx-text-fill: white; " +
+                                "-fx-text-fill: " + toRgbString(TEXTO_CLARO) + "; " + // Cambiado a TEXTO_CLARO
                                 "-fx-font-weight: bold; " +
                                 "-fx-padding: 8px; " +
                                 "-fx-border-color: transparent;"
                 )
         );
 
-        // Celdas
-        tabla.lookupAll(".table-row-cell").forEach(nodo ->
+        // Celdas (esto es clave para el texto dentro de las celdas)
+        tabla.lookupAll(".table-cell").forEach(nodo ->
                 nodo.setStyle(
-                        "-fx-background-color: rgba(40, 40, 50, 0.5); " +
-                                "-fx-text-fill: white; " +
+                        "-fx-background-color: transparent; " +
+                                "-fx-text-fill: " + toRgbString(TEXTO_CLARO) + "; " + // Cambiado a TEXTO_CLARO
                                 "-fx-table-cell-border-color: transparent;"
                 )
         );
 
         // CSS para filas alternadas y efectos de hover
         String cssClave = "tabla-estilo";
-        String css = ".table-row-cell:odd { -fx-background-color: rgba(50, 50, 60, 0.5); -fx-text-fill: white; }" +
-                ".table-row-cell:even { -fx-background-color: rgba(40, 40, 50, 0.5); -fx-text-fill: white; }" +
-                ".table-row-cell:hover { -fx-background-color: rgba(80, 70, 120, 0.5); -fx-text-fill: white; }";
+        String css = ".table-row-cell:odd { -fx-background-color: rgba(50, 50, 60, 0.5); }" +
+                ".table-row-cell:even { -fx-background-color: rgba(40, 40, 50, 0.5); }" +
+                ".table-row-cell:hover { -fx-background-color: rgba(80, 70, 120, 0.5); }" +
+                ".table-row-cell:selected { -fx-background-color: rgba(100, 100, 200, 0.7); }" +
+                ".table-cell { -fx-text-fill: " + toRgbString(TEXTO_CLARO) + "; }"; // Cambiado a TEXTO_CLARO
 
         // Usa la caché para no crear múltiples archivos CSS
         if (!cssCache.containsKey(cssClave)) {
@@ -753,8 +780,54 @@ public class EstilosApp {
         }
 
         String cssUrl = cssCache.get(cssClave);
-        if (!tabla.getStylesheets().contains(cssUrl)) {
-            tabla.getStylesheets().add(cssUrl);
+        if (tabla.getScene() != null && !tabla.getScene().getStylesheets().contains(cssUrl)) {
+            tabla.getScene().getStylesheets().add(cssUrl);
+        } else if (tabla.getScene() == null) {
+            // Si la tabla no está en la escena aún, añadir un listener para cuando lo esté
+            tabla.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene != null && !newScene.getStylesheets().contains(cssUrl)) {
+                    newScene.getStylesheets().add(cssUrl);
+                }
+            });
+        }
+    }
+
+    /**
+     * Aplica estilo a las listas (ListView)
+     */
+    public static void aplicarEstiloLista(ListView<?> lista) {
+        // Estilo general de la lista
+        lista.setStyle(
+                "-fx-background-color: rgba(30, 30, 40, 0.7); " +
+                        "-fx-background-radius: 5px; " +
+                        "-fx-border-color: rgba(80, 80, 120, 0.5); " +
+                        "-fx-border-radius: 5px; " +
+                        "-fx-border-width: 1px;"
+        );
+
+        // CSS para celdas alternadas y efectos de hover
+        String cssClave = "lista-estilo";
+        String css = ".list-cell:odd { -fx-background-color: rgba(50, 50, 60, 0.5); }" +
+                ".list-cell:even { -fx-background-color: rgba(40, 40, 50, 0.5); }" +
+                ".list-cell:hover { -fx-background-color: rgba(80, 70, 120, 0.5); }" +
+                ".list-cell:selected { -fx-background-color: rgba(100, 100, 200, 0.7); }" +
+                ".list-cell { -fx-text-fill: " + toRgbString(TEXTO_CLARO) + "; }";
+
+        // Usa la caché para no crear múltiples archivos CSS
+        if (!cssCache.containsKey(cssClave)) {
+            cssCache.put(cssClave, crearCSS(css));
+        }
+
+        String cssUrl = cssCache.get(cssClave);
+        if (lista.getScene() != null && !lista.getScene().getStylesheets().contains(cssUrl)) {
+            lista.getScene().getStylesheets().add(cssUrl);
+        } else if (lista.getScene() == null) {
+            // Si la lista no está en la escena aún, añadir un listener para cuando lo esté
+            lista.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene != null && !newScene.getStylesheets().contains(cssUrl)) {
+                    newScene.getStylesheets().add(cssUrl);
+                }
+            });
         }
     }
 
@@ -762,28 +835,52 @@ public class EstilosApp {
      * Aplica estilos a un ComboBox
      */
     public static void aplicarEstiloComboBox(ComboBox<?> combo) {
+        // Usar el color de fondo definido
+        String colorFondoCombo = toRgbString(FONDO_CLARO_CONTROLES); // <--- USA TU COLOR DEFINIDO
+
         combo.setStyle(
-                "-fx-background-color: rgba(35, 35, 45, 1.0); " +
+                "-fx-background-color: " + colorFondoCombo + "; " +
                         "-fx-border-color: rgba(120, 100, 200, 0.5); " +
                         "-fx-border-radius: 5px; " +
                         "-fx-background-radius: 5px; " +
-                        "-fx-text-fill: white;"
+                        "-fx-text-fill: " + toRgbString(TEXTO_CLARO) + ";" // Texto de la selección actual
         );
 
-        // Añadir CSS para estilizar la lista desplegable
-        String cssClave = "combo-estilo";
-        String css = ".combo-box .list-cell { -fx-text-fill: white; -fx-background-color: rgba(35, 35, 45, 1.0); }" +
-                ".combo-box .list-view { -fx-background-color: rgba(25, 25, 35, 0.95); -fx-border-color: rgba(160, 100, 255, 0.7); }" +
-                ".combo-box .list-cell:hover { -fx-background-color: rgba(60, 60, 90, 0.7); }";
+        // CSS para la lista desplegable
+        String cssClave = "combo-estilo-popup-claro"; // Nueva clave para evitar conflictos
+        // Aseguramos que el popup también use un fondo oscuro y texto claro
+        String css = String.format(
+                ".combo-box.%s .list-cell { -fx-text-fill: %s; -fx-background-color: %s; }" +
+                        ".combo-box.%s .list-view { -fx-background-color: %s; -fx-border-color: %s; }" +
+                        ".combo-box.%s .list-cell:hover { -fx-background-color: %s; }",
+                cssClave, toRgbString(TEXTO_CLARO), toRgbString(PANEL_OSCURO), // Celda de la lista
+                cssClave, toRgbString(Color.rgb(25, 25, 35, 0.95)), toRgbString(NEON_MORADO), // ListView del popup
+                cssClave, toRgbString(Color.rgb(60, 60, 90, 0.7)) // Celda hover
+        );
 
+        String cssUrl = "";
         if (!cssCache.containsKey(cssClave)) {
             cssCache.put(cssClave, crearCSS(css));
         }
+        cssUrl = cssCache.get(cssClave);
 
-        String cssUrl = cssCache.get(cssClave);
-        if (!combo.getStylesheets().contains(cssUrl)) {
-            combo.getStylesheets().add(cssUrl);
+        // Añadir la clase de estilo al ComboBox
+        if (!combo.getStyleClass().contains(cssClave)) {
+            combo.getStyleClass().add(cssClave);
         }
+        // Aplicar la hoja de estilos a la escena del ComboBox
+        final String finalCssUrl = cssUrl;
+        Platform.runLater(() -> {
+            if (combo.getScene() != null && !combo.getScene().getStylesheets().contains(finalCssUrl)) {
+                combo.getScene().getStylesheets().add(finalCssUrl);
+            } else if (combo.getScene() == null) {
+                combo.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                    if (newScene != null && !newScene.getStylesheets().contains(finalCssUrl)) {
+                        newScene.getStylesheets().add(finalCssUrl);
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -821,28 +918,53 @@ public class EstilosApp {
      * Aplica estilos a un TextArea
      */
     public static void aplicarEstiloTextArea(TextArea textArea) {
-        textArea.setStyle(
-                "-fx-background-color: rgba(35, 35, 45, 1.0); " +
-                        "-fx-border-color: rgba(120, 100, 200, 0.5); " +
+        // Usar el color de fondo definido
+        String colorFondoTextArea = toRgbString(FONDO_CLARO_CONTROLES); // <--- USA TU COLOR DEFINIDO
+        String colorTextoTextArea = toRgbString(TEXTO_CLARO);
+        String colorBordeTextArea = toRgbString(Color.rgb(120, 100, 200, 0.7));
+        String colorBordeFocoTextArea = toRgbString(NEON_MORADO);
+
+        String estiloBase = String.format(
+                "-fx-background-color: %s; " +
+                        "-fx-control-inner-background: %s; " + // ESTA ES LA CLAVE PARA EL FONDO DEL CONTENIDO
+                        "-fx-border-color: %s; " +
+                        "-fx-border-width: 1px; " +
                         "-fx-border-radius: 5px; " +
                         "-fx-background-radius: 5px; " +
-                        "-fx-text-fill: rgb(230, 230, 250);"
+                        "-fx-text-fill: %s;" +
+                        "-fx-prompt-text-fill: %s;",
+                colorFondoTextArea, // Fondo exterior
+                colorFondoTextArea, // Fondo interior del contenido
+                colorBordeTextArea,
+                colorTextoTextArea,
+                toRgbString(Color.rgb(150, 150, 170))
         );
 
-        // Añadir CSS para estilizar el scrollbar
-        String cssClave = "text-area-estilo";
-        String css = ".text-area .scroll-bar:vertical { -fx-pref-width: 12px; -fx-background-color: transparent; }" +
-                ".text-area .scroll-bar:vertical .track { -fx-background-color: rgba(25, 25, 35, 0.9); -fx-border-color: rgba(80, 80, 120, 0.5); }" +
-                ".text-area .scroll-bar:vertical .thumb { -fx-background-color: rgba(120, 100, 200, 0.5); }";
+        String estiloFoco = String.format(
+                "-fx-background-color: %s; " +
+                        "-fx-control-inner-background: %s; " + // También para el foco
+                        "-fx-border-color: %s; " +
+                        "-fx-border-width: 1.5px; " +
+                        "-fx-border-radius: 5px; " +
+                        "-fx-background-radius: 5px; " +
+                        "-fx-text-fill: %s;" +
+                        "-fx-prompt-text-fill: %s;",
+                colorFondoTextArea,
+                colorFondoTextArea,
+                colorBordeFocoTextArea,
+                colorTextoTextArea,
+                toRgbString(Color.rgb(150, 150, 170))
+        );
 
-        if (!cssCache.containsKey(cssClave)) {
-            cssCache.put(cssClave, crearCSS(css));
-        }
+        textArea.setStyle(estiloBase);
 
-        String cssUrl = cssCache.get(cssClave);
-        if (!textArea.getStylesheets().contains(cssUrl)) {
-            textArea.getStylesheets().add(cssUrl);
-        }
+        textArea.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                textArea.setStyle(estiloFoco);
+            } else {
+                textArea.setStyle(estiloBase);
+            }
+        });
     }
 
     /**
@@ -1039,4 +1161,50 @@ public class EstilosApp {
         resplandor.setSpread(0.2 * intensidad);
         return resplandor;
     }
+
+    /**
+     * Aplica estilos específicos a las cabeceras de tabla con color morado
+     * Agregar este método a EstilosApp.java
+     */
+    public static void aplicarEstiloCabecerasTabla(TableView<?> tabla) {
+        // Color morado específico: #7b68ee convertido a RGB
+        Color moradoCabecera = Color.rgb(123, 104, 238);
+
+        // Aplicar estilo usando Platform.runLater para asegurar que se aplique después del renderizado
+        Platform.runLater(() -> {
+            tabla.lookupAll(".column-header").forEach(nodo -> {
+                nodo.setStyle(
+                        "-fx-background-color: " + toRgbString(moradoCabecera) + "; " +
+                                "-fx-text-fill: white; " +
+                                "-fx-font-weight: bold; " +
+                                "-fx-padding: 8px; " +
+                                "-fx-border-color: rgba(160, 100, 255, 0.5); " +
+                                "-fx-border-width: 0 0 1px 0;"
+                );
+            });
+
+            // También aplicar a las etiquetas dentro de las cabeceras
+            tabla.lookupAll(".column-header .label").forEach(nodo -> {
+                nodo.setStyle(
+                        "-fx-text-fill: white; " +
+                                "-fx-font-weight: bold;"
+                );
+            });
+        });
+    }
+
+
+    /**
+     * Convierte un objeto Color a su representación en formato RGB para CSS.
+     * @param color El objeto Color de JavaFX.
+     * @return Una cadena en formato "rgb(R, G, B)".
+     */
+    public static String toRgbString(Color color) {
+        return String.format("rgb(%d, %d, %d)",
+                (int) (color.getRed() * 255),
+                (int) (color.getGreen() * 255),
+                (int) (color.getBlue() * 255));
+    }
+
+
 }

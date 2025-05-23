@@ -6,8 +6,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -36,11 +34,6 @@
             <padding>
                 <Insets bottom="30" left="30" right="30" top="30" />
             </padding>
-
-            <!-- Icono de la aplicación (estilo similar a la imagen de referencia) -->
-            <ImageView fitHeight="80.0" fitWidth="80.0" pickOnBounds="true" preserveRatio="true">
-                <Image url="@../imagenes/cerdito.png" />
-            </ImageView>
 
             <Label fx:id="titleLabel" text="SmartSave" />
             <Label fx:id="subtitleLabel" prefWidth="250.0" text="Inicia sesión para continuar" />

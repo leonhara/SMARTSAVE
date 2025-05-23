@@ -111,6 +111,7 @@ public class AhorroController extends BaseController {
             EstilosApp.aplicarEstiloTarjeta(resultadoCalculoPane);
         }
         EstilosApp.aplicarEstiloTarjeta(ejemploCalculoPane);
+        EstilosApp.aplicarEstiloLista(modalidadesListView);
     }
 
     /**
