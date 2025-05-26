@@ -4,11 +4,11 @@ import smartsave.modelo.Producto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +24,7 @@ public class MercadonaApiServicio {
 
     private final ObjectMapper objectMapper;
     private final ExecutorService executorService;
-    private final String pythonScriptPath;
+    private Path pythonScriptPath; // Cambiado a Path
     private final String codigoPostal;
     private boolean apiDisponible;
 
@@ -40,13 +40,40 @@ public class MercadonaApiServicio {
         this.executorService = Executors.newFixedThreadPool(2); // Limitamos a 2 hilos para no sobrecargar
         this.codigoPostal = codigoPostal != null ? codigoPostal : "28001"; // Madrid por defecto
 
-        // Buscar el script Python
-        this.pythonScriptPath = encontrarScriptPython();
-        this.apiDisponible = verificarDisponibilidadApi();
+        try {
+            // Extraer el script y obtener su ruta temporal
+            this.pythonScriptPath = prepararScriptPython();
+            this.apiDisponible = verificarDisponibilidadApi();
+        } catch (IOException e) {
+            System.err.println("Error crítico al preparar el script de Python: " + e.getMessage());
+            e.printStackTrace(); // Añade esto para más detalles en caso de error
+            this.apiDisponible = false;
+        }
 
-        // Limpiar caché periódicamente
         iniciarLimpiadorCache();
     }
+
+    /**
+     * Extrae el script Python del JAR a un archivo temporal.
+     * @return La ruta al script extraído.
+     * @throws IOException Si hay un error al leer o escribir el archivo.
+     */
+    private Path prepararScriptPython() throws IOException {
+        // El path dentro del JAR debe comenzar con '/'
+        try (InputStream scriptStream = MercadonaApiServicio.class.getResourceAsStream("/api/mercadona_bridge.py")) {
+            if (scriptStream == null) {
+                throw new IOException("No se pudo encontrar el script 'mercadona_bridge.py' en el JAR. Verifica la ruta: /api/mercadona_bridge.py");
+            }
+            // Crear un archivo temporal que se borrará al salir
+            Path tempScript = Files.createTempFile("mercadona_bridge_", ".py");
+            tempScript.toFile().deleteOnExit(); // Asegura que el archivo se borre cuando la JVM termine
+
+            Files.copy(scriptStream, tempScript, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Script de Python extraído a: " + tempScript.toAbsolutePath().toString());
+            return tempScript;
+        }
+    }
+
 
     /**
      * Clase interna para manejo de caché de búsquedas
@@ -74,6 +101,7 @@ public class MercadonaApiServicio {
             if (entry != null && !entry.isExpired()) {
                 return new ArrayList<>(entry.productos); // Devolver copia para evitar modificaciones
             }
+            cache.remove(cacheKey); // Eliminar si ha expirado
             return null;
         }
 
@@ -108,41 +136,36 @@ public class MercadonaApiServicio {
      */
     public CompletableFuture<List<Producto>> buscarProductos(String termino) {
         return CompletableFuture.supplyAsync(() -> {
-            if (!apiDisponible) {
-                System.out.println("API de Mercadona no disponible para búsqueda");
+            if (!apiDisponible || this.pythonScriptPath == null) {
+                System.out.println("API de Mercadona no disponible o script no preparado para búsqueda.");
                 return new ArrayList<>();
             }
 
-            // Normalizar el término de búsqueda (minúsculas, sin espacios extra)
             String terminoNormalizado = termino.toLowerCase().trim();
-
-            // Verificar caché
-            String cacheKey = "search:" + terminoNormalizado;
+            String cacheKey = "search:" + terminoNormalizado + ":" + codigoPostal;
             List<Producto> productosCache = searchCache.get(cacheKey);
             if (productosCache != null) {
                 System.out.println("Productos obtenidos de caché para: " + terminoNormalizado);
                 return productosCache;
             }
 
-            // Control de tasa
             esperarControlTasa();
 
             try {
                 ProcessBuilder processBuilder = new ProcessBuilder(
-                        "python", pythonScriptPath, "search", terminoNormalizado,
+                        "python", this.pythonScriptPath.toAbsolutePath().toString(),
+                        "search", terminoNormalizado,
                         "--postcode", codigoPostal,
                         "--limit", "25"
                 );
 
                 String resultado = ejecutarProcesoConBuilder(processBuilder);
                 List<Producto> productos = parsearProductos(resultado);
-
-                // Guardar en caché
                 searchCache.put(cacheKey, productos);
-
                 return productos;
             } catch (Exception e) {
-                System.err.println("Error al buscar productos de Mercadona: " + e.getMessage());
+                System.err.println("Error al buscar productos de Mercadona ("+termino+"): " + e.getMessage());
+                e.printStackTrace();
                 return new ArrayList<>();
             }
         }, executorService);
@@ -153,34 +176,34 @@ public class MercadonaApiServicio {
      */
     public CompletableFuture<List<Producto>> obtenerProductosNuevos() {
         return CompletableFuture.supplyAsync(() -> {
-            if (!apiDisponible) {
+            if (!apiDisponible || this.pythonScriptPath == null) {
+                System.out.println("API de Mercadona no disponible o script no preparado para obtener nuevos productos.");
                 return new ArrayList<>();
             }
 
-            // Verificar caché
-            String cacheKey = "new_products";
+            String cacheKey = "new_products:" + codigoPostal;
             List<Producto> productosCache = searchCache.get(cacheKey);
             if (productosCache != null) {
+                System.out.println("Productos nuevos obtenidos de caché.");
                 return productosCache;
             }
 
-            // Control de tasa
             esperarControlTasa();
 
             try {
                 ProcessBuilder processBuilder = new ProcessBuilder(
-                        "python", pythonScriptPath, "new", "--postcode", codigoPostal
+                        "python", this.pythonScriptPath.toAbsolutePath().toString(),
+                        "new", "--postcode", codigoPostal,
+                        "--limit", "30" // Aumentar un poco el límite para nuevos
                 );
 
                 String resultado = ejecutarProcesoConBuilder(processBuilder);
                 List<Producto> productos = parsearProductos(resultado);
-
-                // Guardar en caché
                 searchCache.put(cacheKey, productos);
-
                 return productos;
             } catch (Exception e) {
                 System.err.println("Error al obtener productos nuevos de Mercadona: " + e.getMessage());
+                e.printStackTrace();
                 return new ArrayList<>();
             }
         }, executorService);
@@ -198,46 +221,25 @@ public class MercadonaApiServicio {
                 Thread.sleep(MIN_TIEMPO_ENTRE_PETICIONES_MS - tiempoDesdeUltimaPeticion);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                System.err.println("Interrupción durante espera de control de tasa.");
             }
         }
-
         ultimaPeticionTimestamp = System.currentTimeMillis();
-    }
-
-    private String encontrarScriptPython() {
-        // Buscar el script en diferentes ubicaciones posibles
-        String[] posiblesRutas = {
-                "src/main/java/smartsave/api/mercadona_bridge.py",
-                "mercadona_bridge.py",
-                "api/mercadona_bridge.py"
-        };
-
-        for (String ruta : posiblesRutas) {
-            if (Files.exists(Paths.get(ruta))) {
-                return ruta;
-            }
-        }
-
-        return "src/main/java/smartsave/api/mercadona_bridge.py";
     }
 
     private boolean verificarDisponibilidadApi() {
         try {
-            // Verificar existencia del script Python primero
-            if (!Files.exists(Paths.get(pythonScriptPath))) {
-                System.err.println("El script Python no existe en la ruta: " + pythonScriptPath);
+            if (this.pythonScriptPath == null || !Files.exists(this.pythonScriptPath)) {
+                System.err.println("El script Python no existe o no está inicializado en la ruta: " + (this.pythonScriptPath != null ? this.pythonScriptPath.toString() : "null"));
                 return false;
             }
 
-            // Verificar python y mercapy
             ProcessBuilder pb = new ProcessBuilder("python", "-c", "import mercapy; print('OK')");
             System.out.println("Verificando disponibilidad de mercapy...");
             Process process = pb.start();
 
-            // Capturar la salida para diagnóstico
             StringBuilder output = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), "UTF-8"))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.append(line).append("\n");
@@ -245,31 +247,29 @@ public class MercadonaApiServicio {
             }
 
             StringBuilder error = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getErrorStream(), "UTF-8"))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     error.append(line).append("\n");
                 }
             }
 
-            // Esperar con timeout para no bloquear
-            if (!process.waitFor(5, TimeUnit.SECONDS)) {
-                process.destroy();
-                System.err.println("Timeout verificando mercapy");
+            if (!process.waitFor(10, TimeUnit.SECONDS)) { // Aumentar timeout
+                process.destroyForcibly(); // Usar destroyForcibly
+                System.err.println("Timeout verificando mercapy. Proceso destruido.");
                 return false;
             }
 
-            boolean disponible = process.exitValue() == 0;
+            boolean disponible = process.exitValue() == 0 && output.toString().trim().equals("OK");
 
             if (disponible) {
-                System.out.println("API de Mercadona disponible. Usando datos reales.");
-                // Probar el script con una búsqueda simple para verificar que funciona
-                testScriptPython();
+                System.out.println("Mercapy parece estar disponible.");
+                // testScriptPython(); // Realizar un test más exhaustivo
                 return true;
             } else {
-                System.err.println("Mercapy no disponible. Salida: " + output.toString());
-                System.err.println("Error: " + error.toString());
+                System.err.println("Mercapy no disponible o no responde como se esperaba.");
+                if (!output.toString().trim().equals("OK")) System.err.println("Salida inesperada: " + output.toString());
+                if (error.length() > 0) System.err.println("Error en el proceso: " + error.toString());
                 return false;
             }
         } catch (Exception e) {
@@ -280,73 +280,76 @@ public class MercadonaApiServicio {
     }
 
     private void testScriptPython() {
+        if (this.pythonScriptPath == null) {
+            System.err.println("No se puede testear el script de Python, ruta no definida.");
+            return;
+        }
         try {
             ProcessBuilder pb = new ProcessBuilder(
-                    "python", pythonScriptPath, "search", "pan",
+                    "python", this.pythonScriptPath.toAbsolutePath().toString(),
+                    "search", "leche", // Un término común para testear
                     "--postcode", codigoPostal, "--limit", "1"
             );
-            // pb.redirectErrorStream(true); // ELIMINADO
-            pb.redirectError(ProcessBuilder.Redirect.INHERIT); // Opcional: ver logs en consola
+            pb.redirectError(ProcessBuilder.Redirect.INHERIT);
 
             Process process = pb.start();
             StringBuilder output = new StringBuilder();
 
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), "UTF-8"))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.append(line).append("\n");
                 }
             }
 
-            if (!process.waitFor(10, TimeUnit.SECONDS)) {
-                process.destroy();
-                System.err.println("Timeout en test del script Python");
+            if (!process.waitFor(15, TimeUnit.SECONDS)) { // Aumentar timeout
+                process.destroyForcibly();
+                System.err.println("Timeout en test del script Python. Proceso destruido.");
+                this.apiDisponible = false; // Marcar como no disponible
                 return;
             }
 
             if (process.exitValue() == 0) {
-                System.out.println("Test de script Python exitoso");
+                System.out.println("Test de script Python con mercadona_bridge.py exitoso.");
+                // No cambiar apiDisponible aquí, eso se decide en verificarDisponibilidadApi
             } else {
-                System.err.println("Test de script Python falló, código: " + process.exitValue());
-                System.err.println("Salida: " + output.toString());
+                System.err.println("Test de script Python con mercadona_bridge.py falló, código: " + process.exitValue());
+                System.err.println("Salida del test: " + output.toString());
+                this.apiDisponible = false; // Marcar como no disponible
             }
         } catch (Exception e) {
-            System.err.println("Error en test de script Python: " + e.getMessage());
+            System.err.println("Error en test de script Python con mercadona_bridge.py: " + e.getMessage());
+            e.printStackTrace();
+            this.apiDisponible = false; // Marcar como no disponible
         }
     }
 
-    private String ejecutarProcesoConBuilder(ProcessBuilder processBuilder) throws IOException, InterruptedException {
-        // processBuilder.redirectErrorStream(true); // ELIMINADO
-        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT); // Opcional: ver logs en consola
 
-        // Establecer variables de entorno para UTF-8
+    private String ejecutarProcesoConBuilder(ProcessBuilder processBuilder) throws IOException, InterruptedException {
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         processBuilder.environment().put("PYTHONIOENCODING", "utf-8");
-        processBuilder.environment().put("LANG", "C.UTF-8");
+        processBuilder.environment().put("LANG", "C.UTF-8"); // O el locale que sepas que funciona
 
         Process process = processBuilder.start();
-
         StringBuilder output = new StringBuilder();
 
-        // Leer stdout mientras se ejecuta el proceso para evitar deadlocks
-        try (BufferedReader outputReader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), "UTF-8"))) {
-
+        try (BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = outputReader.readLine()) != null) {
                 output.append(line).append("\n");
             }
         }
 
-        // Esperar finalización con timeout
         if (!process.waitFor(30, TimeUnit.SECONDS)) {
-            process.destroy();
-            throw new IOException("Timeout ejecutando el script Python");
+            process.destroyForcibly();
+            throw new IOException("Timeout ejecutando el script Python (30 segundos). Proceso destruido.");
         }
 
         int exitCode = process.exitValue();
         if (exitCode != 0) {
-            throw new IOException("Error ejecutando script Python. Exit code: " + exitCode);
+            System.err.println("Salida del script Python (stdout): " + output.toString());
+            // Ya no leemos stderr aquí porque está redirigido
+            throw new IOException("Error ejecutando script Python. Exit code: " + exitCode + ". Revisa la consola para los errores de Python.");
         }
 
         return output.toString().trim();
@@ -354,9 +357,9 @@ public class MercadonaApiServicio {
 
     private List<Producto> parsearProductos(String json) {
         List<Producto> productos = new ArrayList<>();
-
         try {
             if (json == null || json.isEmpty()) {
+                System.out.println("Respuesta JSON vacía o nula de Mercadona API.");
                 return productos;
             }
 
@@ -367,21 +370,31 @@ public class MercadonaApiServicio {
                 if (data != null && data.isArray()) {
                     for (JsonNode productNode : data) {
                         try {
-                            // Usar el adaptador para convertir nodo a producto
-                            Producto producto = MercadonaAdapter.convertirNodoAProducto(productNode);
+                            Producto producto = MercadonaAdapter.convertirNodoAProducto(productNode); //
                             if (producto != null) {
                                 productos.add(producto);
                             }
                         } catch (Exception e) {
-                            System.err.println("Error procesando producto de Mercadona: " + e.getMessage());
+                            System.err.println("Error procesando un producto individual de Mercadona: " + e.getMessage());
+                            e.printStackTrace();
                         }
                     }
+                    System.out.println("Parseados " + productos.size() + " productos de Mercadona.");
+                } else {
+                    System.out.println("La respuesta JSON de Mercadona no contiene un array de datos o 'data' es null.");
+                }
+            } else {
+                String errorMsg = root.has("error") ? root.get("error").asText("Error desconocido") : "La API indicó un fallo sin mensaje de error.";
+                System.err.println("La API de Mercadona devolvio un error: " + errorMsg);
+                if (root.has("details")) {
+                    System.err.println("Detalles del error: " + root.get("details").asText());
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error parseando productos de Mercadona: " + e.getMessage());
+            System.err.println("Error crítico parseando la respuesta JSON de Mercadona: " + e.getMessage());
+            e.printStackTrace();
+            System.err.println("JSON problemático: " + json.substring(0, Math.min(json.length(), 500)) + "..."); // Muestra una parte del JSON
         }
-
         return productos;
     }
 
@@ -392,9 +405,20 @@ public class MercadonaApiServicio {
     public void cerrar() {
         executorService.shutdown();
         try {
-            executorService.awaitTermination(5, TimeUnit.SECONDS);
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
         } catch (InterruptedException e) {
+            executorService.shutdownNow();
             Thread.currentThread().interrupt();
+        }
+        // Limpiar el archivo temporal del script si existe y no se borró
+        if (pythonScriptPath != null) {
+            try {
+                Files.deleteIfExists(pythonScriptPath);
+            } catch (IOException e) {
+                System.err.println("No se pudo eliminar el script temporal: " + pythonScriptPath.toString() + " - " + e.getMessage());
+            }
         }
     }
 }
