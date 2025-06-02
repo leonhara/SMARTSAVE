@@ -260,32 +260,41 @@ public class LoginController implements Initializable {
     }
 
     private void abrirPanelPrincipal() throws IOException {
-        FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
-        Parent raizPanel = cargador.load();
-        Scene escenaPanel = new Scene(raizPanel);
-        escenaPanel.setFill(Color.TRANSPARENT);
+        // Cargar la vista del panel principal
+        FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml")); //
+        Parent raizPanel = cargador.load(); //
 
-        Stage escenarioActual = (Stage) loginButton.getScene().getWindow();
+        // Configurar la nueva escena
+        Scene escenaPanel = new Scene(raizPanel); //
+        escenaPanel.setFill(Color.TRANSPARENT); //
 
-        // --- Guardar el estado y tamaño actual de la ventana ANTES de cambiar la escena ---
+        // Obtener el escenario actual
+        Stage escenarioActual = (Stage) loginButton.getScene().getWindow(); //
+
+        // --- Guardar el estado de maximización de la ventana de login ---
         boolean eraMaximizado = escenarioActual.isMaximized();
-        double anchoActual = escenarioActual.getWidth();
-        double altoActual = escenarioActual.getHeight();
+
+        // --- Definir el nuevo tamaño deseado para el dashboard ---
+        // Puedes ajustar estos valores según tus necesidades
+        double nuevoAnchoDashboard = 1200; // Por ejemplo, 1200px
+        double nuevoAltoDashboard = 800;  // Por ejemplo, 800px
 
         // Establecer la nueva escena
-        escenarioActual.setScene(escenaPanel);
-        escenarioActual.setTitle("SmartSave - Panel Principal");
+        escenarioActual.setScene(escenaPanel); //
+        escenarioActual.setTitle("SmartSave - Panel Principal"); //
 
-        // --- Restaurar el estado y tamaño de la ventana DESPUÉS de cambiar la escena ---
+        // --- Restaurar el estado de maximización o aplicar nuevo tamaño ---
         if (eraMaximizado) {
+            // Si la ventana de login estaba maximizada, mantener el dashboard maximizado
             escenarioActual.setMaximized(true);
         } else {
-            escenarioActual.setWidth(anchoActual);
-            escenarioActual.setHeight(altoActual);
+            // Si no estaba maximizada, aplicar el nuevo tamaño para el dashboard
+            escenarioActual.setWidth(nuevoAnchoDashboard);
+            escenarioActual.setHeight(nuevoAltoDashboard);
         }
-        // No llamar a sizeToScene() aquí tampoco
 
-        escenarioActual.centerOnScreen(); // Opcional: centrar si lo deseas
+        // Centrar en pantalla (opcional)
+        escenarioActual.centerOnScreen(); //
     }
 
     @FXML
