@@ -176,13 +176,13 @@ public abstract class BaseController implements Initializable {
     @FXML
     public void handleMaximizeAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setMaximized(!escenario.isMaximized());
+        escenario.setMaximized(!escenario.isMaximized()); // Esto ya está bien
 
         // Cambiar el símbolo del botón según el estado
         if (escenario.isMaximized()) {
-            maximizeButton.setText("❐");  // Símbolo para restaurar
+            maximizeButton.setText("❐");
         } else {
-            maximizeButton.setText("□");  // Símbolo para maximizar
+            maximizeButton.setText("□");
         }
     }
 

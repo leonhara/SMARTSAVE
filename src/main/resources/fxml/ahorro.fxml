@@ -217,7 +217,7 @@
                             </GridPane>
                         </VBox>
 
-                        <!-- Calculadora de ahorro -->
+                        <!-- Calculadoora de ahorro -->
                         <VBox fx:id="ejemploCalculoPane" spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
                             <padding>
                                 <Insets top="10" right="10" bottom="10" left="10" />

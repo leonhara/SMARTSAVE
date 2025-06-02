@@ -59,25 +59,39 @@ public class NavegacionServicio {
     public <T> void navegarA(String rutaFXML, String titulo, Stage escenarioActual,
                              Consumer<T> configuracionControlador) {
         try {
+            // --- PASO 1: Guardar el estado y tamaño actual de la ventana ---
+            boolean eraMaximizado = escenarioActual.isMaximized();
+            double anchoActual = escenarioActual.getWidth();
+            double altoActual = escenarioActual.getHeight();
+
             FXMLLoader cargador = new FXMLLoader(getClass().getResource(rutaFXML));
             Parent raiz = cargador.load();
 
-            // Configurar el controlador si es necesario
             if (configuracionControlador != null) {
                 T controlador = cargador.getController();
                 configuracionControlador.accept(controlador);
             }
 
-            // Configurar la nueva escena
             Scene escena = new Scene(raiz);
-            escena.setFill(Color.TRANSPARENT);
+            escena.setFill(Color.TRANSPARENT); // Mantener para ventana personalizada
 
-            // Establecer la nueva escena
+            // --- PASO 2: Establecer la nueva escena ---
             escenarioActual.setScene(escena);
             escenarioActual.setTitle("SmartSave - " + titulo);
 
-            // Almacenar el controlador en caché si es necesario
-            // controladoresCache.put(rutaFXML, cargador.getController());
+            // --- PASO 3: Restaurar el estado y tamaño de la ventana ---
+            if (eraMaximizado) {
+                escenarioActual.setMaximized(true);
+            } else {
+                // Solo restaurar dimensiones si no estaba maximizada
+                // Esto preserva el tamaño si el usuario lo ajustó manualmente
+                escenarioActual.setWidth(anchoActual);
+                escenarioActual.setHeight(altoActual);
+            }
+            // Es importante NO llamar a escenarioActual.sizeToScene() si quieres
+            // mantener el tamaño anterior elegido por el usuario.
+
+            // controladoresCache.put(rutaFXML, cargador.getController()); // Si usas caché
 
         } catch (IOException e) {
             mostrarAlertaError("Error de navegación",

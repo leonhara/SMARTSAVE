@@ -260,23 +260,32 @@ public class LoginController implements Initializable {
     }
 
     private void abrirPanelPrincipal() throws IOException {
-        // Cargar la vista del panel principal
         FXMLLoader cargador = new FXMLLoader(getClass().getResource("/fxml/dashboard.fxml"));
         Parent raizPanel = cargador.load();
-
-        // Configurar la nueva escena
         Scene escenaPanel = new Scene(raizPanel);
         escenaPanel.setFill(Color.TRANSPARENT);
 
-        // Obtener el escenario actual
         Stage escenarioActual = (Stage) loginButton.getScene().getWindow();
+
+        // --- Guardar el estado y tamaño actual de la ventana ANTES de cambiar la escena ---
+        boolean eraMaximizado = escenarioActual.isMaximized();
+        double anchoActual = escenarioActual.getWidth();
+        double altoActual = escenarioActual.getHeight();
 
         // Establecer la nueva escena
         escenarioActual.setScene(escenaPanel);
         escenarioActual.setTitle("SmartSave - Panel Principal");
 
-        // Centrar en pantalla (opcional)
-        escenarioActual.centerOnScreen();
+        // --- Restaurar el estado y tamaño de la ventana DESPUÉS de cambiar la escena ---
+        if (eraMaximizado) {
+            escenarioActual.setMaximized(true);
+        } else {
+            escenarioActual.setWidth(anchoActual);
+            escenarioActual.setHeight(altoActual);
+        }
+        // No llamar a sizeToScene() aquí tampoco
+
+        escenarioActual.centerOnScreen(); // Opcional: centrar si lo deseas
     }
 
     @FXML
