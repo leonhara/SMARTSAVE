@@ -121,9 +121,9 @@ public class ConfiguracionController extends BaseController {
      */
     private void cargarConfiguracionActual() {
         // Información sobre la aplicación
-        versionLabel.setText("1.0.0");
+        versionLabel.setText("1.5.2");
         autorLabel.setText("Leonel Yupanqui Serrano");
-        fechaCompilacionLabel.setText("28/04/2025");
+        fechaCompilacionLabel.setText("18/05/2025");
         centroLabel.setText("Salesianos San Francisco De Sales El Buen Amigo");
     }
 

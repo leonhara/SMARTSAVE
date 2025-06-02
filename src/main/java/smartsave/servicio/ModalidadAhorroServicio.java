@@ -137,7 +137,6 @@ public class ModalidadAhorroServicio {
         if (modalidad == null) {
             return presupuestoOriginal;
         }
-        // Cambiado para usar el método de compatibilidad
         return presupuestoOriginal * modalidad.getFactorPresupuestoAsDouble();
     }
 

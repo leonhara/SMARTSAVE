@@ -137,7 +137,6 @@ public class AhorroController extends BaseController {
                     setGraphic(null);
                     setStyle("-fx-background-color: transparent;");
                 } else {
-                    // Crear contenido de la celda
                     VBox contenido = new VBox(5);
 
                     // Nombre de la modalidad

@@ -17,9 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Servicio optimizado para integrar con la API de Mercadona usando mercapy (Python)
- */
+//hola
 public class MercadonaApiServicio {
 
     private final ObjectMapper objectMapper;
@@ -38,7 +36,7 @@ public class MercadonaApiServicio {
     public MercadonaApiServicio(String codigoPostal) {
         this.objectMapper = new ObjectMapper();
         this.executorService = Executors.newFixedThreadPool(2); // Limitamos a 2 hilos para no sobrecargar
-        this.codigoPostal = codigoPostal != null ? codigoPostal : "28001"; // Madrid por defecto
+        this.codigoPostal = codigoPostal != null ? codigoPostal : "14010"; //En salesianos para honrar al centro
 
         try {
             // Extraer el script y obtener su ruta temporal
@@ -46,7 +44,7 @@ public class MercadonaApiServicio {
             this.apiDisponible = verificarDisponibilidadApi();
         } catch (IOException e) {
             System.err.println("Error crítico al preparar el script de Python: " + e.getMessage());
-            e.printStackTrace(); // Añade esto para más detalles en caso de error
+            e.printStackTrace(); 
             this.apiDisponible = false;
         }
 
