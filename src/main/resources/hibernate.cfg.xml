@@ -4,29 +4,29 @@
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
-        <!-- ========== CONFIGURACIÓN DE BASE DE DATOS ========== -->
+        <!--CONFIGURACION DE BASE DE DATOS-->
         <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
         <property name="hibernate.connection.url">jdbc:mysql://127.0.0.1:3306/smartsave?useTimezone=true&amp;serverTimezone=Europe/Madrid&amp;useSSL=false&amp;allowPublicKeyRetrieval=true&amp;characterEncoding=UTF-8</property>
         <property name="hibernate.connection.username">root</property>
         <property name="hibernate.connection.password">laco</property>
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
 
-        <!-- ========== CONFIGURACIÓN DE LOGGING ========== -->
+        <!--CONFIGURACIÓN DE LOGGING-->
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.format_sql">true</property>
         <property name="hibernate.use_sql_comments">true</property>
 
-        <!-- ========== CONFIGURACIÓN DE ESQUEMA ========== -->
-        <!-- CAMBIADO DE update A none PARA EVITAR VALIDACIÓN -->
+        <!--CONFIGURACIÓN DE ESQUEMA-->
+        <!--ESta en none para evitar la validacion-->
         <property name="hibernate.hbm2ddl.auto">none</property>
         <property name="javax.persistence.schema-generation.database.action">none</property>
 
-        <!-- ========== CONFIGURACIÓN ADICIONAL ========== -->
+        <!--CONFIGURACIÓN ADICIONAL-->
         <property name="hibernate.physical_naming_strategy">org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy</property>
         <property name="hibernate.jdbc.batch_size">25</property>
         <property name="hibernate.jdbc.fetch_size">50</property>
 
-        <!-- ========== CLASES MAPEADAS ========== -->
+        <!--CLASES MAPEADAS-->
         <mapping class="smartsave.modelo.Usuario"/>
         <mapping class="smartsave.modelo.ModalidadAhorro"/>
         <mapping class="smartsave.modelo.Producto"/>

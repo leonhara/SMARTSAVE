@@ -22,7 +22,7 @@ import smartsave.servicio.UsuarioServicio;
 import smartsave.servicio.TransaccionServicio;
 import smartsave.servicio.PerfilNutricionalServicio;
 import smartsave.utilidad.EstilosApp;
-import smartsave.utilidad.ValidacionUtil; // Importar ValidacionUtil
+import smartsave.utilidad.ValidacionUtil;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -44,16 +44,16 @@ import java.util.stream.Collectors;
  */
 public class PerfilController extends BaseController {
 
-    // Componentes FXML para la información del perfil
-    @FXML private Circle profilePhotoCircle; // Círculo para la foto de perfil (decorativo)
-    @FXML private ImageView profilePhoto;    // Contenedor de la imagen de perfil
-    @FXML private Button cambiarFotoButton;  // Botón para cambiar la foto de perfil
+    //Estos son los componentes que se sacan del fxml asociado
+    @FXML private Circle profilePhotoCircle;
+    @FXML private ImageView profilePhoto;
+    @FXML private Button cambiarFotoButton;
 
-    @FXML private Label nombreCompletoLabel; // Etiqueta para mostrar el nombre completo del usuario
-    @FXML private Label emailLabel;          // Etiqueta para mostrar el email del usuario
-    @FXML private Label fechaRegistroLabel;  // Etiqueta para mostrar la fecha de registro
-    @FXML private Label ultimoAccesoLabel;   // Etiqueta para mostrar la fecha del último acceso
-    @FXML private Button editarDatosButton;   // Botón para editar los datos personales
+    @FXML private Label nombreCompletoLabel;
+    @FXML private Label emailLabel;
+    @FXML private Label fechaRegistroLabel;
+    @FXML private Label ultimoAccesoLabel;
+    @FXML private Button editarDatosButton;
 
     // Componentes FXML para la modalidad de ahorro
     @FXML private Label modalidadActualLabel;    // Etiqueta para mostrar la modalidad de ahorro actual
