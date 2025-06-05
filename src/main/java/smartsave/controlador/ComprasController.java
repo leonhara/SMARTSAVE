@@ -11,7 +11,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import smartsave.modelo.*;
-import smartsave.servicio.*; // Importar SessionManager
+import smartsave.servicio.*;
 import smartsave.utilidad.EstilosApp;
 
 import java.time.LocalDate;
