@@ -8,22 +8,18 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import smartsave.modelo.PerfilNutricional;
 import smartsave.servicio.PerfilNutricionalServicio;
+import smartsave.servicio.SessionManager; // Importar SessionManager
 import smartsave.utilidad.EstilosApp;
+import smartsave.modelo.Usuario; // Importar Usuario
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
-import java.net.URL;
 
-/**
- * Controlador para la vista de Perfil Nutricional
- * Extiende BaseController para heredar funcionalidad común
- */
 public class NutricionController extends BaseController {
 
-    // Referencias a elementos del formulario
     @FXML private TextField edadField;
     @FXML private TextField pesoField;
     @FXML private TextField alturaField;
@@ -33,8 +29,6 @@ public class NutricionController extends BaseController {
     @FXML private ComboBox<String> actividadComboBox;
     @FXML private VBox restriccionesPane;
     @FXML private Button guardarPerfilButton;
-
-    // Referencias a elementos de resumen
     @FXML private Label imcValueLabel;
     @FXML private Label imcCategoryLabel;
     @FXML private Label caloriasLabel;
@@ -46,340 +40,238 @@ public class NutricionController extends BaseController {
     @FXML private TextArea recomendacionesArea;
     @FXML private PieChart macrosPieChart;
 
-    // Servicios
     private final PerfilNutricionalServicio perfilServicio = new PerfilNutricionalServicio();
 
-    // Variables de estado
-    private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
+    private Long usuarioIdActualLocal; // Variable para el ID del usuario en sesión
+    private Usuario usuarioActualLocal; // Variable para el objeto Usuario en sesión
     private List<CheckBox> restriccionesCheckboxes = new ArrayList<>();
     private PerfilNutricional perfilActual = null;
 
-    /**
-     * Inicialización específica del controlador de nutrición
-     * Implementación del método abstracto de BaseController
-     */
     @Override
     protected void inicializarControlador() {
-        // Destacar el botón de nutrición como seleccionado
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual();
+
+        if (this.usuarioActualLocal == null) {
+            System.err.println("Error crítico: No hay usuario en sesión en NutricionController.");
+            if (navegacionServicio != null) {
+                navegacionServicio.mostrarAlertaError("Error de Sesión", "No se pudo identificar al usuario. Por favor, inicie sesión de nuevo.");
+                if (mainPane != null && mainPane.getScene() != null && mainPane.getScene().getWindow() instanceof Stage) {
+                    Stage stage = (Stage) mainPane.getScene().getWindow();
+                    if (stage != null) {
+                        navegacionServicio.navegarALogin(stage);
+                    }
+                }
+            }
+            disableUIComponents();
+            return;
+        }
+        this.usuarioIdActualLocal = this.usuarioActualLocal.getId();
+
         activarBoton(nutritionButton);
-
-        // Inicializar elementos del formulario
         inicializarFormulario();
-
-        // Cargar datos del perfil si existe
-        cargarPerfilExistente();
-
-        // Aplicar estilos personalizados
+        cargarPerfilExistente(); // Este método usará usuarioIdActualLocal
         aplicarEstilosComponentes();
     }
 
-    /**
-     * Aplica estilos a los componentes específicos de esta pantalla
-     */
-    private void aplicarEstilosComponentes() {
-        // Aplicar estilos a los campos de texto
-        EstilosApp.aplicarEstiloCampoTexto(edadField);
-        EstilosApp.aplicarEstiloCampoTexto(pesoField);
-        EstilosApp.aplicarEstiloCampoTexto(alturaField);
-
-        // Aplicar estilos a TextArea
-        EstilosApp.aplicarEstiloTextArea(recomendacionesArea);
-
-        // Aplicar estilos a los botones
-        EstilosApp.aplicarEstiloBotonPrimario(guardarPerfilButton);
-
-        // Aplicar estilos a ComboBox
-        EstilosApp.aplicarEstiloComboBox(actividadComboBox);
-
-        // Aplicar estilos al gráfico
-        EstilosApp.aplicarEstiloGrafico(macrosPieChart);
-
-        // Aplicar estilos a los paneles
-//        EstilosApp.aplicarEstiloTarjeta(restriccionesPane);
-
-        // Estilizar radio buttons
-        estilizarRadioButtons();
-
+    private void disableUIComponents() {
+        // Deshabilitar campos y botones si no hay usuario
+        if (edadField != null) edadField.setDisable(true);
+        if (pesoField != null) pesoField.setDisable(true);
+        if (alturaField != null) alturaField.setDisable(true);
+        if (sexoMRadio != null) sexoMRadio.setDisable(true);
+        if (sexoFRadio != null) sexoFRadio.setDisable(true);
+        if (actividadComboBox != null) actividadComboBox.setDisable(true);
+        if (restriccionesPane != null) restriccionesPane.setDisable(true);
+        if (guardarPerfilButton != null) guardarPerfilButton.setDisable(true);
+        // Limpiar etiquetas de resumen
+        if (imcValueLabel != null) imcValueLabel.setText("N/A");
+        if (imcCategoryLabel != null) imcCategoryLabel.setText("N/A");
+        if (caloriasLabel != null) caloriasLabel.setText("N/A kcal");
+        if (proteinasLabel != null) proteinasLabel.setText("N/A g");
+        if (carbosLabel != null) carbosLabel.setText("N/A g");
+        if (grasasLabel != null) grasasLabel.setText("N/A g");
+        if (puntuacionLabel != null) puntuacionLabel.setText("--/100");
+        if (puntuacionProgress != null) puntuacionProgress.setProgress(0);
+        if (recomendacionesArea != null) recomendacionesArea.setText("Cree o cargue un perfil para ver recomendaciones.");
+        if (macrosPieChart != null) macrosPieChart.setData(FXCollections.observableArrayList());
     }
 
-    /**
-     * Aplica estilos a los radio buttons
-     */
-    private void estilizarRadioButtons() {
-        // Estilizar radio buttons para el sexo
-        String radioButtonStyle =
-                "-fx-text-fill: white; " +
-                        "-fx-background-color: rgba(40, 40, 50, 0.7); " +
-                        "-fx-background-radius: 5px; " +
-                        "-fx-padding: 5px 10px;";
 
+    private void aplicarEstilosComponentes() {
+        if (edadField != null) EstilosApp.aplicarEstiloCampoTexto(edadField); //
+        if (pesoField != null) EstilosApp.aplicarEstiloCampoTexto(pesoField); //
+        if (alturaField != null) EstilosApp.aplicarEstiloCampoTexto(alturaField); //
+        if (recomendacionesArea != null) EstilosApp.aplicarEstiloTextArea(recomendacionesArea); //
+        if (guardarPerfilButton != null) EstilosApp.aplicarEstiloBotonPrimario(guardarPerfilButton); //
+        if (actividadComboBox != null) EstilosApp.aplicarEstiloComboBox(actividadComboBox); //
+        if (macrosPieChart != null) EstilosApp.aplicarEstiloGrafico(macrosPieChart); //
+        estilizarRadioButtons();
+    }
+
+    private void estilizarRadioButtons() {
+        if (sexoMRadio == null || sexoFRadio == null) return;
+        String radioButtonStyle = "-fx-text-fill: white; -fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-padding: 5px 10px;";
         sexoMRadio.setStyle(radioButtonStyle);
         sexoFRadio.setStyle(radioButtonStyle);
-
-        // Efectos de hover
-        sexoMRadio.setOnMouseEntered(e ->
-                sexoMRadio.setStyle(radioButtonStyle + "-fx-background-color: rgba(60, 60, 80, 0.7);"));
-        sexoMRadio.setOnMouseExited(e ->
-                sexoMRadio.setStyle(radioButtonStyle));
-
-        sexoFRadio.setOnMouseEntered(e ->
-                sexoFRadio.setStyle(radioButtonStyle + "-fx-background-color: rgba(60, 60, 80, 0.7);"));
-        sexoFRadio.setOnMouseExited(e ->
-                sexoFRadio.setStyle(radioButtonStyle));
+        sexoMRadio.setOnMouseEntered(e -> sexoMRadio.setStyle(radioButtonStyle + "-fx-background-color: rgba(60, 60, 80, 0.7);"));
+        sexoMRadio.setOnMouseExited(e -> sexoMRadio.setStyle(radioButtonStyle));
+        sexoFRadio.setOnMouseEntered(e -> sexoFRadio.setStyle(radioButtonStyle + "-fx-background-color: rgba(60, 60, 80, 0.7);"));
+        sexoFRadio.setOnMouseExited(e -> sexoFRadio.setStyle(radioButtonStyle));
     }
 
-    /**
-     * Inicializa los elementos del formulario
-     */
     private void inicializarFormulario() {
-        // Configurar validación de campos numéricos
         configurarValidacionCampos();
+        if (actividadComboBox != null) actividadComboBox.setItems(FXCollections.observableArrayList(perfilServicio.obtenerNivelesActividad())); //
 
-        // Cargar niveles de actividad
-        actividadComboBox.setItems(FXCollections.observableArrayList(
-                perfilServicio.obtenerNivelesActividad()
-        ));
-
-        // Crear checkboxes para restricciones alimentarias
-        List<String> restricciones = perfilServicio.obtenerRestriccionesAlimentarias();
-
-        restriccionesPane.getChildren().clear();
-        restriccionesCheckboxes.clear();
-
-        // Crear checkboxes por fila (2 por fila)
-        HBox filaActual = null;
-        int contador = 0;
-
-        for (String restriccion : restricciones) {
-            if (contador % 2 == 0) {
-                filaActual = new HBox(20);
-                restriccionesPane.getChildren().add(filaActual);
+        if (restriccionesPane != null) {
+            List<String> restricciones = perfilServicio.obtenerRestriccionesAlimentarias(); //
+            restriccionesPane.getChildren().clear();
+            restriccionesCheckboxes.clear();
+            HBox filaActual = null;
+            int contador = 0;
+            for (String restriccion : restricciones) {
+                if (contador % 2 == 0) {
+                    filaActual = new HBox(20);
+                    restriccionesPane.getChildren().add(filaActual);
+                }
+                CheckBox checkbox = new CheckBox(restriccion);
+                checkbox.setTextFill(Color.rgb(230, 230, 250));
+                restriccionesCheckboxes.add(checkbox);
+                if (filaActual != null) filaActual.getChildren().add(checkbox);
+                contador++;
             }
-
-            CheckBox checkbox = new CheckBox(restriccion);
-            checkbox.setTextFill(Color.rgb(230, 230, 250));
-
-            restriccionesCheckboxes.add(checkbox);
-            filaActual.getChildren().add(checkbox);
-
-            contador++;
         }
     }
 
-    /**
-     * Configura la validación de campos numéricos
-     */
     private void configurarValidacionCampos() {
-        // Permitir solo números en el campo de edad
-        edadField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*")) {
-                edadField.setText(oldValue);
-            }
-        });
-
-        // Permitir números y punto decimal en el campo de peso
-        pesoField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*\\.?\\d*")) {
-                pesoField.setText(oldValue);
-            }
-        });
-
-        // Permitir números y punto decimal en el campo de altura
-        alturaField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*\\.?\\d*")) {
-                alturaField.setText(oldValue);
-            }
-        });
+        if (edadField != null) edadField.textProperty().addListener((observable, oldValue, newValue) -> { if (!newValue.matches("\\d*")) edadField.setText(oldValue); });
+        if (pesoField != null) pesoField.textProperty().addListener((observable, oldValue, newValue) -> { if (!newValue.matches("\\d*\\.?\\d*")) pesoField.setText(oldValue); });
+        if (alturaField != null) alturaField.textProperty().addListener((observable, oldValue, newValue) -> { if (!newValue.matches("\\d*\\.?\\d*")) alturaField.setText(oldValue); });
     }
 
-    /**
-     * Carga los datos del perfil existente si hay uno
-     */
     private void cargarPerfilExistente() {
-        if (perfilServicio.tienePerfil(usuarioIdActual)) {
-            perfilActual = perfilServicio.obtenerPerfilPorUsuario(usuarioIdActual);
-
-            // Cargar datos en el formulario
-            edadField.setText(String.valueOf(perfilActual.getEdad()));
-            pesoField.setText(String.format("%.1f", perfilActual.getPeso()));
-            alturaField.setText(String.format("%.1f", perfilActual.getAltura()));
-
-            if ("M".equals(perfilActual.getSexo())) {
-                sexoMRadio.setSelected(true);
-            } else {
-                sexoFRadio.setSelected(true);
+        if (usuarioIdActualLocal == null) return; // No cargar si no hay ID de usuario
+        if (perfilServicio.tienePerfil(usuarioIdActualLocal)) { //
+            perfilActual = perfilServicio.obtenerPerfilPorUsuario(usuarioIdActualLocal); //
+            if (perfilActual != null) {
+                if (edadField != null) edadField.setText(String.valueOf(perfilActual.getEdad())); //
+                if (pesoField != null) pesoField.setText(String.format("%.1f", perfilActual.getPeso())); //
+                if (alturaField != null) alturaField.setText(String.format("%.1f", perfilActual.getAltura())); //
+                if (sexoMRadio != null && sexoFRadio != null) {
+                    if ("M".equals(perfilActual.getSexo())) sexoMRadio.setSelected(true); else sexoFRadio.setSelected(true); //
+                }
+                if (actividadComboBox != null) actividadComboBox.setValue(perfilActual.getNivelActividad()); //
+                for (CheckBox checkbox : restriccionesCheckboxes) {
+                    checkbox.setSelected(perfilActual.getRestricciones().contains(checkbox.getText())); //
+                }
+                actualizarResumen(perfilActual);
             }
-
-            actividadComboBox.setValue(perfilActual.getNivelActividad());
-
-            // Marcar restricciones
-            for (CheckBox checkbox : restriccionesCheckboxes) {
-                checkbox.setSelected(perfilActual.getRestricciones().contains(checkbox.getText()));
-            }
-
-            // Actualizar resumen
-            actualizarResumen(perfilActual);
         }
     }
 
-    /**
-     * Guarda el perfil nutricional del usuario
-     */
     @FXML
     private void handleGuardarPerfil(ActionEvent event) {
-        // Validar campos
-        if (edadField.getText().trim().isEmpty() ||
-                pesoField.getText().trim().isEmpty() ||
-                alturaField.getText().trim().isEmpty() ||
-                actividadComboBox.getValue() == null) {
-
-            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos obligatorios.");
+        if (usuarioIdActualLocal == null) {
+            navegacionServicio.mostrarAlertaError("Error de Sesión", "No hay un usuario activo para guardar el perfil."); //
             return;
         }
-
+        if (edadField.getText().trim().isEmpty() || pesoField.getText().trim().isEmpty() || alturaField.getText().trim().isEmpty() || actividadComboBox.getValue() == null) {
+            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos obligatorios."); //
+            return;
+        }
         try {
-            // Obtener valores del formulario
             int edad = Integer.parseInt(edadField.getText().trim());
             double peso = Double.parseDouble(pesoField.getText().trim());
             double altura = Double.parseDouble(alturaField.getText().trim());
             String sexo = sexoMRadio.isSelected() ? "M" : "F";
             String nivelActividad = actividadComboBox.getValue();
 
-            // Validar valores
-            if (edad < 12 || edad > 120) {
-                navegacionServicio.mostrarAlertaError("Valor incorrecto", "La edad debe estar entre 12 y 120 años.");
-                return;
-            }
+            if (edad < 12 || edad > 120) { navegacionServicio.mostrarAlertaError("Valor incorrecto", "La edad debe estar entre 12 y 120 años."); return; } //
+            if (peso < 30 || peso > 300) { navegacionServicio.mostrarAlertaError("Valor incorrecto", "El peso debe estar entre 30 y 300 kg."); return; } //
+            if (altura < 100 || altura > 250) { navegacionServicio.mostrarAlertaError("Valor incorrecto", "La altura debe estar entre 100 y 250 cm."); return; } //
 
-            if (peso < 30 || peso > 300) {
-                navegacionServicio.mostrarAlertaError("Valor incorrecto", "El peso debe estar entre 30 y 300 kg.");
-                return;
-            }
-
-            if (altura < 100 || altura > 250) {
-                navegacionServicio.mostrarAlertaError("Valor incorrecto", "La altura debe estar entre 100 y 250 cm.");
-                return;
-            }
-
-            // Crear o actualizar perfil
             PerfilNutricional perfil;
             if (perfilActual != null) {
                 perfil = perfilActual;
-                perfil.setEdad(edad);
-                perfil.setPeso(peso);
-                perfil.setAltura(altura);
-                perfil.setSexo(sexo);
-                perfil.setNivelActividad(nivelActividad);
-                perfil.getRestricciones().clear(); // Limpiar restricciones existentes
+                perfil.setEdad(edad); perfil.setPeso(peso); perfil.setAltura(altura); perfil.setSexo(sexo); perfil.setNivelActividad(nivelActividad); //
+                perfil.getRestricciones().clear(); //
             } else {
-                perfil = new PerfilNutricional(usuarioIdActual, edad, peso, altura, sexo, nivelActividad);
+                perfil = new PerfilNutricional(usuarioIdActualLocal, edad, peso, altura, sexo, nivelActividad); //
             }
-
-            // Agregar restricciones seleccionadas
             for (CheckBox checkbox : restriccionesCheckboxes) {
-                if (checkbox.isSelected()) {
-                    perfil.agregarRestriccion(checkbox.getText());
-                }
+                if (checkbox.isSelected()) perfil.agregarRestriccion(checkbox.getText()); //
             }
-
-            // Guardar perfil
-            perfilActual = perfilServicio.guardarPerfil(perfil);
-
-            // Actualizar resumen
+            perfilActual = perfilServicio.guardarPerfil(perfil); //
             actualizarResumen(perfilActual);
-
-            // Mostrar mensaje de éxito
-            navegacionServicio.mostrarAlertaInformacion("Perfil guardado", "Tu perfil nutricional ha sido guardado correctamente.");
-
+            navegacionServicio.mostrarAlertaInformacion("Perfil guardado", "Tu perfil nutricional ha sido guardado correctamente."); //
         } catch (NumberFormatException e) {
-            navegacionServicio.mostrarAlertaError("Formato incorrecto", "Por favor, ingresa valores numéricos válidos.");
+            navegacionServicio.mostrarAlertaError("Formato incorrecto", "Por favor, ingresa valores numéricos válidos."); //
         }
     }
 
-    /**
-     * Actualiza el resumen con los datos del perfil
-     */
     private void actualizarResumen(PerfilNutricional perfil) {
-        // Actualizar valores de IMC
-        double imc = perfil.getImc();
+        if (imcValueLabel == null || imcCategoryLabel == null || caloriasLabel == null || proteinasLabel == null || carbosLabel == null || grasasLabel == null || puntuacionLabel == null || puntuacionProgress == null || recomendacionesArea == null || macrosPieChart == null) return;
+        double imc = perfil.getImc(); //
         imcValueLabel.setText(String.format("%.1f", imc));
-        String categoriaIMC = perfil.getCategoriaIMC();
+        String categoriaIMC = perfil.getCategoriaIMC(); //
         imcCategoryLabel.setText(categoriaIMC);
-
-        // Colorear según categoría IMC
         switch (categoriaIMC) {
-            case "Bajo peso":
-                imcCategoryLabel.setTextFill(Color.rgb(255, 200, 0));
-                break;
-            case "Normal":
-                imcCategoryLabel.setTextFill(Color.rgb(100, 220, 100));
-                break;
-            case "Sobrepeso":
-                imcCategoryLabel.setTextFill(Color.rgb(255, 150, 0));
-                break;
-            case "Obesidad":
-                imcCategoryLabel.setTextFill(Color.rgb(255, 80, 80));
-                break;
+            case "Bajo peso": imcCategoryLabel.setTextFill(Color.rgb(255, 200, 0)); break;
+            case "Normal": imcCategoryLabel.setTextFill(Color.rgb(100, 220, 100)); break;
+            case "Sobrepeso": imcCategoryLabel.setTextFill(Color.rgb(255, 150, 0)); break;
+            case "Obesidad": imcCategoryLabel.setTextFill(Color.rgb(255, 80, 80)); break;
         }
-
-        // Actualizar calorías
-        caloriasLabel.setText(perfil.getCaloriasDiarias() + " kcal");
-
-        // Actualizar macronutrientes
-        PerfilNutricional.MacronutrientesDiarios macros = perfil.getMacronutrientesDiarios();
+        caloriasLabel.setText(perfil.getCaloriasDiarias() + " kcal"); //
+        PerfilNutricional.MacronutrientesDiarios macros = perfil.getMacronutrientesDiarios(); //
         proteinasLabel.setText(macros.getProteinas() + " g");
         carbosLabel.setText(macros.getCarbohidratos() + " g");
         grasasLabel.setText(macros.getGrasas() + " g");
-
-        // Actualizar puntuación
-        int puntuacion = perfilServicio.calcularPuntuacionNutricional(perfil);
+        int puntuacion = perfilServicio.calcularPuntuacionNutricional(perfil); //
         puntuacionLabel.setText(puntuacion + "/100");
         puntuacionProgress.setProgress(puntuacion / 100.0);
-
-        // Colorear puntuación según valor
-        if (puntuacion >= 80) {
-            puntuacionLabel.setTextFill(Color.rgb(100, 220, 100)); // Verde
-        } else if (puntuacion >= 60) {
-            puntuacionLabel.setTextFill(Color.rgb(200, 220, 100)); // Verde-amarillo
-        } else if (puntuacion >= 40) {
-            puntuacionLabel.setTextFill(Color.rgb(255, 200, 0)); // Amarillo
-        } else {
-            puntuacionLabel.setTextFill(Color.rgb(255, 100, 100)); // Rojo
-        }
-
-        // Actualizar recomendaciones
-        recomendacionesArea.setText(perfilServicio.generarRecomendacionAlimentaria(perfil));
-
-        // Actualizar gráfico de macronutrientes
+        if (puntuacion >= 80) puntuacionLabel.setTextFill(Color.rgb(100, 220, 100));
+        else if (puntuacion >= 60) puntuacionLabel.setTextFill(Color.rgb(200, 220, 100));
+        else if (puntuacion >= 40) puntuacionLabel.setTextFill(Color.rgb(255, 200, 0));
+        else puntuacionLabel.setTextFill(Color.rgb(255, 100, 100));
+        recomendacionesArea.setText(perfilServicio.generarRecomendacionAlimentaria(perfil)); //
         actualizarGraficoMacros(macros);
-
     }
 
-    /**
-     * Actualiza el gráfico de macronutrientes
-     */
     private void actualizarGraficoMacros(PerfilNutricional.MacronutrientesDiarios macros) {
+        if (macrosPieChart == null) return;
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList(
                 new PieChart.Data("Proteínas (30%)", macros.getProteinas()),
                 new PieChart.Data("Carbohidratos (40%)", macros.getCarbohidratos()),
                 new PieChart.Data("Grasas (30%)", macros.getGrasas())
         );
-
         macrosPieChart.setData(pieChartData);
-
-        // Aplicar colores a las secciones
-        pieChartData.get(0).getNode().setStyle("-fx-pie-color: rgb(100, 220, 100);"); // Verde para proteínas
-        pieChartData.get(1).getNode().setStyle("-fx-pie-color: rgb(100, 170, 255);"); // Azul para carbohidratos
-        pieChartData.get(2).getNode().setStyle("-fx-pie-color: rgb(255, 170, 100);"); // Naranja para grasas
+        if (!pieChartData.isEmpty()) { // Añadida comprobación para evitar errores si está vacía
+            if(pieChartData.get(0) != null && pieChartData.get(0).getNode() != null) pieChartData.get(0).getNode().setStyle("-fx-pie-color: rgb(100, 220, 100);");
+            if(pieChartData.size() > 1 && pieChartData.get(1) != null && pieChartData.get(1).getNode() != null) pieChartData.get(1).getNode().setStyle("-fx-pie-color: rgb(100, 170, 255);");
+            if(pieChartData.size() > 2 && pieChartData.get(2) != null && pieChartData.get(2).getNode() != null) pieChartData.get(2).getNode().setStyle("-fx-pie-color: rgb(255, 170, 100);");
+        }
     }
 
-    /**
-     * Sobrescribe el método de navegación a nutrición
-     * Ya que estamos en la vista de nutrición
-     */
     @Override
     public void handleNutritionAction(ActionEvent evento) {
-        // Ya estamos en la vista de nutrición, solo activamos el botón
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual(); // Refrescar usuario
+        if (this.usuarioActualLocal == null) {
+            System.err.println("Error crítico: No hay usuario en sesión al re-navegar a Nutrición.");
+            if (navegacionServicio != null) {
+                navegacionServicio.mostrarAlertaError("Error de Sesión", "No se pudo identificar al usuario. Por favor, inicie sesión de nuevo.");
+                if (mainPane != null && mainPane.getScene() != null && mainPane.getScene().getWindow() instanceof Stage) {
+                    Stage stage = (Stage) mainPane.getScene().getWindow();
+                    if (stage != null) {
+                        navegacionServicio.navegarALogin(stage);
+                    }
+                }
+            }
+            disableUIComponents();
+            return;
+        }
+        this.usuarioIdActualLocal = this.usuarioActualLocal.getId();
         activarBoton(nutritionButton);
+        // Opcional: Recargar datos si es necesario, por ejemplo:
+        cargarPerfilExistente();
     }
 }

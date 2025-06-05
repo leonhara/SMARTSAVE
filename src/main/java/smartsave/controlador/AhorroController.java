@@ -8,21 +8,18 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 import smartsave.modelo.ModalidadAhorro;
 import smartsave.servicio.ModalidadAhorroServicio;
+import smartsave.servicio.SessionManager; // Importar SessionManager
+import smartsave.servicio.UsuarioServicio;
 import smartsave.utilidad.EstilosApp;
+import smartsave.modelo.Usuario; // Importar Usuario
 
-import java.net.URL;
 import java.util.List;
-import java.util.ResourceBundle;
 
-/**
- * Controlador para la vista de Modalidades de Ahorro
- * Extiende BaseController para heredar funcionalidad común
- */
 public class AhorroController extends BaseController {
 
-    // Referencias a elementos específicos de la pantalla de ahorro
     @FXML private ListView<ModalidadAhorro> modalidadesListView;
     @FXML private Label tituloModalidadLabel;
     @FXML private TextArea descripcionModalidadTextArea;
@@ -45,334 +42,235 @@ public class AhorroController extends BaseController {
     @FXML private Label ahorroEstimadoResultadoLabel;
     @FXML private PieChart distribucionGastosChart;
 
-    // Servicios
     private final ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
 
-    // Variables de estado
-    private Long usuarioIdActual = 1L; // Simulado, en un caso real vendría de la sesión
+    // private Long usuarioIdActual = 1L; // Eliminado
+    private Usuario usuarioActualLocal; // Para el objeto Usuario en sesión
     private ModalidadAhorro modalidadSeleccionada = null;
-    private boolean modalidadAplicada = false;
+    // private boolean modalidadAplicada = false; // Se manejará con la modalidad del usuario
 
-    /**
-     * Inicialización específica del controlador de ahorro
-     * Implementación del método abstracto de BaseController
-     */
     @Override
     protected void inicializarControlador() {
-        // Destacar el botón de ahorros como seleccionado
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual();
+
+        if (this.usuarioActualLocal == null) {
+            System.err.println("Error crítico: No hay usuario en sesión en AhorroController.");
+            if (navegacionServicio != null) {
+                navegacionServicio.mostrarAlertaError("Error de Sesión", "No se pudo identificar al usuario. Por favor, inicie sesión de nuevo.");
+                if (mainPane != null && mainPane.getScene() != null && mainPane.getScene().getWindow() instanceof Stage) {
+                    Stage stage = (Stage) mainPane.getScene().getWindow();
+                    if (stage != null) {
+                        navegacionServicio.navegarALogin(stage);
+                    }
+                }
+            }
+            disableUIComponents();
+            return;
+        }
+        // this.usuarioIdActualLocal = this.usuarioActualLocal.getId(); // No se usa directamente el ID aquí pero es bueno tenerlo si se necesitara
+
         activarBoton(savingsButton);
-
-        // Inicializar pantalla de modalidades de ahorro
         inicializarPantallaAhorro();
-
-        // Cargar datos
         cargarModalidades();
-
-        // Aplicar estilos personalizados
         aplicarEstilosComponentes();
     }
 
-    /**
-     * Aplica estilos a los componentes específicos de esta pantalla
-     */
+    private void disableUIComponents() {
+        // Deshabilitar o limpiar componentes si no hay usuario
+        if (modalidadesListView != null) modalidadesListView.setDisable(true);
+        if (aplicarModalidadButton != null) aplicarModalidadButton.setDisable(true);
+        if (presupuestoEjemploField != null) presupuestoEjemploField.setDisable(true);
+        if (calcularButton != null) calcularButton.setDisable(true);
+        if (tituloModalidadLabel != null) tituloModalidadLabel.setText("Modalidad: N/A");
+        if (descripcionModalidadTextArea != null) descripcionModalidadTextArea.setText("Seleccione una modalidad.");
+        // ... limpiar otras etiquetas y progresos ...
+        if (resultadoCalculoPane != null) {
+            resultadoCalculoPane.setVisible(false);
+            resultadoCalculoPane.setManaged(false);
+        }
+    }
+
     private void aplicarEstilosComponentes() {
-        // Aplicar estilos al ListView y TextArea
-        modalidadesListView.setStyle(
-                "-fx-background-color: rgba(30, 30, 40, 0.7); " +
-                        "-fx-background-radius: 5px; " +
-                        "-fx-border-color: rgba(80, 80, 120, 0.5); " +
-                        "-fx-border-radius: 5px; " +
-                        "-fx-text-fill: white;"
-        );
-
-        consejosListView.setStyle(
-                "-fx-background-color: rgba(30, 30, 40, 0.7); " +
-                        "-fx-background-radius: 5px; " +
-                        "-fx-border-color: rgba(80, 80, 120, 0.5); " +
-                        "-fx-border-radius: 5px; " +
-                        "-fx-text-fill: white;"
-        );
-
-        // Aplicar estilos a TextArea
-        EstilosApp.aplicarEstiloTextArea(descripcionModalidadTextArea);
-
-        // Aplicar estilos a los campos de texto
-        EstilosApp.aplicarEstiloCampoTexto(presupuestoEjemploField);
-
-        // Aplicar estilos a los botones principales
-        EstilosApp.aplicarEstiloBotonPrimario(aplicarModalidadButton);
-        EstilosApp.aplicarEstiloBotonPrimario(calcularButton);
-
-        // Aplicar estilos al gráfico
-        EstilosApp.aplicarEstiloGrafico(distribucionGastosChart);
-
-        // Aplicar estilos a los paneles
-        if (resultadoCalculoPane.isVisible()) {
-            EstilosApp.aplicarEstiloTarjeta(resultadoCalculoPane);
+        if (modalidadesListView != null) {
+            modalidadesListView.setStyle("-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px; -fx-text-fill: white;");
+            EstilosApp.aplicarEstiloLista(modalidadesListView); //
         }
-        EstilosApp.aplicarEstiloTarjeta(ejemploCalculoPane);
-        EstilosApp.aplicarEstiloLista(modalidadesListView);
+        if (consejosListView != null) consejosListView.setStyle("-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px; -fx-text-fill: white;");
+        if (descripcionModalidadTextArea != null) EstilosApp.aplicarEstiloTextArea(descripcionModalidadTextArea); //
+        if (presupuestoEjemploField != null) EstilosApp.aplicarEstiloCampoTexto(presupuestoEjemploField); //
+        if (aplicarModalidadButton != null) EstilosApp.aplicarEstiloBotonPrimario(aplicarModalidadButton); //
+        if (calcularButton != null) EstilosApp.aplicarEstiloBotonPrimario(calcularButton); //
+        if (distribucionGastosChart != null) EstilosApp.aplicarEstiloGrafico(distribucionGastosChart); //
+        if (resultadoCalculoPane != null && resultadoCalculoPane.isVisible()) EstilosApp.aplicarEstiloTarjeta(resultadoCalculoPane); //
+        if (ejemploCalculoPane != null) EstilosApp.aplicarEstiloTarjeta(ejemploCalculoPane); //
     }
 
-    /**
-     * Inicializa la pantalla de ahorro
-     */
     private void inicializarPantallaAhorro() {
-        // Configurar la selección de modalidad
-        modalidadesListView.getSelectionModel().selectedItemProperty().addListener(
-                (observable, oldValue, newValue) -> {
-                    if (newValue != null) {
-                        mostrarDetalleModalidad(newValue);
-                    }
-                });
-
-        // Configurar celda personalizada para ListView de modalidades
-        modalidadesListView.setCellFactory(param -> new ListCell<ModalidadAhorro>() {
-            @Override
-            protected void updateItem(ModalidadAhorro item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                    setGraphic(null);
-                    setStyle("-fx-background-color: transparent;");
-                } else {
-                    VBox contenido = new VBox(5);
-
-                    // Nombre de la modalidad
-                    Label nombreLabel = new Label(item.getNombre());
-                    nombreLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
-
-                    // Factor de presupuesto
-                    Label factorLabel = new Label(String.format("Factor: %.0f%%", item.getFactorPresupuestoAsDouble() * 100));
-                    factorLabel.setStyle("-fx-text-fill: rgb(200, 200, 220);");
-
-                    // Prioridades
-                    HBox prioridades = new HBox(10);
-                    Label precioLabel = new Label("Precio: " + item.getPrioridadPrecio() + "/10");
-                    precioLabel.setStyle("-fx-text-fill: rgb(100, 200, 255);");
-
-                    Label nutricionLabel = new Label("Nutrición: " + item.getPrioridadNutricion() + "/10");
-                    nutricionLabel.setStyle("-fx-text-fill: rgb(100, 220, 100);");
-
-                    prioridades.getChildren().addAll(precioLabel, nutricionLabel);
-
-                    contenido.getChildren().addAll(nombreLabel, factorLabel, prioridades);
-
-                    // Configurar estilo de la celda
-                    setGraphic(contenido);
-
-                    // Estilo de selección
-                    selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
-                        if (isNowSelected) {
-                            setStyle("-fx-background-color: rgba(80, 80, 140, 0.7); -fx-background-radius: 5px;");
-                        } else {
-                            setStyle("-fx-background-color: transparent;");
-                        }
-                    });
-
-                    if (isSelected()) {
-                        setStyle("-fx-background-color: rgba(80, 80, 140, 0.7); -fx-background-radius: 5px;");
+        if (modalidadesListView != null) {
+            modalidadesListView.getSelectionModel().selectedItemProperty().addListener(
+                    (observable, oldValue, newValue) -> { if (newValue != null) mostrarDetalleModalidad(newValue); }
+            );
+            modalidadesListView.setCellFactory(param -> new ListCell<ModalidadAhorro>() { /* ... (código de celda como antes) ... */
+                @Override
+                protected void updateItem(ModalidadAhorro item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null); setGraphic(null); setStyle("-fx-background-color: transparent;");
                     } else {
-                        setStyle("-fx-background-color: transparent;");
+                        VBox contenido = new VBox(5);
+                        Label nombreLabel = new Label(item.getNombre());
+                        nombreLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
+                        Label factorLabel = new Label(String.format("Factor: %.0f%%", item.getFactorPresupuestoAsDouble() * 100)); //
+                        factorLabel.setStyle("-fx-text-fill: rgb(200, 200, 220);");
+                        HBox prioridades = new HBox(10);
+                        Label precioLabel = new Label("Precio: " + item.getPrioridadPrecio() + "/10"); //
+                        precioLabel.setStyle("-fx-text-fill: rgb(100, 200, 255);");
+                        Label nutricionLabel = new Label("Nutrición: " + item.getPrioridadNutricion() + "/10"); //
+                        nutricionLabel.setStyle("-fx-text-fill: rgb(100, 220, 100);");
+                        prioridades.getChildren().addAll(precioLabel, nutricionLabel);
+                        contenido.getChildren().addAll(nombreLabel, factorLabel, prioridades);
+                        setGraphic(contenido);
+                        selectedProperty().addListener((obs, wasSelected, isNowSelected) -> setStyle(isNowSelected ? "-fx-background-color: rgba(80, 80, 140, 0.7); -fx-background-radius: 5px;" : "-fx-background-color: transparent;"));
+                        setStyle(isSelected() ? "-fx-background-color: rgba(80, 80, 140, 0.7); -fx-background-radius: 5px;" : "-fx-background-color: transparent;");
                     }
                 }
-            }
-        });
-
-        // Configurar celda personalizada para ListView de consejos
-        consejosListView.setCellFactory(param -> new ListCell<String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    setText("• " + item);
-                    setTextFill(Color.rgb(230, 230, 250));
+            });
+        }
+        if (consejosListView != null) {
+            consejosListView.setCellFactory(param -> new ListCell<String>() { /* ... (código de celda como antes) ... */
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) { setText(null); setGraphic(null); }
+                    else { setText("• " + item); setTextFill(Color.rgb(230, 230, 250)); }
                 }
-            }
-        });
-
-        // Configurar validación para el campo de presupuesto ejemplo
-        presupuestoEjemploField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.matches("\\d*\\.?\\d*")) {
-                presupuestoEjemploField.setText(oldValue);
-            }
-        });
-
-        // Configurar acción del botón calcular
-        calcularButton.setOnAction(this::handleCalcularEjemplo);
-
-        // Configurar acción del botón aplicar modalidad
-        aplicarModalidadButton.setOnAction(this::handleAplicarModalidad);
-
-        // Ocultar el panel de resultado de cálculo inicialmente
-        resultadoCalculoPane.setVisible(false);
-        resultadoCalculoPane.setManaged(false);
+            });
+        }
+        if (presupuestoEjemploField != null) presupuestoEjemploField.textProperty().addListener((observable, oldValue, newValue) -> { if (!newValue.matches("\\d*\\.?\\d*")) presupuestoEjemploField.setText(oldValue); });
+        if (calcularButton != null) calcularButton.setOnAction(this::handleCalcularEjemplo);
+        if (aplicarModalidadButton != null) aplicarModalidadButton.setOnAction(this::handleAplicarModalidad);
+        if (resultadoCalculoPane != null) {
+            resultadoCalculoPane.setVisible(false);
+            resultadoCalculoPane.setManaged(false);
+        }
     }
 
-    /**
-     * Carga las modalidades de ahorro desde el servicio
-     */
     private void cargarModalidades() {
-        // Obtener todas las modalidades
-        List<ModalidadAhorro> modalidades = modalidadServicio.obtenerTodasModalidades();
-
-        // Cargar en el ListView
+        if (modalidadesListView == null) return;
+        List<ModalidadAhorro> modalidades = modalidadServicio.obtenerTodasModalidades(); //
         modalidadesListView.setItems(FXCollections.observableArrayList(modalidades));
-
-        // Seleccionar la primera modalidad
         if (!modalidades.isEmpty()) {
-            modalidadesListView.getSelectionModel().select(0);
+            // Intentar seleccionar la modalidad actual del usuario si existe
+            if (usuarioActualLocal != null && usuarioActualLocal.getModalidadAhorroSeleccionada() != null) { //
+                ModalidadAhorro modalidadUsuario = modalidadServicio.obtenerModalidadPorNombre(usuarioActualLocal.getModalidadAhorroSeleccionada()); //
+                if (modalidadUsuario != null) {
+                    modalidadesListView.getSelectionModel().select(modalidadUsuario);
+                } else {
+                    modalidadesListView.getSelectionModel().select(0);
+                }
+            } else {
+                modalidadesListView.getSelectionModel().select(0);
+            }
         }
     }
 
-    /**
-     * Muestra los detalles de la modalidad seleccionada
-     */
     private void mostrarDetalleModalidad(ModalidadAhorro modalidad) {
+        if (modalidad == null || tituloModalidadLabel == null || descripcionModalidadTextArea == null || factorPresupuestoLabel == null || prioridadPrecioLabel == null || prioridadPrecioProgress == null || prioridadNutricionLabel == null || prioridadNutricionProgress == null || consejosListView == null || presupuestoOriginalLabel == null || presupuestoAjustadoLabel == null || ahorroEstimadoLabel == null || aplicarModalidadButton == null) return;
         modalidadSeleccionada = modalidad;
+        tituloModalidadLabel.setText("Modalidad: " + modalidad.getNombre()); //
+        descripcionModalidadTextArea.setText(modalidad.getDescripcion()); //
+        factorPresupuestoLabel.setText(String.format("%.0f%%", modalidad.getFactorPresupuestoAsDouble() * 100)); //
+        prioridadPrecioLabel.setText(modalidad.getPrioridadPrecio() + "/10"); //
+        prioridadPrecioProgress.setProgress(modalidad.getPrioridadPrecio() / 10.0); //
+        prioridadNutricionLabel.setText(modalidad.getPrioridadNutricion() + "/10"); //
+        prioridadNutricionProgress.setProgress(modalidad.getPrioridadNutricion() / 10.0); //
+        // ... (lógica de colores para progress bars como antes) ...
+        String colorPrecio; if (modalidad.getPrioridadPrecio() >= 7) colorPrecio = "rgb(100, 200, 255)"; else if (modalidad.getPrioridadPrecio() >= 4) colorPrecio = "rgb(200, 200, 0)"; else colorPrecio = "rgb(200, 100, 100)"; prioridadPrecioProgress.setStyle("-fx-accent: " + colorPrecio + ";"); //
+        String colorNutricion; if (modalidad.getPrioridadNutricion() >= 7) colorNutricion = "rgb(100, 220, 100)"; else if (modalidad.getPrioridadNutricion() >= 4) colorNutricion = "rgb(200, 200, 0)"; else colorNutricion = "rgb(200, 100, 100)"; prioridadNutricionProgress.setStyle("-fx-accent: " + colorNutricion + ";"); //
 
-        // Actualizar la interfaz con los detalles de la modalidad
-        tituloModalidadLabel.setText("Modalidad: " + modalidad.getNombre());
-        descripcionModalidadTextArea.setText(modalidad.getDescripcion());
-
-        // Actualizar etiquetas y barras de progreso
-        factorPresupuestoLabel.setText(String.format("%.0f%%", modalidad.getFactorPresupuestoAsDouble() * 100));
-
-        prioridadPrecioLabel.setText(modalidad.getPrioridadPrecio() + "/10");
-        prioridadPrecioProgress.setProgress(modalidad.getPrioridadPrecio() / 10.0);
-
-        prioridadNutricionLabel.setText(modalidad.getPrioridadNutricion() + "/10");
-        prioridadNutricionProgress.setProgress(modalidad.getPrioridadNutricion() / 10.0);
-
-        // Colorear barras de progreso
-        String colorPrecio;
-        if (modalidad.getPrioridadPrecio() >= 7) {
-            colorPrecio = "rgb(100, 200, 255)"; // Azul
-        } else if (modalidad.getPrioridadPrecio() >= 4) {
-            colorPrecio = "rgb(200, 200, 0)"; // Amarillo
-        } else {
-            colorPrecio = "rgb(200, 100, 100)"; // Rojo
-        }
-        prioridadPrecioProgress.setStyle("-fx-accent: " + colorPrecio + ";");
-
-        String colorNutricion;
-        if (modalidad.getPrioridadNutricion() >= 7) {
-            colorNutricion = "rgb(100, 220, 100)"; // Verde
-        } else if (modalidad.getPrioridadNutricion() >= 4) {
-            colorNutricion = "rgb(200, 200, 0)"; // Amarillo
-        } else {
-            colorNutricion = "rgb(200, 100, 100)"; // Rojo
-        }
-        prioridadNutricionProgress.setStyle("-fx-accent: " + colorNutricion + ";");
-
-        // Cargar consejos
-        List<String> consejos = modalidadServicio.obtenerConsejosAhorro(modalidad);
+        List<String> consejos = modalidadServicio.obtenerConsejosAhorro(modalidad); //
         consejosListView.setItems(FXCollections.observableArrayList(consejos));
-
-        // Calcular ejemplo con un presupuesto predeterminado
-        double presupuestoEjemplo = 200.0; // € 200 como ejemplo
-        double presupuestoAjustado = modalidadServicio.calcularPresupuestoAjustado(presupuestoEjemplo, modalidad);
-        double ahorroEstimado = presupuestoEjemplo - presupuestoAjustado;
-
-        // Actualizar etiquetas de ejemplo
+        double presupuestoEjemplo = 200.0;
+        double presupuestoAjustadoCalc = modalidadServicio.calcularPresupuestoAjustado(presupuestoEjemplo, modalidad); //
+        double ahorroEstimadoCalc = presupuestoEjemplo - presupuestoAjustadoCalc;
         presupuestoOriginalLabel.setText(String.format("€%.2f", presupuestoEjemplo));
-        presupuestoAjustadoLabel.setText(String.format("€%.2f", presupuestoAjustado));
-        ahorroEstimadoLabel.setText(String.format("€%.2f", ahorroEstimado));
+        presupuestoAjustadoLabel.setText(String.format("€%.2f", presupuestoAjustadoCalc));
+        ahorroEstimadoLabel.setText(String.format("€%.2f", ahorroEstimadoCalc));
 
-        // Actualizar estado del botón
-        aplicarModalidadButton.setText(modalidadAplicada ? "Modalidad Aplicada" : "Aplicar Modalidad");
-        aplicarModalidadButton.setDisable(modalidadAplicada);
+        boolean esModalidadActualUsuario = usuarioActualLocal != null && modalidad.getNombre().equals(usuarioActualLocal.getModalidadAhorroSeleccionada()); //
+        aplicarModalidadButton.setText(esModalidadActualUsuario ? "Modalidad Aplicada" : "Aplicar Modalidad");
+        aplicarModalidadButton.setDisable(esModalidadActualUsuario);
     }
 
-    /**
-     * Manejador para el cálculo de ejemplo con presupuesto personalizado
-     */
     @FXML
     private void handleCalcularEjemplo(ActionEvent event) {
-        if (modalidadSeleccionada == null) {
-            return;
-        }
-
+        if (modalidadSeleccionada == null || presupuestoEjemploField == null || presupuestoOriginalResultadoLabel == null || presupuestoAjustadoResultadoLabel == null || ahorroEstimadoResultadoLabel == null || distribucionGastosChart == null || resultadoCalculoPane == null) return;
         try {
-            // Obtener el presupuesto ingresado
             String presupuestoTexto = presupuestoEjemploField.getText().trim();
-            if (presupuestoTexto.isEmpty()) {
-                navegacionServicio.mostrarAlertaError("Error", "Por favor, ingresa un presupuesto válido.");
-                return;
-            }
-
+            if (presupuestoTexto.isEmpty()) { navegacionServicio.mostrarAlertaError("Error", "Por favor, ingresa un presupuesto válido."); return; } //
             double presupuesto = Double.parseDouble(presupuestoTexto);
-            if (presupuesto <= 0) {
-                navegacionServicio.mostrarAlertaError("Error", "El presupuesto debe ser mayor que cero.");
-                return;
-            }
-
-            // Calcular presupuesto ajustado
-            double presupuestoAjustado = modalidadServicio.calcularPresupuestoAjustado(presupuesto, modalidadSeleccionada);
-            double ahorroEstimado = presupuesto - presupuestoAjustado;
-
-            // Mostrar resultados
+            if (presupuesto <= 0) { navegacionServicio.mostrarAlertaError("Error", "El presupuesto debe ser mayor que cero."); return; } //
+            double presupuestoAjustadoCalc = modalidadServicio.calcularPresupuestoAjustado(presupuesto, modalidadSeleccionada); //
+            double ahorroEstimadoCalc = presupuesto - presupuestoAjustadoCalc;
             presupuestoOriginalResultadoLabel.setText(String.format("€%.2f", presupuesto));
-            presupuestoAjustadoResultadoLabel.setText(String.format("€%.2f", presupuestoAjustado));
-            ahorroEstimadoResultadoLabel.setText(String.format("€%.2f", ahorroEstimado));
-
-            // Actualizar gráfico
+            presupuestoAjustadoResultadoLabel.setText(String.format("€%.2f", presupuestoAjustadoCalc));
+            ahorroEstimadoResultadoLabel.setText(String.format("€%.2f", ahorroEstimadoCalc));
             ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList(
-                    new PieChart.Data("Gasto", presupuestoAjustado),
-                    new PieChart.Data("Ahorro", ahorroEstimado)
+                    new PieChart.Data("Gasto", presupuestoAjustadoCalc), new PieChart.Data("Ahorro", ahorroEstimadoCalc)
             );
             distribucionGastosChart.setData(pieChartData);
-
-            // Colorear secciones del gráfico
-            pieChartData.get(0).getNode().setStyle("-fx-pie-color: rgb(100, 170, 255);"); // Azul para gastos
-            pieChartData.get(1).getNode().setStyle("-fx-pie-color: rgb(100, 220, 100);"); // Verde para ahorro
-
-            // Mostrar panel de resultados
+            if (!pieChartData.isEmpty()) { // Añadida comprobación
+                if(pieChartData.get(0) != null && pieChartData.get(0).getNode() != null) pieChartData.get(0).getNode().setStyle("-fx-pie-color: rgb(100, 170, 255);");
+                if(pieChartData.size() > 1 && pieChartData.get(1) != null && pieChartData.get(1).getNode() != null) pieChartData.get(1).getNode().setStyle("-fx-pie-color: rgb(100, 220, 100);");
+            }
             resultadoCalculoPane.setVisible(true);
             resultadoCalculoPane.setManaged(true);
-
-            // Aplicar estilo a la tarjeta de resultados
-            EstilosApp.aplicarEstiloTarjeta(resultadoCalculoPane);
-
+            EstilosApp.aplicarEstiloTarjeta(resultadoCalculoPane); //
         } catch (NumberFormatException e) {
-            navegacionServicio.mostrarAlertaError("Formato incorrecto", "Por favor, ingresa un valor numérico válido.");
+            navegacionServicio.mostrarAlertaError("Formato incorrecto", "Por favor, ingresa un valor numérico válido."); //
         }
     }
 
-    /**
-     * Manejador para aplicar la modalidad seleccionada
-     */
     @FXML
     private void handleAplicarModalidad(ActionEvent event) {
-        if (modalidadSeleccionada == null) {
-            return;
+        if (modalidadSeleccionada == null || usuarioActualLocal == null || aplicarModalidadButton == null) return;
+
+        // Actualizar la modalidad en el objeto Usuario
+        usuarioActualLocal.setModalidadAhorroSeleccionada(modalidadSeleccionada.getNombre()); //
+
+        // Guardar el cambio en la base de datos a través del UsuarioServicio
+        UsuarioServicio usuarioServicio = new UsuarioServicio(); // Considera inyectarlo o hacerlo singleton si no lo es
+        boolean actualizado = usuarioServicio.actualizarUsuario(usuarioActualLocal); //
+
+        if (actualizado) {
+            aplicarModalidadButton.setText("Modalidad Aplicada");
+            aplicarModalidadButton.setDisable(true);
+            navegacionServicio.mostrarAlertaInformacion("Modalidad Aplicada", "La modalidad de ahorro '" + modalidadSeleccionada.getNombre() + "' ha sido aplicada correctamente."); //
+            // Actualizar la sesión en SessionManager si es necesario (si el objeto Usuario es una copia)
+            SessionManager.getInstancia().setUsuarioActual(usuarioActualLocal);
+        } else {
+            navegacionServicio.mostrarAlertaError("Error", "No se pudo aplicar la modalidad de ahorro."); //
         }
-
-        // Aquí se implementaría la lógica para aplicar la modalidad al usuario
-        // Por ejemplo, guardar la preferencia en la base de datos
-
-        // Simulación de aplicación exitosa
-        modalidadAplicada = true;
-        aplicarModalidadButton.setText("Modalidad Aplicada");
-        aplicarModalidadButton.setDisable(true);
-
-        navegacionServicio.mostrarAlertaInformacion("Modalidad Aplicada",
-                "La modalidad de ahorro '" + modalidadSeleccionada.getNombre() +
-                        "' ha sido aplicada correctamente. Se utilizará en tus recomendaciones de compra y presupuesto.");
     }
 
-    /**
-     * Sobrescribe el método de navegación a ahorros
-     * Ya que estamos en la vista de modalidades de ahorro
-     */
     @Override
     public void handleSavingsAction(ActionEvent evento) {
-        // Ya estamos en la vista de modalidades de ahorro, solo activamos el botón
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual(); // Refrescar usuario
+        if (this.usuarioActualLocal == null) {
+            System.err.println("Error crítico: No hay usuario en sesión al re-navegar a Ahorro.");
+            if (navegacionServicio != null) {
+                navegacionServicio.mostrarAlertaError("Error de Sesión", "No se pudo identificar al usuario. Por favor, inicie sesión de nuevo.");
+                if (mainPane != null && mainPane.getScene() != null && mainPane.getScene().getWindow() instanceof Stage) {
+                    Stage stage = (Stage) mainPane.getScene().getWindow();
+                    if (stage != null) {
+                        navegacionServicio.navegarALogin(stage);
+                    }
+                }
+            }
+            disableUIComponents();
+            return;
+        }
         activarBoton(savingsButton);
+        cargarModalidades(); // Recargar modalidades y actualizar selección
     }
 }

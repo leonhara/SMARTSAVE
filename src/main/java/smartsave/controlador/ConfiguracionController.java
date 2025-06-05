@@ -5,20 +5,17 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import smartsave.modelo.Usuario; // Importar Usuario
+import smartsave.servicio.SessionManager; // Importar SessionManager
+import smartsave.servicio.UsuarioServicio; // Para cambiar contraseña
 import smartsave.utilidad.EstilosApp;
 
-/**
- * Controlador para la vista de Configuración
- * Extiende BaseController para heredar funcionalidad común
- */
 public class ConfiguracionController extends BaseController {
 
-    // Referencias a los elementos de configuración
     @FXML private ComboBox<String> temaComboBox;
     @FXML private ComboBox<String> idiomaComboBox;
-
     @FXML private Button cambiarContrasena;
-
     @FXML private Label versionLabel;
     @FXML private Label autorLabel;
     @FXML private Label fechaCompilacionLabel;
@@ -27,72 +24,63 @@ public class ConfiguracionController extends BaseController {
     @FXML private Button privacidadButton;
     @FXML private Button acercaDeButton;
 
-    /**
-     * Inicialización específica del controlador de configuración
-     * Implementación del método abstracto de BaseController
-     */
+    private UsuarioServicio usuarioServicio = new UsuarioServicio();
+    private Usuario usuarioActualLocal;
+    private Long usuarioIdActualLocal;
+
+
     @Override
     protected void inicializarControlador() {
-        // Destacar el botón de configuración como seleccionado
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual();
+
+        if (this.usuarioActualLocal == null) {
+            System.err.println("Error crítico: No hay usuario en sesión en ConfiguracionController.");
+            if (navegacionServicio != null) {
+                navegacionServicio.mostrarAlertaError("Error de Sesión", "No se pudo identificar al usuario. Por favor, inicie sesión de nuevo.");
+                if (mainPane != null && mainPane.getScene() != null && mainPane.getScene().getWindow() instanceof Stage) {
+                    Stage stage = (Stage) mainPane.getScene().getWindow();
+                    if (stage != null) {
+                        navegacionServicio.navegarALogin(stage);
+                    }
+                }
+            }
+            if (cambiarContrasena != null) cambiarContrasena.setDisable(true);
+        } else {
+            this.usuarioIdActualLocal = this.usuarioActualLocal.getId();
+            if (cambiarContrasena != null) cambiarContrasena.setDisable(false);
+        }
+
         activarBoton(settingsButton);
-
-        // Inicializar configuración
         inicializarConfiguracion();
-
-        // Cargar configuración actual
         cargarConfiguracionActual();
-
-        // Aplicar estilos personalizados
         aplicarEstilosComponentes();
     }
 
-    /**
-     * Aplica estilos a los componentes específicos de esta pantalla
-     */
     private void aplicarEstilosComponentes() {
-        // Aplicar estilos a los ComboBox
-        EstilosApp.aplicarEstiloComboBox(temaComboBox);
-        EstilosApp.aplicarEstiloComboBox(idiomaComboBox);
-
-        // Aplicar estilos a los botones
-        EstilosApp.aplicarEstiloBotonPrimario(cambiarContrasena);
-        EstilosApp.aplicarEstiloBotonPrimario(licenciaButton);
-        EstilosApp.aplicarEstiloBotonPrimario(privacidadButton);
-        EstilosApp.aplicarEstiloBotonPrimario(acercaDeButton);
-
-        // Aplicar estilos a las etiquetas de información
+        if (temaComboBox != null) EstilosApp.aplicarEstiloComboBox(temaComboBox);
+        if (idiomaComboBox != null) EstilosApp.aplicarEstiloComboBox(idiomaComboBox);
+        if (cambiarContrasena != null) EstilosApp.aplicarEstiloBotonPrimario(cambiarContrasena);
+        if (licenciaButton != null) EstilosApp.aplicarEstiloBotonPrimario(licenciaButton);
+        if (privacidadButton != null) EstilosApp.aplicarEstiloBotonPrimario(privacidadButton);
+        if (acercaDeButton != null) EstilosApp.aplicarEstiloBotonPrimario(acercaDeButton);
         estilizarEtiquetasInformacion();
-
-        // Aplicar estilos a los paneles contenedores
         estilizarPanelesContenedores();
-
-        // Aplicar estilo al ScrollBar (si está disponible)
         aplicarEstiloScrollBarNeon();
     }
 
-    /**
-     * Aplica estilos a las etiquetas de información
-     */
     private void estilizarEtiquetasInformacion() {
-        // Estilo para etiquetas de información
         String estiloEtiquetaInfo = "-fx-text-fill: rgb(180, 180, 220); -fx-font-size: 14px;";
-
-        // Aplicar el estilo a las etiquetas de información
-        versionLabel.setStyle(estiloEtiquetaInfo);
-        autorLabel.setStyle(estiloEtiquetaInfo);
-        fechaCompilacionLabel.setStyle(estiloEtiquetaInfo);
-        centroLabel.setStyle(estiloEtiquetaInfo);
+        if (versionLabel != null) versionLabel.setStyle(estiloEtiquetaInfo);
+        if (autorLabel != null) autorLabel.setStyle(estiloEtiquetaInfo);
+        if (fechaCompilacionLabel != null) fechaCompilacionLabel.setStyle(estiloEtiquetaInfo);
+        if (centroLabel != null) centroLabel.setStyle(estiloEtiquetaInfo);
     }
 
-    /**
-     * Aplica estilos a los paneles contenedores
-     */
     private void estilizarPanelesContenedores() {
-        // Buscar paneles VBox que contienen secciones de configuración
+        if (mainPane == null) return;
         for (javafx.scene.Node nodo : mainPane.lookupAll("VBox")) {
             if (nodo instanceof VBox && nodo != sideMenu) {
                 VBox panel = (VBox) nodo;
-                // Verificar si es un panel de sección buscando hijos específicos
                 if (!panel.getChildren().isEmpty() && panel.getChildren().get(0) instanceof Label) {
                     EstilosApp.aplicarEstiloTarjeta(panel);
                 }
@@ -100,82 +88,54 @@ public class ConfiguracionController extends BaseController {
         }
     }
 
-    /**
-     * Inicializa los elementos de configuración
-     */
     private void inicializarConfiguracion() {
-        // PRIMERO agregar items a los ComboBox
-        // Inicializar ComboBox de tema
-        temaComboBox.getItems().addAll("Oscuro (Actual)", "Claro", "Automático");
-
-        // Inicializar ComboBox de idioma
-        idiomaComboBox.getItems().addAll("Español", "English", "Français");
-
-        // DESPUÉS seleccionar valores por defecto
-        temaComboBox.setValue("Oscuro (Actual)");
-        idiomaComboBox.setValue("Español");
+        if (temaComboBox != null) {
+            temaComboBox.getItems().addAll("Oscuro (Actual)", "Claro", "Automático");
+            temaComboBox.setValue("Oscuro (Actual)");
+        }
+        if (idiomaComboBox != null) {
+            idiomaComboBox.getItems().addAll("Español", "English", "Français");
+            idiomaComboBox.setValue("Español");
+        }
     }
 
-    /**
-     * Carga la configuración actual del sistema
-     */
     private void cargarConfiguracionActual() {
-        // Información sobre la aplicación
-        versionLabel.setText("1.5.2");
-        autorLabel.setText("Leonel Yupanqui Serrano");
-        fechaCompilacionLabel.setText("18/05/2025");
-        centroLabel.setText("Salesianos San Francisco De Sales El Buen Amigo");
+        if (versionLabel != null) versionLabel.setText("1.5.2");
+        if (autorLabel != null) autorLabel.setText("Leonel Yupanqui Serrano");
+        if (fechaCompilacionLabel != null) fechaCompilacionLabel.setText("18/05/2025");
+        if (centroLabel != null) centroLabel.setText("Salesianos San Francisco De Sales El Buen Amigo");
     }
 
-    /**
-     * Manejador para el cambio de contraseña
-     */
     @FXML
     private void handleCambiarContrasenaAction(ActionEvent evento) {
-        // Crear diálogo para cambiar contraseña
+        if (usuarioActualLocal == null) {
+            navegacionServicio.mostrarAlertaError("Error", "Debe iniciar sesión para cambiar la contraseña.");
+            return;
+        }
+
         Dialog<String[]> dialog = new Dialog<>();
         dialog.setTitle("Cambiar Contraseña");
         dialog.setHeaderText("Ingresa tu nueva contraseña");
-
-        // Configurar botones
         ButtonType cambiarButtonType = new ButtonType("Cambiar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(cambiarButtonType, ButtonType.CANCEL);
-
-        // Crear el formulario
         GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
-
-        PasswordField contrasenaActual = new PasswordField();
-        contrasenaActual.setPromptText("Contraseña actual");
-        PasswordField nuevaContrasena = new PasswordField();
-        nuevaContrasena.setPromptText("Nueva contraseña");
-        PasswordField confirmarContrasena = new PasswordField();
-        confirmarContrasena.setPromptText("Confirmar nueva contraseña");
-
-        // Aplicar estilos a los campos
-        EstilosApp.aplicarEstiloCampoContrasena(contrasenaActual);
-        EstilosApp.aplicarEstiloCampoContrasena(nuevaContrasena);
-        EstilosApp.aplicarEstiloCampoContrasena(confirmarContrasena);
-
-        grid.add(new Label("Contraseña actual:"), 0, 0);
-        grid.add(contrasenaActual, 1, 0);
-        grid.add(new Label("Nueva contraseña:"), 0, 1);
-        grid.add(nuevaContrasena, 1, 1);
-        grid.add(new Label("Confirmar contraseña:"), 0, 2);
-        grid.add(confirmarContrasena, 1, 2);
-
+        grid.setHgap(10); grid.setVgap(10); grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+        PasswordField contrasenaActualField = new PasswordField(); contrasenaActualField.setPromptText("Contraseña actual");
+        PasswordField nuevaContrasenaField = new PasswordField(); nuevaContrasenaField.setPromptText("Nueva contraseña");
+        PasswordField confirmarContrasenaField = new PasswordField(); confirmarContrasenaField.setPromptText("Confirmar nueva contraseña");
+        EstilosApp.aplicarEstiloCampoContrasena(contrasenaActualField);
+        EstilosApp.aplicarEstiloCampoContrasena(nuevaContrasenaField);
+        EstilosApp.aplicarEstiloCampoContrasena(confirmarContrasenaField);
+        grid.add(new Label("Contraseña actual:"), 0, 0); grid.add(contrasenaActualField, 1, 0);
+        grid.add(new Label("Nueva contraseña:"), 0, 1); grid.add(nuevaContrasenaField, 1, 1);
+        grid.add(new Label("Confirmar contraseña:"), 0, 2); grid.add(confirmarContrasenaField, 1, 2);
         dialog.getDialogPane().setContent(grid);
-        contrasenaActual.requestFocus();
-
-        // Estilizar el diálogo
+        contrasenaActualField.requestFocus();
         navegacionServicio.estilizarDialog(dialog);
 
-        // Convertir el resultado cuando se presiona el botón cambiar
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == cambiarButtonType) {
-                return new String[]{contrasenaActual.getText(), nuevaContrasena.getText(), confirmarContrasena.getText()};
+                return new String[]{contrasenaActualField.getText(), nuevaContrasenaField.getText(), confirmarContrasenaField.getText()};
             }
             return null;
         });
@@ -184,37 +144,35 @@ public class ConfiguracionController extends BaseController {
             String actual = result[0];
             String nueva = result[1];
             String confirmar = result[2];
-
-            // Validar contraseñas
             if (actual.isEmpty() || nueva.isEmpty() || confirmar.isEmpty()) {
-                navegacionServicio.mostrarAlertaError("Error", "Todos los campos son obligatorios.");
-                return;
+                navegacionServicio.mostrarAlertaError("Error", "Todos los campos son obligatorios."); return;
             }
-
             if (!nueva.equals(confirmar)) {
-                navegacionServicio.mostrarAlertaError("Error", "Las contraseñas nuevas no coinciden.");
-                return;
+                navegacionServicio.mostrarAlertaError("Error", "Las contraseñas nuevas no coinciden."); return;
             }
-
             if (nueva.length() < 6) {
-                navegacionServicio.mostrarAlertaError("Error", "La nueva contraseña debe tener al menos 6 caracteres.");
-                return;
+                navegacionServicio.mostrarAlertaError("Error", "La nueva contraseña debe tener al menos 6 caracteres."); return;
             }
 
-            // Simular cambio de contraseña
-            navegacionServicio.mostrarAlertaInformacion("Contraseña Cambiada",
-                    "Tu contraseña ha sido cambiada correctamente.");
+            //Verificar contraseña actual
+            if (!usuarioActualLocal.getContrasenaHash().equals(actual)) {
+                navegacionServicio.mostrarAlertaError("Error", "La contraseña actual es incorrecta."); return;
+            }
+
+            usuarioActualLocal.setContrasenaHash(nueva);
+            if (usuarioServicio.actualizarUsuario(usuarioActualLocal)) {
+                navegacionServicio.mostrarAlertaInformacion("Contraseña Cambiada", "Tu contraseña ha sido cambiada correctamente.");
+            } else {
+                navegacionServicio.mostrarAlertaError("Error", "No se pudo actualizar la contraseña.");
+            }
         });
     }
 
-    /**
-     * Manejador para ver la licencia del software
-     */
     @FXML
     private void handleVerLicenciaAction(ActionEvent evento) {
         navegacionServicio.mostrarAlertaInformacion("Licencia de Software",
                 "SmartSave - Licencia MIT\n\n" +
-                        "Copyright © 2025 Leonel Yupanqui Serrano\n\n" +
+                        "Copyright © 2025 Leonel Yupanqui Serrano\n\n" + //
                         "Por la presente se concede permiso, libre de cargos, a cualquier persona " +
                         "que obtenga una copia de este software y de los archivos de documentación " +
                         "asociados (el \"Software\"), a utilizar el Software sin restricción, " +
@@ -223,9 +181,6 @@ public class ConfiguracionController extends BaseController {
                         "EL SOFTWARE SE PROPORCIONA \"COMO ESTÁ\", SIN GARANTÍA DE NINGÚN TIPO.");
     }
 
-    /**
-     * Manejador para ver la política de privacidad
-     */
     @FXML
     private void handlePoliticaPrivacidadAction(ActionEvent evento) {
         navegacionServicio.mostrarAlertaInformacion("Política de Privacidad",
@@ -238,9 +193,6 @@ public class ConfiguracionController extends BaseController {
                         "Para más información, contacta al desarrollador.");
     }
 
-    /**
-     * Manejador para ver la información acerca de la aplicación
-     */
     @FXML
     private void handleAcercaDeAction(ActionEvent evento) {
         navegacionServicio.mostrarAlertaInformacion("Acerca de SmartSave",
@@ -254,27 +206,24 @@ public class ConfiguracionController extends BaseController {
                         "nutricionales para ayudar a los usuarios a optimizar tanto su economía como su salud.");
     }
 
-    /**
-     * Aplica estilos al ScrollBar
-     */
     private void aplicarEstiloScrollBarNeon() {
         Platform.runLater(() -> {
-            ScrollPane scrollPane = (ScrollPane) mainPane.getCenter();
-
-            if (scrollPane != null) {
-                // Aplicar estilos centralizados a través de EstilosApp
+            if (mainPane != null && mainPane.getCenter() instanceof ScrollPane) { //Verificar que mainPane y su centro no sean null
+                ScrollPane scrollPane = (ScrollPane) mainPane.getCenter();
                 EstilosApp.aplicarEstiloScrollPane(scrollPane);
             }
         });
     }
 
-    /**
-     * Sobrescribe el método de navegación a configuración
-     * Ya que estamos en la vista de configuración
-     */
     @Override
     public void handleSettingsAction(ActionEvent evento) {
-        // Ya estamos en la vista de configuración, solo activamos el botón
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual();
+        if (this.usuarioActualLocal == null) {
+            if (cambiarContrasena != null) cambiarContrasena.setDisable(true);
+        } else {
+            this.usuarioIdActualLocal = this.usuarioActualLocal.getId();
+            if (cambiarContrasena != null) cambiarContrasena.setDisable(false);
+        }
         activarBoton(settingsButton);
     }
 }

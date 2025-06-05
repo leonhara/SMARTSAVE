@@ -12,6 +12,7 @@ import javafx.scene.effect.Glow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import smartsave.servicio.SessionManager;
 import smartsave.utilidad.EstilosApp;
 import smartsave.servicio.UsuarioServicio;
 import smartsave.modelo.Usuario;
@@ -216,7 +217,14 @@ public class LoginController implements Initializable {
         // Acceso rápido para desarrollo
         if ("1".equals(email) && "1".equals(contrasena)) {
             try {
-                abrirPanelPrincipal();
+                // Obtener el usuario de prueba y guardarlo en la sesión
+                Usuario usuarioPrueba = usuarioServicio.obtenerUsuarioPorId(1L);
+                if (usuarioPrueba != null) {
+                    SessionManager.getInstancia().setUsuarioActual(usuarioPrueba);
+                    abrirPanelPrincipal();
+                } else {
+                    mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo cargar el usuario de prueba (ID: 1).");
+                }
                 return;
             } catch (IOException e) {
                 mostrarAlerta(Alert.AlertType.ERROR, "Error", "Error al cargar el panel principal: " + e.getMessage());
@@ -245,6 +253,9 @@ public class LoginController implements Initializable {
         Usuario usuario = usuarioServicio.verificarCredenciales(email, contrasena);
 
         if (usuario != null) {
+            // ***** Guardar usuario en la sesión *****
+            SessionManager.getInstancia().setUsuarioActual(usuario);
+            // ***** FIN DE LA MODIFICACIÓN *****
             try {
                 // Login exitoso, abrir panel principal
                 abrirPanelPrincipal();
