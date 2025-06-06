@@ -97,7 +97,8 @@ public class TransaccionServicio {
                     "FROM Transaccion t WHERE t.usuarioId = :usuarioId AND t.tipo = :tipo ORDER BY t.fecha DESC",
                     Transaccion.class);
             query.setParameter("usuarioId", usuarioId);
-            query.setParameter("tipo", tipo);
+            // LÍNEA CORREGIDA: Convertir el String al tipo Enum esperado por Hibernate
+            query.setParameter("tipo", Transaccion.TipoTransaccion.valueOf(tipo));
             return query.getResultList();
         } catch (Exception e) {
             throw new RuntimeException("Error obteniendo transacciones por tipo: " + e.getMessage(), e);
