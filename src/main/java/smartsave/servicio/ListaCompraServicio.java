@@ -872,15 +872,28 @@ public class ListaCompraServicio {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
 
-            ListaCompra lista = obtenerListaCompra(listaId, usuarioId);
-            if (lista != null) {
+            ListaCompra lista = session.get(ListaCompra.class, listaId);
+
+            if (lista != null && lista.getUsuarioId().equals(usuarioId)) {
+
+                Long transaccionAEliminarId = lista.getTransaccionIdAsociada();
                 session.delete(lista);
+
+                // 3. Si había una transacción asociada, eliminarla también
+                if (transaccionAEliminarId != null) {
+                    TransaccionServicio transaccionServicio = new TransaccionServicio();
+                    Transaccion transaccionAEliminar = transaccionServicio.obtenerTransaccionPorId(transaccionAEliminarId, usuarioId);
+                    if (transaccionAEliminar != null) {
+                        session.delete(transaccionAEliminar);
+                    }
+                }
+
                 transaction.commit();
 
-                // Eliminar de caché
+                // Actualizar la caché al final
                 cacheListas.remove(listaId);
-
                 return true;
+
             } else {
                 transaction.rollback();
                 return false;

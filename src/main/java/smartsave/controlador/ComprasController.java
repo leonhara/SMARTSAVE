@@ -386,16 +386,27 @@ public class ComprasController extends BaseController {
 
     @FXML private void handleFiltroListas(ActionEvent event) { cargarListasCompra(); }
 
+    // Reemplaza el método en ComprasController.java con esta versión
+
     @FXML
     private void handleCrearLista(ActionEvent event) {
         if (crearListaTituloLabel == null || nombreListaField == null || modalidadComboBox == null || presupuestoField == null || fechaPlanificadaPicker == null || generarAutomaticoCheckBox == null) return;
+
         modoEdicion = false;
         crearListaTituloLabel.setText("Crear Lista de Compra");
         nombreListaField.clear();
-        modalidadComboBox.getSelectionModel().select("Equilibrado");
         presupuestoField.clear();
         fechaPlanificadaPicker.setValue(LocalDate.now().plusDays(7));
-        generarAutomaticoCheckBox.setSelected(true);
+        generarAutomaticoCheckBox.setSelected(false);
+
+        String modalidadPorDefecto = "Equilibrado";
+
+        if (usuarioActualLocal != null && usuarioActualLocal.getModalidadAhorroSeleccionada() != null && !usuarioActualLocal.getModalidadAhorroSeleccionada().isEmpty()) {
+            modalidadPorDefecto = usuarioActualLocal.getModalidadAhorroSeleccionada();
+        }
+
+        modalidadComboBox.setValue(modalidadPorDefecto);
+
         mostrarPanelCrearLista();
     }
 
@@ -532,22 +543,45 @@ public class ComprasController extends BaseController {
     private void handleBuscarProducto(ActionEvent event) {
         if (buscarProductoField == null || buscarProductoButton == null || resultadosProductosTableView == null) return;
         String termino = buscarProductoField.getText().trim();
+
+        // --- LÓGICA MEJORADA PARA OBTENER LA MODALIDAD ---
+        if (listaSeleccionada == null) {
+            navegacionServicio.mostrarAlertaError("Seleccione una Lista", "Por favor, selecciona primero una lista de compra para poder buscar productos.");
+            return;
+        }
+
+        ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
+        ModalidadAhorro modalidadActual = modalidadServicio.obtenerModalidadPorNombre(listaSeleccionada.getModalidadAhorro());
+
+        if (modalidadActual == null) {
+            navegacionServicio.mostrarAlertaError("Error de Modalidad", "No se pudo cargar la modalidad de ahorro de la lista. Seleccionando 'Equilibrado' por defecto.");
+            modalidadActual = modalidadServicio.obtenerModalidadPorNombre("Equilibrado");
+            if (modalidadActual == null) { // Fallback extremo
+                navegacionServicio.mostrarAlertaError("Error Crítico", "No se encontraron las modalidades de ahorro.");
+                return;
+            }
+        }
+        // --- FIN DE LA LÓGICA ---
+
         buscarProductoButton.setDisable(true);
         buscarProductoButton.setText("Buscando...");
+
+        // Se pasa la modalidadActual a la tarea asíncrona
+        final ModalidadAhorro modalidadParaBusqueda = modalidadActual;
+
         CompletableFuture.supplyAsync(() -> {
-            List<Producto> resultados;
-            if (termino.isEmpty()) resultados = productoServicio.obtenerTodosProductos();
-            else resultados = productoServicio.buscarProductos(termino);
-            return resultados;
+            // Llamada al servicio con la nueva firma
+            return productoServicio.buscarProductos(termino, modalidadParaBusqueda);
         }).thenAccept(resultados -> Platform.runLater(() -> {
             resultadosProductosTableView.setItems(FXCollections.observableArrayList(resultados));
             buscarProductoButton.setDisable(false);
             buscarProductoButton.setText("Buscar");
-            if (resultados.isEmpty()) navegacionServicio.mostrarAlertaInformacion("Búsqueda sin resultados", "No se encontraron productos para: " + termino); //
-            else System.out.println("Encontrados " + resultados.size() + " productos para: " + termino);
+            if (resultados.isEmpty()) {
+                navegacionServicio.mostrarAlertaInformacion("Búsqueda sin resultados", "No se encontraron productos para: " + termino);
+            }
         })).exceptionally(e -> {
             Platform.runLater(() -> {
-                navegacionServicio.mostrarAlertaError("Error en búsqueda", "Se produjo un error al buscar productos: " + e.getMessage()); //
+                navegacionServicio.mostrarAlertaError("Error en búsqueda", "Se produjo un error al buscar productos: " + e.getMessage());
                 buscarProductoButton.setDisable(false);
                 buscarProductoButton.setText("Buscar");
             });

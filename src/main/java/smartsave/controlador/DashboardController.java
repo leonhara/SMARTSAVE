@@ -1,5 +1,6 @@
 package smartsave.controlador;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -280,29 +281,59 @@ public class DashboardController extends BaseController {
     private void cargarGraficoEvolucion() {
         if (evolutionLineChart == null) return;
         evolutionLineChart.getData().clear();
+
         XYChart.Series<String, Number> serieIngresos = new XYChart.Series<>();
-        XYChart.Series<String, Number> serieGastos = new XYChart.Series<>();
-        XYChart.Series<String, Number> serieAhorros = new XYChart.Series<>();
         serieIngresos.setName("Ingresos");
+
+        XYChart.Series<String, Number> serieGastos = new XYChart.Series<>();
         serieGastos.setName("Gastos");
-        serieAhorros.setName("Ahorros");
+
+        XYChart.Series<String, Number> serieBalance = new XYChart.Series<>();
+        serieBalance.setName("Balance");
+
         LocalDate hoy = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM");
+
         for (int i = 5; i >= 0; i--) {
             LocalDate mesActual = hoy.minusMonths(i);
             LocalDate inicioMes = mesActual.withDayOfMonth(1);
             LocalDate finMes = mesActual.plusMonths(1).withDayOfMonth(1).minusDays(1);
-            String nombreMes = mesActual.getMonth().toString().substring(0, 3).toUpperCase();
-            double ingresos = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, inicioMes, finMes); //
-            double gastos = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, inicioMes, finMes); //
-            double ahorros = (ingresos - gastos) * 0.3;
+            String nombreMes = mesActual.format(formatter);
+
+            double ingresos = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, inicioMes, finMes);
+            double gastos = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, inicioMes, finMes);
+            double balance = ingresos - gastos;
+
             serieIngresos.getData().add(new XYChart.Data<>(nombreMes, ingresos));
             serieGastos.getData().add(new XYChart.Data<>(nombreMes, gastos));
-            serieAhorros.getData().add(new XYChart.Data<>(nombreMes, ahorros));
+            serieBalance.getData().add(new XYChart.Data<>(nombreMes, balance));
         }
-        evolutionLineChart.getData().addAll(serieIngresos, serieGastos, serieAhorros);
-        if (serieIngresos.getNode() != null) serieIngresos.getNode().setStyle("-fx-stroke: rgb(100, 220, 100);");
-        if (serieGastos.getNode() != null) serieGastos.getNode().setStyle("-fx-stroke: rgb(220, 100, 100);");
-        if (serieAhorros.getNode() != null) serieAhorros.getNode().setStyle("-fx-stroke: rgb(100, 100, 220);");
+
+        evolutionLineChart.getData().addAll(serieIngresos, serieGastos, serieBalance);
+
+        Platform.runLater(() -> {
+            String colorIngresos = "rgb(100, 220, 100)";
+            String colorGastos = "rgb(220, 100, 100)";
+            String colorBalance = "rgb(100, 100, 220)";
+
+            if (serieIngresos.getNode() != null) {
+                serieIngresos.getNode().setStyle("-fx-stroke: " + colorIngresos + "; -fx-stroke-width: 2.5px;");
+            }
+            if (serieGastos.getNode() != null) {
+                serieGastos.getNode().setStyle("-fx-stroke: " + colorGastos + "; -fx-stroke-width: 2.5px;");
+            }
+            if (serieBalance.getNode() != null) {
+                serieBalance.getNode().setStyle("-fx-stroke: " + colorBalance + "; -fx-stroke-width: 2.5px;");
+            }
+            try {
+
+                evolutionLineChart.lookup(".default-color0.chart-legend-item-symbol").setStyle("-fx-background-color: " + colorIngresos + ";");
+                evolutionLineChart.lookup(".default-color1.chart-legend-item-symbol").setStyle("-fx-background-color: " + colorGastos + ";");
+                evolutionLineChart.lookup(".default-color2.chart-legend-item-symbol").setStyle("-fx-background-color: " + colorBalance + ";");
+            } catch (Exception e) {
+                System.err.println("Error al aplicar estilos a la leyenda del gráfico: " + e.getMessage());
+            }
+        });
     }
 
     @Override

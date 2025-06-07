@@ -186,16 +186,15 @@ public class ProductoServicio {
      * @param termino Término de búsqueda
      * @return Lista de productos que coinciden con la búsqueda
      */
-    // En el método buscarProductos
-    public List<Producto> buscarProductos(String termino) {
+    // Reemplaza el método completo en: smartsave/servicio/ProductoServicio.java
+
+    public List<Producto> buscarProductos(String termino, ModalidadAhorro modalidad) {
+        // 1. OBTENER TODOS LOS RESULTADOS (esta parte no cambia)
         if (termino == null || termino.trim().isEmpty()) {
             return obtenerTodosProductos();
         }
-
         String terminoNormalizado = termino.toLowerCase().trim();
         List<Producto> resultados = new ArrayList<>();
-
-        // Buscar en base de datos
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             Query<Producto> query = session.createQuery(
                     "FROM Producto p WHERE p.disponible = true AND " +
@@ -203,34 +202,14 @@ public class ProductoServicio {
                     Producto.class);
             query.setParameter("termino", "%" + terminoNormalizado + "%");
             resultados.addAll(query.getResultList());
-
-            // Registrar resultados para depuración
-            System.out.println("Productos encontrados en BD: " + resultados.size());
         } catch (Exception e) {
             System.err.println("Error buscando productos en BD: " + e.getMessage());
-            e.printStackTrace(); // Añadir stack trace para mejor diagnóstico
         }
-
-        // Buscar en Mercadona si la API está disponible
         if (usarApiMercadona) {
             try {
-                // Mejorar el manejo del timeout
                 CompletableFuture<List<Producto>> futureProductos = mercadonaApi.buscarProductos(terminoNormalizado);
-                List<Producto> productosMercadona = new ArrayList<>();
-
-                try {
-                    productosMercadona = futureProductos.get(15, TimeUnit.SECONDS); // Aumentar timeout a 15 segundos
-                    System.out.println("Productos encontrados en Mercadona: " + productosMercadona.size());
-                } catch (TimeoutException e) {
-                    System.err.println("Timeout al buscar en Mercadona: " + e.getMessage());
-                }
-
-                // Eliminar posibles duplicados por ID antes de añadir
-                Set<Long> idsExistentes = resultados.stream()
-                        .map(Producto::getId)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toSet());
-
+                List<Producto> productosMercadona = futureProductos.get(15, TimeUnit.SECONDS);
+                Set<Long> idsExistentes = resultados.stream().map(Producto::getId).filter(Objects::nonNull).collect(Collectors.toSet());
                 for (Producto producto : productosMercadona) {
                     if (producto.getId() != null && !idsExistentes.contains(producto.getId())) {
                         resultados.add(producto);
@@ -239,14 +218,50 @@ public class ProductoServicio {
                 }
             } catch (Exception e) {
                 System.err.println("Error buscando en Mercadona: " + e.getMessage());
-                e.printStackTrace(); // Añadir stack trace para mejor diagnóstico
             }
         }
 
-        // Registrar resultados totales para depuración
-        System.out.println("Total de productos encontrados: " + resultados.size());
+        // 2. APLICAR NUEVA LÓGICA DE FILTRADO POR BANDAS DE PRECIOS
+        if (resultados.isEmpty() || modalidad == null) {
+            return resultados;
+        }
 
-        return resultados;
+        // Ordenar siempre por precio para poder trabajar con los rangos
+        resultados.sort(Comparator.comparing(Producto::getPrecio));
+
+        String nombreModalidad = modalidad.getNombre();
+        int totalProductos = resultados.size();
+
+        switch (nombreModalidad.toLowerCase()) {
+            case "máximo":
+                // Muestra el 50% de los productos más baratos.
+                // Si hay pocos productos, muestra hasta 5.
+                int limiteMaximo = Math.max(5, (int) (totalProductos * 0.5));
+                return resultados.stream().limit(limiteMaximo).collect(Collectors.toList());
+
+            case "equilibrado":
+                // Busca un 'punto dulce' en el medio, mostrando productos que están
+                // entre el 20% y el 80% del rango. Elimina los extremos.
+                int inicioEquilibrado = (int) (totalProductos * 0.20);
+                int finEquilibrado = (int) (totalProductos * 0.80);
+                if (finEquilibrado <= inicioEquilibrado) { // Asegurar que haya rango
+                    return resultados;
+                }
+                return resultados.subList(inicioEquilibrado, finEquilibrado);
+
+            case "estándar":
+                // Se enfoca en la calidad/precio superior, mostrando la mitad más cara de los productos.
+                // Ignora el 50% más barato.
+                int inicioEstandar = (int) (totalProductos * 0.50);
+                if (totalProductos <= 5) { // Si hay muy pocos, mostrarlos todos
+                    return resultados;
+                }
+                return resultados.subList(inicioEstandar, totalProductos);
+
+            default:
+                // Si la modalidad no es reconocida, devolver todo ordenado por precio.
+                return resultados;
+        }
     }
 
     /**
