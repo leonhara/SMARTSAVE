@@ -21,17 +21,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 public class SmartSaveApp extends Application {
-
-    // Coordenadas para permitir el arrastre de la ventana
     private double offsetX;
     private double offsetY;
 
     @Override
     public void start(Stage escenarioPrincipal) throws Exception {
-        // Verificar e instalar dependencias de Python al inicio
         boolean pythonDepsOk = checkAndInstallPythonDependencies();
         if (!pythonDepsOk) {
-            // Mostrar una alerta si las dependencias de Python no se pudieron instalar
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Advertencia de Dependencias");
             alert.setHeaderText("Problema con las dependencias de Python");
@@ -58,27 +54,22 @@ public class SmartSaveApp extends Application {
             alert.setContentText("La aplicación no puede continuar y se cerrará.\nError: " + e.getMessage() +
                     "\n\nPor favor, revisa la conexión a la base de datos y la configuración.");
             alert.showAndWait();
-            Platform.exit(); // Cerrar la aplicación JavaFX
-            System.exit(1); // Terminar el proceso de la JVM
-            return; // Salir del método start para evitar que continúe
+            Platform.exit();
+            System.exit(1);
+            return;
         }
-        // --- FIN DE LA SECCIÓN MODIFICADA/AÑADIDA ---
 
-        // Cargar la vista de login desde el archivo FXML
         Parent raiz = FXMLLoader.load(getClass().getResource("/fxml/login.fxml"));
 
-        // Configurar la escena con fondo transparente para el efecto de ventana personalizada
         Scene escena = new Scene(raiz);
         escena.setFill(Color.TRANSPARENT);
 
-        // Configurar el estilo de la ventana sin decoración del sistema operativo
         escenarioPrincipal.initStyle(StageStyle.TRANSPARENT);
         escenarioPrincipal.setTitle("SmartSave");
         escenarioPrincipal.setScene(escena);
         escenarioPrincipal.setMinWidth(800);
         escenarioPrincipal.setMinHeight(600);
 
-        // Permitir arrastrar la ventana desde cualquier parte
         configurarVentanaArrastrable(escena, escenarioPrincipal);
 
         escenarioPrincipal.show();
@@ -143,9 +134,8 @@ public class SmartSaveApp extends Application {
             try (InputStream reqStream = SmartSaveApp.class.getResourceAsStream("/api/requirements.txt")) {
                 if (reqStream == null) {
                     System.err.println("No se pudo encontrar 'requirements.txt' en el JAR. Verifica la ruta: /api/requirements.txt");
-                    return false; // No se puede continuar sin el archivo de requisitos
+                    return false;
                 }
-                // Crear un archivo temporal que se borrará al salir de la JVM
                 tempRequirementsPath = Files.createTempFile("smartsave_req_", ".txt");
                 tempRequirementsPath.toFile().deleteOnExit(); // Asegura que se borre
 
@@ -156,12 +146,11 @@ public class SmartSaveApp extends Application {
             ProcessBuilder processBuilder = new ProcessBuilder(
                     "python", "-m", "pip", "install", "-r", tempRequirementsPath.toAbsolutePath().toString()
             );
-            processBuilder.redirectErrorStream(true); // Combina la salida de error con la estándar
+            processBuilder.redirectErrorStream(true);
 
             System.out.println("Ejecutando comando: " + String.join(" ", processBuilder.command()));
             Process process = processBuilder.start();
 
-            // Leer la salida del proceso para logging y depuración
             StringBuilder output = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
@@ -171,7 +160,7 @@ public class SmartSaveApp extends Application {
                 }
             }
 
-            int exitCode = process.waitFor(); // Espera a que el proceso termine
+            int exitCode = process.waitFor();
 
             if (exitCode == 0) {
                 System.out.println("Dependencias de Python ('mercapy', 'requests') instaladas/verificadas correctamente.");
@@ -185,7 +174,7 @@ public class SmartSaveApp extends Application {
             System.err.println("Excepción al intentar instalar dependencias de Python: " + e.getMessage());
             e.printStackTrace();
             if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt(); // Buena práctica restablecer la interrupción
+                Thread.currentThread().interrupt();
             }
             return false;
         } finally {

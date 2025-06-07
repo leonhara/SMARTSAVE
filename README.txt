@@ -1,24 +1,13 @@
 # SmartSave - Instrucciones de Instalación y Ejecución
 
-¡Gracias por usar SmartSave! Para que la aplicación funcione correctamente, sigue estos pasos.
+Gracias por usar SmartSave! Para que la aplicación funcione correctamente hay que seguir estos pasos.
 
 ## Requisitos Previos
 
-1.  **Java**: Necesitas tener Java (JDK) 21 o superior instalado. Puedes verificarlo abriendo una terminal o `cmd` y escribiendo:
-    ```
-    java -version
-    ```
+1.  Java: Necesitas tener Java (JDK) 21 o superior instalado.
 
-2.  **Python**: Necesitas Python 3.8 o superior. La funcionalidad de búsqueda de productos de Mercadona depende de esto. Puedes verificarlo escribiendo:
+2.  Python: Necesitas Python 3.13 o superior. Para que la api funcione bien es totalmente necesario este paso. 
     ```
-    python --version
-    ```
-    o
-    ```
-    python3 --version
-    ```
-
-3.  **Pip**: El gestor de paquetes de Python. Normalmente se instala junto a Python.
 
 ## Pasos de Instalación de Dependencias de Python
 

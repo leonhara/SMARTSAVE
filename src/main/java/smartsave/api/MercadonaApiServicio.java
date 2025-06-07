@@ -26,17 +26,15 @@ public class MercadonaApiServicio {
     private final String codigoPostal;
     private boolean apiDisponible;
 
-    // Control de tasa de peticiones para no sobrecargar la API
-    private static final long MIN_TIEMPO_ENTRE_PETICIONES_MS = 500; // 500ms mínimo entre peticiones
+    private static final long MIN_TIEMPO_ENTRE_PETICIONES_MS = 500;
     private long ultimaPeticionTimestamp = 0;
 
-    // Cache de búsquedas recientes para mejorar rendimiento
     private final MercadonaSearchCache searchCache = new MercadonaSearchCache();
 
     public MercadonaApiServicio(String codigoPostal) {
         this.objectMapper = new ObjectMapper();
-        this.executorService = Executors.newFixedThreadPool(2); // Limitamos a 2 hilos para no sobrecargar
-        this.codigoPostal = codigoPostal != null ? codigoPostal : "14010"; //En salesianos para honrar al centro
+        this.executorService = Executors.newFixedThreadPool(2);
+        this.codigoPostal = codigoPostal != null ? codigoPostal : "14010";
 
         try {
             // Extraer el script y obtener su ruta temporal
@@ -97,9 +95,9 @@ public class MercadonaApiServicio {
         List<Producto> get(String cacheKey) {
             CacheEntry entry = cache.get(cacheKey);
             if (entry != null && !entry.isExpired()) {
-                return new ArrayList<>(entry.productos); // Devolver copia para evitar modificaciones
+                return new ArrayList<>(entry.productos);
             }
-            cache.remove(cacheKey); // Eliminar si ha expirado
+            cache.remove(cacheKey);
             return null;
         }
 

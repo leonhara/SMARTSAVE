@@ -39,6 +39,9 @@ public class ListaCompra {
     @OneToMany(mappedBy = "lista", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ItemCompra> items = new ArrayList<>();
 
+    @Column(name = "transaccion_id_asociada")
+    private Long transaccionIdAsociada;
+
     // Constructores
     public ListaCompra() {
         this.fechaCreacion = LocalDate.now();
@@ -105,6 +108,14 @@ public class ListaCompra {
 
     public boolean isCompletada() { return completada; }
     public void setCompletada(boolean completada) { this.completada = completada; }
+
+    public Long getTransaccionIdAsociada() {
+        return transaccionIdAsociada;
+    }
+
+    public void setTransaccionIdAsociada(Long transaccionIdAsociada) {
+        this.transaccionIdAsociada = transaccionIdAsociada;
+    }
 
     public void agregarItem(ItemCompra item) {
         item.setLista(this);  // Establecer la relación bidireccional

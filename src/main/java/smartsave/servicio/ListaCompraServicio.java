@@ -600,6 +600,8 @@ public class ListaCompraServicio {
      * @param presupuestoMaximo Presupuesto máximo
      * @return Lista de compra generada automáticamente
      */
+    // En SMARTSAVE/src/main/java/smartsave/servicio/ListaCompraServicio.java
+
     public ListaCompra generarListaOptimizada(Long usuarioId, String nombre, String modalidadAhorro, double presupuestoMaximo) {
         // Crear la lista vacía
         ListaCompra lista = crearListaCompra(usuarioId, nombre, modalidadAhorro, presupuestoMaximo);
@@ -688,7 +690,8 @@ public class ListaCompraServicio {
                     // Verificar si añadir este producto nos excede del presupuesto
                     if (costoActual + (producto.getPrecio() * cantidad) <= presupuestoAjustado) {
                         // Añadir a la lista
-                        agregarProductoALista(lista, producto.getId(), cantidad);
+                        // <-- CAMBIO CLAVE: Pasamos el objeto 'producto' completo
+                        agregarProductoALista(lista, producto.getId(), producto, cantidad);
 
                         // Actualizar contadores
                         proteinasActuales += producto.getInfoNutricional().getProteinas() * cantidad;
@@ -750,7 +753,8 @@ public class ListaCompraServicio {
                     int cantidad = 1;
 
                     // Añadir a la lista
-                    agregarProductoALista(lista, producto.getId(), cantidad);
+                    // <-- CAMBIO CLAVE: Pasamos el objeto 'producto' completo
+                    agregarProductoALista(lista, producto.getId(), producto, cantidad);
 
                     // Actualizar contadores
                     proteinasActuales += proteinasProducto * cantidad;

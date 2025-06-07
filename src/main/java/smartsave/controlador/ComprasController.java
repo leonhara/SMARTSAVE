@@ -67,6 +67,7 @@ public class ComprasController extends BaseController {
 
     private final ListaCompraServicio listaCompraServicio = new ListaCompraServicio();
     private final ProductoServicio productoServicio = new ProductoServicio();
+    private final TransaccionServicio transaccionServicio = new TransaccionServicio();
 
     private Long usuarioIdActualLocal;
     private Usuario usuarioActualLocal; 
@@ -470,11 +471,53 @@ public class ComprasController extends BaseController {
 
     @FXML
     private void handleCompletadaChange(ActionEvent event) {
-        if (listaSeleccionada != null && completadaCheckBox != null) {
-            listaSeleccionada.setCompletada(completadaCheckBox.isSelected());
-            listaCompraServicio.actualizarListaCompra(listaSeleccionada);
-            cargarListasCompra();
+        if (listaSeleccionada == null || completadaCheckBox == null || usuarioIdActualLocal == null) {
+            return; // Salir si no hay nada que procesar
         }
+
+        boolean completada = completadaCheckBox.isSelected();
+        listaSeleccionada.setCompletada(completada);
+
+        if (completada) {
+            // --- LÓGICA PARA CREAR LA TRANSACCIÓN ---
+            // Verificar que no se haya creado ya una transacción para esta lista
+            if (listaSeleccionada.getTransaccionIdAsociada() == null) {
+                // Crear el objeto Transacción
+                Transaccion nuevaTransaccion = new Transaccion();
+                nuevaTransaccion.setFecha(LocalDate.now());
+                nuevaTransaccion.setDescripcion("Compra: " + listaSeleccionada.getNombre());
+                nuevaTransaccion.setCategoria("Alimentación");
+                nuevaTransaccion.setMonto(listaSeleccionada.getCosteTotal());
+                nuevaTransaccion.setTipo("Gasto");
+
+                // Guardar la transacción en la base de datos
+                Transaccion transaccionGuardada = transaccionServicio.agregarTransaccion(nuevaTransaccion, usuarioIdActualLocal);
+
+                // Guardar el ID de la nueva transacción en la lista de compra
+                listaSeleccionada.setTransaccionIdAsociada(transaccionGuardada.getId());
+
+                navegacionServicio.mostrarAlertaInformacion("Gasto Registrado", "La compra se ha añadido como un gasto en tus transacciones.");
+            }
+        } else {
+            // --- LÓGICA PARA ELIMINAR LA TRANSACCIÓN ---
+            // Verificar si hay una transacción asociada para eliminar
+            Long transaccionId = listaSeleccionada.getTransaccionIdAsociada();
+            if (transaccionId != null) {
+                // Eliminar la transacción
+                boolean eliminada = transaccionServicio.eliminarTransaccion(transaccionId, usuarioIdActualLocal);
+                if (eliminada) {
+                    // Quitar la referencia de la lista de compra
+                    listaSeleccionada.setTransaccionIdAsociada(null);
+                    navegacionServicio.mostrarAlertaInformacion("Gasto Anulado", "El gasto asociado a esta compra ha sido eliminado de tus transacciones.");
+                }
+            }
+        }
+
+        // Finalmente, actualizar la lista de compra en la base de datos con los cambios
+        listaCompraServicio.actualizarListaCompra(listaSeleccionada);
+
+        // Recargar la vista para que todo se muestre correctamente
+        cargarListasCompra();
     }
 
     @FXML
