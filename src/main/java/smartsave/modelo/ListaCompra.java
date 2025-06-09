@@ -159,7 +159,6 @@ public class ListaCompra {
                 .sum();
     }
 
-    // CORREGIDO: Comparar BigDecimal con double
     public boolean estaDentroPresupuesto() {
         if (presupuestoMaximo == null) return false;
         return BigDecimal.valueOf(getCosteTotal()).compareTo(presupuestoMaximo) <= 0;

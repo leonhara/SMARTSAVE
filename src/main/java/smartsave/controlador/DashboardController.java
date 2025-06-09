@@ -160,13 +160,13 @@ public class DashboardController extends BaseController {
             }
         });
         if (transactionsTable != null) {
-            EstilosApp.aplicarEstiloTabla(transactionsTable); //
-            EstilosApp.aplicarEstiloCabecerasTabla(transactionsTable); //
+            EstilosApp.aplicarEstiloTabla(transactionsTable);
+            EstilosApp.aplicarEstiloCabecerasTabla(transactionsTable);
         }
     }
 
     private void cargarDatosReales() {
-        if (usuarioIdActualLocal == null) { // Verificar si el ID es nulo (usuario no cargado)
+        if (usuarioIdActualLocal == null) {
             disableUIComponents();
             return;
         }
@@ -223,22 +223,21 @@ public class DashboardController extends BaseController {
 
     private String formatearCambio(double porcentaje) {
         String signo = porcentaje >= 0 ? "+" : "";
-        // No se puede calcular un valor monetario absoluto del cambio solo con porcentaje
         return String.format("%s%.1f%%", signo, porcentaje);
     }
 
     private double calcularPorcentajeCambio(double valorActual, double valorAnterior) {
         if (valorAnterior == 0) {
-            return valorActual > 0 ? 100.0 : (valorActual < 0 ? -100.0 : 0.0); // Manejar división por cero
+            return valorActual > 0 ? 100.0 : (valorActual < 0 ? -100.0 : 0.0);
         }
         return ((valorActual - valorAnterior) / Math.abs(valorAnterior)) * 100;
     }
 
     private void cargarDatosNutricionales() {
-        if (perfilNutricionalServicio.tienePerfil(usuarioIdActualLocal)) { //
-            PerfilNutricional perfil = perfilNutricionalServicio.obtenerPerfilPorUsuario(usuarioIdActualLocal); //
+        if (perfilNutricionalServicio.tienePerfil(usuarioIdActualLocal)) {
+            PerfilNutricional perfil = perfilNutricionalServicio.obtenerPerfilPorUsuario(usuarioIdActualLocal);
             if (perfil != null) {
-                int puntuacion = perfilNutricionalServicio.calcularPuntuacionNutricional(perfil); //
+                int puntuacion = perfilNutricionalServicio.calcularPuntuacionNutricional(perfil);
                 if (nutritionScore != null) nutritionScore.setText(puntuacion + "/100");
                 String estado;
                 Color color;
@@ -273,7 +272,7 @@ public class DashboardController extends BaseController {
         }
         if (expensesPieChart != null) {
             expensesPieChart.setData(pieChartData);
-            EstilosApp.aplicarEstiloGrafico(expensesPieChart); //
+            EstilosApp.aplicarEstiloGrafico(expensesPieChart);
             expensesPieChart.getData().forEach(data -> data.getNode().setEffect(new javafx.scene.effect.Glow(0.3)));
         }
     }
