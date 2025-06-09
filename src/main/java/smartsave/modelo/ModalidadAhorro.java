@@ -17,19 +17,17 @@ public class ModalidadAhorro {
     private String descripcion;
 
     @Column(name = "factor_presupuesto", nullable = false, precision = 3, scale = 2)
-    private BigDecimal factorPresupuesto; // porcentaje del presupuesto a utilizar
+    private BigDecimal factorPresupuesto;
 
     @Column(name = "prioridad_precio", nullable = false)
-    private int prioridadPrecio; // 1-10, qué tanto priorizar precio vs calidad
+    private int prioridadPrecio;
 
     @Column(name = "prioridad_nutricion", nullable = false)
-    private int prioridadNutricion; // 1-10, qué tanto priorizar nutrición vs precio
+    private int prioridadNutricion;
 
-    // Constructor vacío
     public ModalidadAhorro() {
     }
 
-    // Constructor con parámetros - actualizado para usar BigDecimal
     public ModalidadAhorro(String nombre, String descripcion, double factorPresupuesto,
                            int prioridadPrecio, int prioridadNutricion) {
         this.nombre = nombre;
@@ -39,7 +37,6 @@ public class ModalidadAhorro {
         this.prioridadNutricion = prioridadNutricion;
     }
 
-    // Constructor con BigDecimal
     public ModalidadAhorro(String nombre, String descripcion, BigDecimal factorPresupuesto,
                            int prioridadPrecio, int prioridadNutricion) {
         this.nombre = nombre;
@@ -49,7 +46,6 @@ public class ModalidadAhorro {
         this.prioridadNutricion = prioridadNutricion;
     }
 
-    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -74,17 +70,14 @@ public class ModalidadAhorro {
         this.descripcion = descripcion;
     }
 
-    // Getter para BigDecimal
     public BigDecimal getFactorPresupuesto() {
         return factorPresupuesto;
     }
 
-    // Setter para BigDecimal
     public void setFactorPresupuesto(BigDecimal factorPresupuesto) {
         this.factorPresupuesto = factorPresupuesto;
     }
 
-    // Métodos adicionales para compatibilidad con double
     public double getFactorPresupuestoAsDouble() {
         return factorPresupuesto != null ? factorPresupuesto.doubleValue() : 0.0;
     }

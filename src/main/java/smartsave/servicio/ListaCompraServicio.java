@@ -13,23 +13,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * Servicio optimizado para gestionar operaciones relacionadas con listas de compra
- * MIGRADO A HIBERNATE - Incluye optimizaciones para productos de Mercadona
- */
 public class ListaCompraServicio {
 
-    // Servicios relacionados
     private ProductoServicio productoServicio;
     private PerfilNutricionalServicio perfilServicio;
     private UsuarioServicio usuarioServicio;
 
-    // Caché para listas de compra
     private final Map<Long, ListaCompra> cacheListas = new HashMap<>();
     private long ultimaLimpiezaCache = System.currentTimeMillis();
     private static final long TIEMPO_EXPIRACION_CACHE = TimeUnit.MINUTES.toMillis(5);
 
-    // Métodos singleton para servicios
     private ProductoServicio getProductoServicio() {
         if (productoServicio == null) {
             productoServicio = new ProductoServicio();
@@ -51,9 +44,6 @@ public class ListaCompraServicio {
         return usuarioServicio;
     }
 
-    /**
-     * Limpia la caché si ha pasado el tiempo de expiración
-     */
     private void limpiarCacheSiNecesario() {
         long tiempoActual = System.currentTimeMillis();
         if (tiempoActual - ultimaLimpiezaCache > TIEMPO_EXPIRACION_CACHE) {
@@ -62,14 +52,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Crea una nueva lista de compra para un usuario
-     * @param usuarioId ID del usuario
-     * @param nombre Nombre de la lista
-     * @param modalidadAhorro Modalidad de ahorro ("Máximo", "Equilibrado", "Estándar")
-     * @param presupuestoMaximo Presupuesto máximo para la lista
-     * @return La lista de compra creada
-     */
     public ListaCompra crearListaCompra(Long usuarioId, String nombre, String modalidadAhorro, double presupuestoMaximo) {
         Transaction transaction = null;
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
@@ -80,7 +62,6 @@ public class ListaCompraServicio {
 
             transaction.commit();
 
-            // Actualizar caché
             cacheListas.put(lista.getId(), lista);
 
             return lista;
@@ -92,13 +73,7 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Obtiene todas las listas de compra de un usuario
-     * @param usuarioId ID del usuario
-     * @return Lista de todas las listas de compra del usuario
-     */
     public List<ListaCompra> obtenerListasCompraUsuario(Long usuarioId) {
-        // Limpiar caché si es necesario
         limpiarCacheSiNecesario();
 
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
@@ -109,10 +84,8 @@ public class ListaCompraServicio {
 
             List<ListaCompra> listas = query.getResultList();
 
-            // Forzar carga de items para evitar lazy loading issues
             for (ListaCompra lista : listas) {
                 lista.getItems().size();
-                // Actualizar caché
                 cacheListas.put(lista.getId(), lista);
             }
 
@@ -122,17 +95,9 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Obtiene una lista de compra específica por su ID
-     * @param listaId ID de la lista
-     * @param usuarioId ID del usuario
-     * @return La lista de compra o null si no existe
-     */
     public ListaCompra obtenerListaCompra(Long listaId, Long usuarioId) {
-        // Verificar caché
         if (cacheListas.containsKey(listaId)) {
             ListaCompra listaCache = cacheListas.get(listaId);
-            // Verificar que pertenezca al usuario correcto
             if (listaCache.getUsuarioId().equals(usuarioId)) {
                 return listaCache;
             }
@@ -141,7 +106,6 @@ public class ListaCompraServicio {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             ListaCompra lista = obtenerListaCompraConItems(session, listaId, usuarioId);
 
-            // Actualizar caché si se encontró
             if (lista != null) {
                 cacheListas.put(lista.getId(), lista);
             }
@@ -152,9 +116,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Método auxiliar para obtener lista con items cargados
-     */
     private ListaCompra obtenerListaCompraConItems(Session session, Long listaId, Long usuarioId) {
         Query<ListaCompra> query = session.createQuery(
                 "SELECT l FROM ListaCompra l " +
@@ -168,14 +129,6 @@ public class ListaCompraServicio {
         return query.uniqueResult();
     }
 
-    /**
-     * Añade un producto a una lista de compra con manejo mejorado de productos de Mercadona
-     * @param lista Lista de compra a modificar
-     * @param productoId ID del producto a añadir
-     * @param producto Objeto Producto completo (opcional, puede ser null)
-     * @param cantidad Cantidad del producto
-     * @return La lista actualizada
-     */
     public ListaCompra agregarProductoALista(ListaCompra lista, Long productoId, Producto productoCompleto, int cantidad) {
         System.out.println("Iniciando adición de producto ID: " + productoId);
 
@@ -183,30 +136,24 @@ public class ListaCompraServicio {
         Transaction transaction = null;
 
         try {
-            // Abrir una nueva sesión
             session = HibernateConfig.getSessionFactory().openSession();
             transaction = session.beginTransaction();
 
-            // 1. Verificar si el producto ya existe en la base de datos
             Producto producto = session.get(Producto.class, productoId);
             System.out.println("Producto encontrado en BD: " + (producto != null ? "Sí" : "No"));
 
-            // 2. Si no existe, usar el producto completo proporcionado o buscar en Mercadona
             if (producto == null) {
                 if (productoCompleto != null) {
-                    // Usar el producto proporcionado directamente
                     System.out.println("Usando producto proporcionado: " + productoCompleto.getNombre());
                     producto = productoCompleto;
                 } else {
                     System.out.println("Buscando información real del producto en Mercadona...");
-                    // Obtener información del producto de Mercadona
                     Producto productoMercadona = obtenerProductoMercadona(productoId);
 
                     if (productoMercadona != null) {
                         System.out.println("Producto encontrado en Mercadona: " + productoMercadona.getNombre());
                         producto = productoMercadona;
                     } else {
-                        // Si no se encuentra, crear un producto básico
                         System.out.println("No se encontró información en Mercadona, creando producto básico");
                         producto = new Producto();
                         producto.setNombre("Producto " + productoId);
@@ -218,26 +165,20 @@ public class ListaCompraServicio {
                     }
                 }
 
-                // Verificar que el precio no sea nulo
                 if (producto.getPrecioBD() == null) {
                     System.out.println("Precio nulo detectado, estableciendo a 1.0");
                     producto.setPrecioBD(BigDecimal.valueOf(1.0));
                 }
 
-                // Guardar el nuevo producto en la BD
                 System.out.println("Creando nuevo producto en la base de datos");
                 session.save(producto);
                 session.flush();
 
                 System.out.println("Nuevo producto guardado con ID generado: " + producto.getId());
 
-                // Usar el ID generado por la base de datos
                 productoId = producto.getId();
             }
 
-            // El resto del método continúa igual...
-
-            // 3. Verificar si el producto ya está en la lista
             ItemCompra itemExistente = null;
             try {
                 itemExistente = session.createQuery(
@@ -253,15 +194,12 @@ public class ListaCompraServicio {
             System.out.println("Añadiendo item a lista ID: " + lista.getId());
 
             if (itemExistente != null) {
-                // Si ya existe, aumentar la cantidad
                 System.out.println("Item ya existe, actualizando cantidad");
                 itemExistente.setCantidad(itemExistente.getCantidad() + cantidad);
                 session.update(itemExistente);
             } else {
-                // Si no existe, crear nuevo item
                 System.out.println("Creando nuevo item para el producto");
 
-                // Obtener referencias frescas
                 ListaCompra listaFresca = session.get(ListaCompra.class, lista.getId());
                 Producto productoFresco = session.get(Producto.class, productoId);
 
@@ -276,20 +214,16 @@ public class ListaCompraServicio {
                 ItemCompra nuevoItem = new ItemCompra(productoFresco, cantidad);
                 nuevoItem.setLista(listaFresca);
 
-                // Guardar el nuevo item
                 session.save(nuevoItem);
             }
 
-            // Confirmar la transacción
             transaction.commit();
-            transaction = null; // Marcar como completada para evitar rollback en finally
+            transaction = null;
 
             System.out.println("Ítem añadido correctamente");
 
-            // Limpiar caché para forzar recarga fresca
             cacheListas.remove(lista.getId());
 
-            // Recargar la lista actualizada
             ListaCompra listaActualizada;
             try (Session nuevaSesion = HibernateConfig.getSessionFactory().openSession()) {
                 listaActualizada = obtenerListaCompra(lista.getId(), lista.getUsuarioId());
@@ -323,23 +257,10 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Versión sobrecargada del método para mantener compatibilidad con el código existente
-     * @param lista Lista de compra a modificar
-     * @param productoId ID del producto a añadir
-     * @param cantidad Cantidad del producto
-     * @return La lista actualizada
-     */
     public ListaCompra agregarProductoALista(ListaCompra lista, Long productoId, int cantidad) {
-        // Llama al nuevo método pasando null como producto completo
         return agregarProductoALista(lista, productoId, null, cantidad);
     }
 
-    /**
-     * Obtiene la información real de un producto de Mercadona usando el servicio de API
-     * @param productoId ID del producto a buscar
-     * @return Objeto Producto con la información real o null si no se encuentra
-     */
     private Producto obtenerProductoMercadona(Long productoId) {
         try {
             ProductoServicio productoServicio = getProductoServicio();
@@ -349,7 +270,6 @@ public class ListaCompraServicio {
                 return null;
             }
 
-            // Primero intentar obtener el producto directamente usando el ID
             Producto producto = buscarProductoMercadona(productoId);
             if (producto != null) {
                 System.out.println("Encontrado producto en API: " + producto.getNombre());
@@ -364,27 +284,19 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Busca un producto de Mercadona por su ID
-     * @param productoId ID del producto
-     * @return Producto encontrado o null
-     */
     private Producto buscarProductoMercadona(Long productoId) {
         try {
             ProductoServicio productoServicio = getProductoServicio();
 
-            // Si la API no está disponible, no seguir intentando
             if (!productoServicio.isApiMercadonaDisponible()) {
                 return null;
             }
 
-            // Obtener productos nuevos (una sola consulta en lugar de múltiples)
             CompletableFuture<List<Producto>> futureProductos = productoServicio.getMercadonaApiServicio()
                     .obtenerProductosNuevos();
 
             List<Producto> productos = futureProductos.get(10, TimeUnit.SECONDS);
 
-            // Buscar el producto con el ID específico
             return productos.stream()
                     .filter(p -> p.getId() != null && p.getId().equals(productoId))
                     .findFirst()
@@ -395,12 +307,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Elimina un item de una lista de compra
-     * @param lista Lista de compra a modificar
-     * @param itemId ID del item a eliminar
-     * @return true si se eliminó correctamente
-     */
     public boolean eliminarItemDeLista(ListaCompra lista, Long itemId) {
         Transaction transaction = null;
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
@@ -411,7 +317,6 @@ public class ListaCompraServicio {
                 session.delete(item);
                 transaction.commit();
 
-                // Actualizar o eliminar de caché
                 cacheListas.remove(lista.getId());
 
                 return true;
@@ -427,13 +332,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Marca un item como comprado o no comprado
-     * @param lista Lista de compra a modificar
-     * @param itemId ID del item
-     * @param comprado true si está comprado, false si no
-     * @return true si se actualizó correctamente
-     */
     public boolean actualizarEstadoItem(ListaCompra lista, Long itemId, boolean comprado) {
         Transaction transaction = null;
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
@@ -445,7 +343,6 @@ public class ListaCompraServicio {
                 session.update(item);
                 transaction.commit();
 
-                // Actualizar o eliminar de caché
                 cacheListas.remove(lista.getId());
 
                 return true;
@@ -461,13 +358,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Actualiza la cantidad de un item
-     * @param lista Lista de compra a modificar
-     * @param itemId ID del item
-     * @param nuevaCantidad Nueva cantidad
-     * @return true si se actualizó correctamente
-     */
     public boolean actualizarCantidadItem(ListaCompra lista, Long itemId, int nuevaCantidad) {
         if (nuevaCantidad <= 0) {
             return false;
@@ -483,7 +373,6 @@ public class ListaCompraServicio {
                 session.update(item);
                 transaction.commit();
 
-                // Actualizar o eliminar de caché
                 cacheListas.remove(lista.getId());
 
                 return true;
@@ -499,11 +388,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Marca una lista de compra como completada
-     * @param lista Lista de compra a marcar
-     * @return La lista actualizada
-     */
     public ListaCompra marcarListaComoCompletada(ListaCompra lista) {
         Transaction transaction = null;
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
@@ -514,7 +398,6 @@ public class ListaCompraServicio {
 
             transaction.commit();
 
-            // Actualizar o eliminar de caché
             cacheListas.remove(lista.getId());
 
             return lista;
@@ -526,11 +409,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Obtiene las listas de compra activas (no completadas) de un usuario
-     * @param usuarioId ID del usuario
-     * @return Lista de listas de compra activas
-     */
     public List<ListaCompra> obtenerListasActivas(Long usuarioId) {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             Query<ListaCompra> query = session.createQuery(
@@ -546,11 +424,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Obtiene las listas de compra completadas de un usuario
-     * @param usuarioId ID del usuario
-     * @return Lista de listas de compra completadas
-     */
     public List<ListaCompra> obtenerListasCompletadas(Long usuarioId) {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             Query<ListaCompra> query = session.createQuery(
@@ -566,11 +439,6 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Actualiza los detalles de una lista de compra
-     * @param lista Lista de compra con datos actualizados
-     * @return true si se actualizó correctamente
-     */
     public boolean actualizarListaCompra(ListaCompra lista) {
         Transaction transaction = null;
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
@@ -579,7 +447,6 @@ public class ListaCompraServicio {
             session.update(lista);
             transaction.commit();
 
-            // Actualizar caché
             cacheListas.remove(lista.getId());
             cacheListas.put(lista.getId(), lista);
 
@@ -592,70 +459,48 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Genera una lista de compra optimizada según el perfil nutricional y el presupuesto
-     * @param usuarioId ID del usuario
-     * @param nombre Nombre de la lista
-     * @param modalidadAhorro Modalidad de ahorro
-     * @param presupuestoMaximo Presupuesto máximo
-     * @return Lista de compra generada automáticamente
-     */
-    // En SMARTSAVE/src/main/java/smartsave/servicio/ListaCompraServicio.java
-
     public ListaCompra generarListaOptimizada(Long usuarioId, String nombre, String modalidadAhorro, double presupuestoMaximo) {
-        // Crear la lista vacía
         ListaCompra lista = crearListaCompra(usuarioId, nombre, modalidadAhorro, presupuestoMaximo);
 
-        // Verificar si el usuario tiene perfil nutricional
         ProductoServicio productoServicio = getProductoServicio();
         PerfilNutricionalServicio perfilServicio = getPerfilServicio();
         PerfilNutricional perfil = perfilServicio.obtenerPerfilPorUsuario(usuarioId);
         if (perfil == null) {
-            // Si no hay perfil, generar una lista básica
             return generarListaBasica(lista);
         }
 
         try {
-            // Obtener las necesidades nutricionales según el perfil
             PerfilNutricional.MacronutrientesDiarios macros = perfil.getMacronutrientesDiarios();
             int caloriasDiarias = perfil.getCaloriasDiarias();
 
-            // Aplicar factor según modalidad de ahorro
             double factorPresupuesto = getUsuarioServicio().obtenerFactorPresupuestoUsuario(usuarioId);
             double presupuestoAjustado = lista.getPresupuestoMaximoAsDouble() * factorPresupuesto;
 
-            // Conseguir productos que cumplan con las restricciones alimentarias
             List<Producto> productosCompatibles = productoServicio.buscarProductosCompatibles(perfil.getRestricciones());
 
-            // Organizar productos por categorías para asegurar variedad
             Map<String, List<Producto>> productosPorCategoria = productosCompatibles.stream()
                     .collect(Collectors.groupingBy(Producto::getCategoria));
 
-            // Calcular macronutrientes para 7 días (semana)
             double proteinasObjetivo = macros.getProteinas() * 7;
             double carbohidratosObjetivo = macros.getCarbohidratos() * 7;
             double grasasObjetivo = macros.getGrasas() * 7;
             double caloriasObjetivo = caloriasDiarias * 7;
 
-            // Variables para seguimiento
             double proteinasActuales = 0;
             double carbohidratosActuales = 0;
             double grasasActuales = 0;
             double caloriasActuales = 0;
             double costoActual = 0;
 
-            // Asegurarnos de incluir alimentos de cada categoría importante
             List<String> categoriasEsenciales = Arrays.asList(
                     "Carnes", "Lácteos", "Frutas", "Verduras", "Cereales", "Legumbres"
             );
 
-            // Obtener prioridades según modalidad
             ModalidadAhorroServicio modalidadServicio = new ModalidadAhorroServicio();
             ModalidadAhorro modalidadObj = modalidadServicio.obtenerModalidadPorNombre(modalidadAhorro);
             int prioridadPrecio = modalidadObj != null ? modalidadObj.getPrioridadPrecio() : 6;
             int prioridadNutricion = modalidadObj != null ? modalidadObj.getPrioridadNutricion() : 7;
 
-            // Priorizar categorías según necesidades
             for (String categoria : categoriasEsenciales) {
                 List<Producto> productosCategoria = productosPorCategoria.getOrDefault(categoria, new ArrayList<>());
 
@@ -663,12 +508,9 @@ public class ListaCompraServicio {
                     continue;
                 }
 
-                // Ordenar productos según las prioridades de la modalidad de ahorro
                 if (prioridadPrecio > prioridadNutricion) {
-                    // Priorizar precio (modalidad máximo ahorro o similar)
                     productosCategoria.sort(Comparator.comparing(Producto::getPrecio));
                 } else if (prioridadPrecio < prioridadNutricion) {
-                    // Priorizar nutrición (modalidad estándar o similar)
                     productosCategoria.sort(Comparator.comparing(obj -> {
                         Producto p = (Producto) obj;
                         return p.getInfoNutricional().getProteinas() +
@@ -676,24 +518,17 @@ public class ListaCompraServicio {
                                 p.getInfoNutricional().getGrasas() / 3;
                     }).reversed());
                 } else {
-                    // Balance entre precio y nutrición (modalidad equilibrada)
                     productosCategoria.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
                 }
 
-                // Añadir al menos un producto de cada categoría esencial
                 if (!productosCategoria.isEmpty()) {
                     Producto producto = productosCategoria.get(0);
 
-                    // Determinar cantidad apropiada según la categoría
                     int cantidad = determinarCantidadPorCategoria(categoria);
 
-                    // Verificar si añadir este producto nos excede del presupuesto
                     if (costoActual + (producto.getPrecio() * cantidad) <= presupuestoAjustado) {
-                        // Añadir a la lista
-                        // <-- CAMBIO CLAVE: Pasamos el objeto 'producto' completo
                         agregarProductoALista(lista, producto.getId(), producto, cantidad);
 
-                        // Actualizar contadores
                         proteinasActuales += producto.getInfoNutricional().getProteinas() * cantidad;
                         carbohidratosActuales += producto.getInfoNutricional().getCarbohidratos() * cantidad;
                         grasasActuales += producto.getInfoNutricional().getGrasas() * cantidad;
@@ -703,15 +538,11 @@ public class ListaCompraServicio {
                 }
             }
 
-            // Completar con más productos para alcanzar objetivos nutricionales
             List<Producto> todosProductos = new ArrayList<>(productosCompatibles);
 
-            // Ordenar según prioridades de modalidad
             if (prioridadPrecio > prioridadNutricion) {
-                // Priorizar precio pero asegurando algo de nutrición
                 todosProductos.sort(Comparator.comparing(p -> p.getPrecio() / (p.getInfoNutricional().getProteinas() + 1)));
             } else if (prioridadPrecio < prioridadNutricion) {
-                // Priorizar nutrición
                 todosProductos.sort(Comparator.comparing(obj -> {
                     Producto p = (Producto) obj;
                     return (p.getInfoNutricional().getProteinas() * 4) +
@@ -719,51 +550,39 @@ public class ListaCompraServicio {
                             (p.getInfoNutricional().getGrasas() * 3);
                 }).reversed());
             } else {
-                // Balance entre nutrición y precio
                 todosProductos.sort(Comparator.comparing(Producto::getRelacionProteinaPrecio).reversed());
             }
 
-            // Añadir productos hasta alcanzar objetivos o agotar presupuesto
             for (Producto producto : todosProductos) {
-                // Evitar duplicados verificando en BD
                 ItemCompra itemExistente = productoYaEnLista(lista.getId(), producto.getId());
                 if (itemExistente != null) {
                     continue;
                 }
 
-                // Determinar qué macro está más lejos de su objetivo
                 double deficitProteinas = Math.max(0, proteinasObjetivo - proteinasActuales) / proteinasObjetivo;
                 double deficitCarbohidratos = Math.max(0, carbohidratosObjetivo - carbohidratosActuales) / carbohidratosObjetivo;
                 double deficitGrasas = Math.max(0, grasasObjetivo - grasasActuales) / grasasObjetivo;
 
-                // Determinar el macro predominante en este producto
                 double proteinasProducto = producto.getInfoNutricional().getProteinas();
                 double carbohidratosProducto = producto.getInfoNutricional().getCarbohidratos();
                 double grasasProducto = producto.getInfoNutricional().getGrasas();
 
-                // ¿Es este producto relevante para nuestros déficits nutricionales?
                 boolean esRelevanteParaDeficit =
                         (deficitProteinas > 0.1 && proteinasProducto > 5) ||
                                 (deficitCarbohidratos > 0.1 && carbohidratosProducto > 10) ||
                                 (deficitGrasas > 0.1 && grasasProducto > 3);
 
-                // Si el producto ayuda con nuestros déficits y tenemos presupuesto, añadirlo
                 if (esRelevanteParaDeficit && costoActual + producto.getPrecio() <= presupuestoAjustado) {
-                    // Determinar cantidad
                     int cantidad = 1;
 
-                    // Añadir a la lista
-                    // <-- CAMBIO CLAVE: Pasamos el objeto 'producto' completo
                     agregarProductoALista(lista, producto.getId(), producto, cantidad);
 
-                    // Actualizar contadores
                     proteinasActuales += proteinasProducto * cantidad;
                     carbohidratosActuales += carbohidratosProducto * cantidad;
                     grasasActuales += grasasProducto * cantidad;
                     caloriasActuales += producto.getInfoNutricional().getCalorias() * cantidad;
                     costoActual += producto.getPrecio() * cantidad;
 
-                    // Si hemos alcanzado objetivos, parar
                     if (proteinasActuales >= proteinasObjetivo * 0.9 &&
                             carbohidratosActuales >= carbohidratosObjetivo * 0.9 &&
                             grasasActuales >= grasasObjetivo * 0.9 &&
@@ -774,15 +593,11 @@ public class ListaCompraServicio {
             }
         } catch (Exception e) {
             System.err.println("Error generando lista optimizada: " + e.getMessage());
-            // Si hay error, seguir adelante con lo que tenemos
         }
 
         return obtenerListaCompra(lista.getId(), lista.getUsuarioId());
     }
 
-    /**
-     * Verifica si un producto ya está en una lista
-     */
     private ItemCompra productoYaEnLista(Long listaId, Long productoId) {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             return session.createQuery(
@@ -796,38 +611,27 @@ public class ListaCompraServicio {
         }
     }
 
-    /**
-     * Determina una cantidad apropiada según la categoría del producto
-     * @param categoria Categoría del producto
-     * @return Cantidad recomendada
-     */
     private int determinarCantidadPorCategoria(String categoria) {
         switch (categoria) {
             case "Carnes":
             case "Pescados":
-                return 3; // 3 piezas/paquetes por semana
+                return 3;
             case "Lácteos":
-                return 7; // 7 unidades por semana (1 por día)
+                return 7;
             case "Frutas":
             case "Verduras":
-                return 14; // 14 piezas por semana (2 por día)
+                return 14;
             case "Cereales":
             case "Legumbres":
-                return 2; // 2 paquetes por semana
+                return 2;
             case "Panadería":
-                return 3; // 3 unidades por semana
+                return 3;
             default:
                 return 1;
         }
     }
 
-    /**
-     * Genera una lista básica con productos esenciales
-     * @param lista Lista de compra vacía a poblar
-     * @return Lista de compra con productos básicos
-     */
     private ListaCompra generarListaBasica(ListaCompra lista) {
-        // Añadir algunos productos básicos
         List<String> categoriasBasicas = Arrays.asList(
                 "Carnes", "Lácteos", "Frutas", "Verduras", "Cereales", "Panadería"
         );
@@ -840,10 +644,8 @@ public class ListaCompraServicio {
                 List<Producto> productosCategoria = productoServicio.buscarPorCategoria(categoria);
 
                 if (!productosCategoria.isEmpty()) {
-                    // Ordenar por precio ascendente
                     productosCategoria.sort(Comparator.comparing(Producto::getPrecio));
 
-                    // Añadir el producto más económico de cada categoría
                     Producto producto = productosCategoria.get(0);
                     int cantidad = determinarCantidadPorCategoria(categoria);
 
@@ -855,18 +657,11 @@ public class ListaCompraServicio {
             }
         } catch (Exception e) {
             System.err.println("Error generando lista básica: " + e.getMessage());
-            // Si hay error, seguir adelante con lo que tenemos
         }
 
         return obtenerListaCompra(lista.getId(), lista.getUsuarioId());
     }
 
-    /**
-     * Elimina una lista de compra
-     * @param listaId ID de la lista a eliminar
-     * @param usuarioId ID del usuario
-     * @return true si se eliminó correctamente
-     */
     public boolean eliminarListaCompra(Long listaId, Long usuarioId) {
         Transaction transaction = null;
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
@@ -879,7 +674,6 @@ public class ListaCompraServicio {
                 Long transaccionAEliminarId = lista.getTransaccionIdAsociada();
                 session.delete(lista);
 
-                // 3. Si había una transacción asociada, eliminarla también
                 if (transaccionAEliminarId != null) {
                     TransaccionServicio transaccionServicio = new TransaccionServicio();
                     Transaccion transaccionAEliminar = transaccionServicio.obtenerTransaccionPorId(transaccionAEliminarId, usuarioId);
@@ -890,7 +684,6 @@ public class ListaCompraServicio {
 
                 transaction.commit();
 
-                // Actualizar la caché al final
                 cacheListas.remove(listaId);
                 return true;
 

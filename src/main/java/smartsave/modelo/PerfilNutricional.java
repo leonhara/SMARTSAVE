@@ -19,10 +19,10 @@ public class PerfilNutricional {
     private int edad;
 
     @Column(nullable = false, precision = 5, scale = 2)
-    private BigDecimal peso;  // en kg - cambiado a BigDecimal
+    private BigDecimal peso;
 
     @Column(nullable = false, precision = 5, scale = 2)
-    private BigDecimal altura;  // en cm - cambiado a BigDecimal
+    private BigDecimal altura;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -35,18 +35,15 @@ public class PerfilNutricional {
     private int caloriasDiarias;
 
     @Column(nullable = false, precision = 4, scale = 2)
-    private BigDecimal imc; // cambiado a BigDecimal
+    private BigDecimal imc;
 
-    // Relación One-to-Many con restricciones
     @OneToMany(mappedBy = "perfil", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<RestriccionNutricional> restriccionesEntidades = new ArrayList<>();
 
-    // Enum para el sexo
     public enum Sexo {
         M, F
     }
 
-    // Constructores
     public PerfilNutricional() {}
 
     public PerfilNutricional(Long usuarioId, int edad, double peso, double altura, String sexo, String nivelActividad) {
@@ -60,7 +57,6 @@ public class PerfilNutricional {
         calcularCaloriasDiarias();
     }
 
-    // Getters y setters básicos
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -73,7 +69,6 @@ public class PerfilNutricional {
         calcularCaloriasDiarias();
     }
 
-    // Métodos para peso (BigDecimal + compatibilidad con double)
     public BigDecimal getPesoBD() { return peso; }
     public void setPesoBD(BigDecimal peso) {
         this.peso = peso;
@@ -88,7 +83,6 @@ public class PerfilNutricional {
         calcularCaloriasDiarias();
     }
 
-    // Métodos para altura (BigDecimal + compatibilidad con double)
     public BigDecimal getAlturaBD() { return altura; }
     public void setAlturaBD(BigDecimal altura) {
         this.altura = altura;
@@ -103,7 +97,6 @@ public class PerfilNutricional {
         calcularCaloriasDiarias();
     }
 
-    // Métodos para compatibilidad con código existente
     public String getSexo() { return sexo.name(); }
     public void setSexo(String sexo) {
         this.sexo = Sexo.valueOf(sexo);
@@ -122,7 +115,6 @@ public class PerfilNutricional {
         calcularCaloriasDiarias();
     }
 
-    // Método para obtener restricciones como lista de Strings
     public List<String> getRestricciones() {
         List<String> restricciones = new ArrayList<>();
         for (RestriccionNutricional entidad : restriccionesEntidades) {
@@ -132,17 +124,14 @@ public class PerfilNutricional {
     }
 
     public void setRestricciones(List<String> restricciones) {
-        // Limpiar restricciones existentes
         this.restriccionesEntidades.clear();
 
-        // Agregar nuevas restricciones
         for (String restriccion : restricciones) {
             agregarRestriccion(restriccion);
         }
     }
 
     public void agregarRestriccion(String restriccion) {
-        // Verificar que no exista ya
         boolean existe = restriccionesEntidades.stream()
                 .anyMatch(r -> r.getRestriccion().equals(restriccion));
 
@@ -160,11 +149,9 @@ public class PerfilNutricional {
 
     public int getCaloriasDiarias() { return caloriasDiarias; }
 
-    // Métodos para IMC (BigDecimal + compatibilidad con double)
     public BigDecimal getImcBD() { return imc; }
     public double getImc() { return imc != null ? imc.doubleValue() : 0.0; }
 
-    // Métodos de cálculo
     private void calcularIMC() {
         if (peso != null && altura != null && altura.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal alturaEnMetros = altura.divide(BigDecimal.valueOf(100));
@@ -179,14 +166,12 @@ public class PerfilNutricional {
         double alturaD = altura.doubleValue();
         double tmb;
 
-        // Fórmula Harris-Benedict revisada
         if (sexo == Sexo.M) {
             tmb = 88.362 + (13.397 * pesoD) + (4.799 * alturaD) - (5.677 * this.edad);
         } else {
             tmb = 447.593 + (9.247 * pesoD) + (3.098 * alturaD) - (4.330 * this.edad);
         }
 
-        // Factor de actividad
         double factorActividad;
         switch (this.nivelActividad) {
             case "Sedentario": factorActividad = 1.2; break;
@@ -220,7 +205,6 @@ public class PerfilNutricional {
         );
     }
 
-    // Clase interna para los macronutrientes
     public static class MacronutrientesDiarios {
         private final long proteinas;
         private final long carbohidratos;

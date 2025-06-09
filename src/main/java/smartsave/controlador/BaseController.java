@@ -16,12 +16,10 @@ import java.util.ResourceBundle;
 
 public abstract class BaseController implements Initializable {
 
-    // Elementos comunes en todas las pantallas
     @FXML protected BorderPane mainPane;
     @FXML protected HBox titleBar;
     @FXML protected VBox sideMenu;
 
-    // Botones de navegación
     @FXML protected Button dashboardButton;
     @FXML protected Button transactionsButton;
     @FXML protected Button nutritionButton;
@@ -32,30 +30,23 @@ public abstract class BaseController implements Initializable {
     @FXML protected Button profileButton;
     @FXML protected Button logoutButton;
 
-    // Botones de control de ventana
     @FXML protected Button minimizeButton;
     @FXML protected Button maximizeButton;
     @FXML protected Button closeButton;
 
-    // Servicio de navegación centralizado
     protected final NavegacionServicio navegacionServicio = NavegacionServicio.getInstancia();
 
-    // Variables para permitir el arrastre de la ventana
     private double offsetX = 0;
     private double offsetY = 0;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Aplicar estilos comunes
         aplicarEstilos();
 
-        // Configurar el arrastre de la ventana
         configurarVentanaArrastrable();
 
-        // Configurar botones de navegación
         configurarBotonesNavegacion();
 
-        // Inicialización específica del controlador (implementada por subclases)
         inicializarControlador();
 
         Platform.runLater(() -> {
@@ -69,7 +60,6 @@ public abstract class BaseController implements Initializable {
                 Label label = (Label) nodo;
                 Color colorActual = (Color) label.getTextFill();
 
-                // Solo cambiar si es específicamente GRIS (R≈G≈B)
                 boolean esGris = Math.abs(colorActual.getRed() - colorActual.getGreen()) < 0.1 &&
                         Math.abs(colorActual.getGreen() - colorActual.getBlue()) < 0.1 &&
                         Math.abs(colorActual.getRed() - colorActual.getBlue()) < 0.1 &&
@@ -82,21 +72,13 @@ public abstract class BaseController implements Initializable {
         });
     }
 
-    /**
-     * Método para inicialización específica, a implementar por cada controlador
-     */
     protected abstract void inicializarControlador();
 
-    /**
-     * Aplicar estilos comunes a todos los controladores
-     */
     protected void aplicarEstilos() {
-        // Estilos comunes para toda la interfaz
         EstilosApp.aplicarEstiloPanelPrincipal(mainPane);
         EstilosApp.aplicarEstiloBarraTitulo(titleBar);
         EstilosApp.aplicarEstiloMenuLateral(sideMenu);
 
-        // Estilos para botones de ventana
         EstilosApp.aplicarEstiloBotonVentana(minimizeButton);
         EstilosApp.aplicarEstiloBotonVentana(maximizeButton);
         EstilosApp.aplicarEstiloBotonVentana(closeButton);
@@ -104,7 +86,6 @@ public abstract class BaseController implements Initializable {
         reportsButton.setVisible(false);
         reportsButton.setManaged(false);
 
-        // Estilos para botones de navegación
         EstilosApp.aplicarEstiloBotonNavegacion(dashboardButton);
         EstilosApp.aplicarEstiloBotonNavegacion(transactionsButton);
         EstilosApp.aplicarEstiloBotonNavegacion(nutritionButton);
@@ -116,9 +97,6 @@ public abstract class BaseController implements Initializable {
         EstilosApp.aplicarEstiloBotonNavegacion(logoutButton);
     }
 
-    /**
-     * Configurar arrastre de ventana (común a todos los controladores)
-     */
     private void configurarVentanaArrastrable() {
         titleBar.setOnMousePressed(evento -> {
             offsetX = evento.getSceneX();
@@ -132,11 +110,7 @@ public abstract class BaseController implements Initializable {
         });
     }
 
-    /**
-     * Configurar eventos de los botones de navegación (común a todos los controladores)
-     */
     private void configurarBotonesNavegacion() {
-        // Configurar acción para cada botón del menú
         dashboardButton.setOnAction(this::handleDashboardAction);
         transactionsButton.setOnAction(this::handleTransactionsAction);
         nutritionButton.setOnAction(this::handleNutritionAction);
@@ -148,11 +122,7 @@ public abstract class BaseController implements Initializable {
         logoutButton.setOnAction(this::handleLogoutAction);
     }
 
-    /**
-     * Destaca el botón correspondiente a la vista actual
-     */
     protected void activarBoton(Button botonActivo) {
-        // Quitar la clase 'selected' de todos los botones
         dashboardButton.getStyleClass().remove("selected");
         transactionsButton.getStyleClass().remove("selected");
         nutritionButton.getStyleClass().remove("selected");
@@ -162,11 +132,9 @@ public abstract class BaseController implements Initializable {
         settingsButton.getStyleClass().remove("selected");
         profileButton.getStyleClass().remove("selected");
 
-        // Añadir la clase 'selected' al botón activo
         botonActivo.getStyleClass().add("selected");
     }
 
-    // Métodos de control de ventana (comunes a todos los controladores)
     @FXML
     public void handleMinimizeAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
@@ -176,9 +144,8 @@ public abstract class BaseController implements Initializable {
     @FXML
     public void handleMaximizeAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
-        escenario.setMaximized(!escenario.isMaximized()); // Esto ya está bien
+        escenario.setMaximized(!escenario.isMaximized());
 
-        // Cambiar el símbolo del botón según el estado
         if (escenario.isMaximized()) {
             maximizeButton.setText("❐");
         } else {
@@ -192,7 +159,6 @@ public abstract class BaseController implements Initializable {
         escenario.close();
     }
 
-    // Métodos de navegación (comunes a todos los controladores)
     @FXML
     public void handleDashboardAction(ActionEvent evento) {
         Stage escenarioActual = (Stage) dashboardButton.getScene().getWindow();

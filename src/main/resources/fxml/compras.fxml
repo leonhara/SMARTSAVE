@@ -26,7 +26,7 @@
     </top>
 
     <left>
-        <!-- Menú de navegación lateral (igual que en dashboard.fxml) -->
+        <!-- Menu de navegación lateral como en el dashboard -->
         <VBox fx:id="sideMenu" prefWidth="200" spacing="5">
             <padding>
                 <Insets top="20" right="10" bottom="20" left="10" />

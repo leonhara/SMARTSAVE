@@ -21,7 +21,7 @@ public class Transaccion {
     private String categoria;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal monto; // Cambiado a BigDecimal
+    private BigDecimal monto;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -30,19 +30,16 @@ public class Transaccion {
     @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
 
-    // Enum para el tipo de transacción
     public enum TipoTransaccion {
         Ingreso,
         Gasto
     }
 
-    // Constructor sin argumentos
     public Transaccion() {
         this.fecha = LocalDate.now();
         this.monto = BigDecimal.ZERO;
     }
 
-    // Constructor con argumentos básicos
     public Transaccion(LocalDate fecha, String descripcion, String categoria, double monto, String tipo) {
         this.fecha = fecha;
         this.descripcion = descripcion;
@@ -51,7 +48,6 @@ public class Transaccion {
         this.tipo = TipoTransaccion.valueOf(tipo);
     }
 
-    // Constructor completo
     public Transaccion(Long id, LocalDate fecha, String descripcion, String categoria, double monto, String tipo, Long usuarioId) {
         this.id = id;
         this.fecha = fecha;
@@ -62,7 +58,6 @@ public class Transaccion {
         this.usuarioId = usuarioId;
     }
 
-    // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -75,13 +70,11 @@ public class Transaccion {
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
 
-    // Métodos para monto (BigDecimal + compatibilidad con double)
     public BigDecimal getMontoBD() { return monto; }
     public void setMontoBD(BigDecimal monto) { this.monto = monto; }
     public double getMonto() { return monto != null ? monto.doubleValue() : 0.0; }
     public void setMonto(double monto) { this.monto = BigDecimal.valueOf(monto); }
 
-    // Métodos para compatibilidad con código existente
     public String getTipo() { return tipo.name(); }
     public void setTipo(String tipo) { this.tipo = TipoTransaccion.valueOf(tipo); }
 
@@ -91,7 +84,6 @@ public class Transaccion {
     public Long getUsuarioId() { return usuarioId; }
     public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
-    // Métodos útiles
     public String getFechaFormateada() {
         return fecha.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }

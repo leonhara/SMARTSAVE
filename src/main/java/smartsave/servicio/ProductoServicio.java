@@ -17,24 +17,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-/**
- * Servicio optimizado para gestionar operaciones relacionadas con productos
- * Integra datos de BD con API de Mercadona de manera eficiente
- */
 public class ProductoServicio {
 
-    // Servicio de API de Mercadona
     private MercadonaApiServicio mercadonaApi;
     private boolean usarApiMercadona = true;
 
-    // Cache en memoria para productos frecuentes
     private final Map<Long, Producto> cacheProductos = new HashMap<>();
     private final Map<String, List<Producto>> cacheBusquedas = new HashMap<>();
     private long ultimaLimpiezaCache = System.currentTimeMillis();
 
-    // Constructor
     public ProductoServicio() {
-        this("14010"); // Código postal por defecto
+        this("14010"); //Codigo del mercadona de Salesianos
     }
 
     public ProductoServicio(String codigoPostal) {
@@ -53,50 +46,33 @@ public class ProductoServicio {
         }
     }
 
-    /**
-     * Obtiene el servicio de API de Mercadona para uso interno
-     * @return El servicio de API de Mercadona
-     */
     public MercadonaApiServicio getMercadonaApiServicio() {
         return this.mercadonaApi;
     }
 
-    /**
-     * Busca y guarda un producto de Mercadona en la base de datos si no existe
-     * @param productoId ID del producto generado
-     * @return El producto guardado o null si no se encuentra
-     */
     public Producto buscarYGuardarProductoMercadona(Long productoId) {
-        // Verificar caché primero
         if (cacheProductos.containsKey(productoId)) {
             return cacheProductos.get(productoId);
         }
 
-        // Verificar BD
         Producto productoExistente = obtenerProductoPorId(productoId);
         if (productoExistente != null) {
-            // Guardar en caché
             cacheProductos.put(productoId, productoExistente);
             return productoExistente;
         }
 
-        // Si no existe y la API no está disponible, retornar null
         if (!usarApiMercadona) {
             return null;
         }
 
         try {
-            // Buscar en diferentes fuentes de Mercadona
             List<Producto> productosMercadona = new ArrayList<>();
 
-            // Productos nuevos (más probable que se intenten añadir)
             CompletableFuture<List<Producto>> futureProductos = mercadonaApi.obtenerProductosNuevos();
 
-            // Buscar con términos comunes para aumentar posibilidades
             CompletableFuture<List<Producto>> futureLeche = mercadonaApi.buscarProductos("leche");
             CompletableFuture<List<Producto>> futurePan = mercadonaApi.buscarProductos("pan");
 
-            // Esperar a que completen con timeout para evitar bloqueos largos
             try {
                 productosMercadona.addAll(futureProductos.get(5, TimeUnit.SECONDS));
                 productosMercadona.addAll(futureLeche.get(5, TimeUnit.SECONDS));
@@ -105,16 +81,13 @@ public class ProductoServicio {
                 System.err.println("Timeout esperando respuesta de Mercadona API");
             }
 
-            // Buscar el producto con el ID específico
             Producto productoEncontrado = productosMercadona.stream()
                     .filter(p -> p.getId() != null && p.getId().equals(productoId))
                     .findFirst()
                     .orElse(null);
 
             if (productoEncontrado != null) {
-                // Guardar en la base de datos
                 Producto guardado = guardarProducto(productoEncontrado);
-                // Actualizar caché
                 cacheProductos.put(productoId, guardado);
                 return guardado;
             }
@@ -126,22 +99,15 @@ public class ProductoServicio {
         }
     }
 
-    /**
-     * Obtiene todos los productos disponibles (BD + Mercadona) con caché
-     * @return Lista de productos
-     */
     public List<Producto> obtenerTodosProductos() {
-        // Verificar caché
         String cacheKey = "todos_productos";
         if (cacheBusquedas.containsKey(cacheKey)) {
-            // Limpiar caché si es necesario
             limpiarCacheSiNecesario();
             return new ArrayList<>(cacheBusquedas.get(cacheKey));
         }
 
         List<Producto> todosProductos = new ArrayList<>();
 
-        // Obtener productos de la base de datos
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             Query<Producto> query = session.createQuery(
                     "FROM Producto p WHERE p.disponible = true",
@@ -151,14 +117,11 @@ public class ProductoServicio {
             System.err.println("Error obteniendo productos de BD: " + e.getMessage());
         }
 
-        // Añadir productos de Mercadona si la API está disponible
         if (usarApiMercadona) {
             try {
-                // Usar timeout para evitar bloqueos
                 CompletableFuture<List<Producto>> futureProductos = mercadonaApi.obtenerProductosNuevos();
                 List<Producto> productosMercadona = futureProductos.get(10, TimeUnit.SECONDS);
 
-                // Eliminar posibles duplicados por ID antes de añadir
                 Set<Long> idsExistentes = todosProductos.stream()
                         .map(Producto::getId)
                         .filter(Objects::nonNull)
@@ -175,21 +138,12 @@ public class ProductoServicio {
             }
         }
 
-        // Guardar en caché
         cacheBusquedas.put(cacheKey, new ArrayList<>(todosProductos));
 
         return todosProductos;
     }
 
-    /**
-     * Busca productos por nombre, marca o categoría con caché
-     * @param termino Término de búsqueda
-     * @return Lista de productos que coinciden con la búsqueda
-     */
-    // Reemplaza el método completo en: smartsave/servicio/ProductoServicio.java
-
     public List<Producto> buscarProductos(String termino, ModalidadAhorro modalidad) {
-        // 1. OBTENER TODOS LOS RESULTADOS (esta parte no cambia)
         if (termino == null || termino.trim().isEmpty()) {
             return obtenerTodosProductos();
         }
@@ -221,12 +175,9 @@ public class ProductoServicio {
             }
         }
 
-        // 2. APLICAR NUEVA LÓGICA DE FILTRADO POR BANDAS DE PRECIOS
         if (resultados.isEmpty() || modalidad == null) {
             return resultados;
         }
-
-        // Ordenar siempre por precio para poder trabajar con los rangos
         resultados.sort(Comparator.comparing(Producto::getPrecio));
 
         String nombreModalidad = modalidad.getNombre();
@@ -234,39 +185,29 @@ public class ProductoServicio {
 
         switch (nombreModalidad.toLowerCase()) {
             case "máximo":
-                // Muestra el 50% de los productos más baratos.
-                // Si hay pocos productos, muestra hasta 5.
                 int limiteMaximo = Math.max(5, (int) (totalProductos * 0.5));
                 return resultados.stream().limit(limiteMaximo).collect(Collectors.toList());
 
             case "equilibrado":
-                // Busca un 'punto dulce' en el medio, mostrando productos que están
-                // entre el 20% y el 80% del rango. Elimina los extremos.
                 int inicioEquilibrado = (int) (totalProductos * 0.20);
                 int finEquilibrado = (int) (totalProductos * 0.80);
-                if (finEquilibrado <= inicioEquilibrado) { // Asegurar que haya rango
+                if (finEquilibrado <= inicioEquilibrado) {
                     return resultados;
                 }
                 return resultados.subList(inicioEquilibrado, finEquilibrado);
 
             case "estándar":
-                // Se enfoca en la calidad/precio superior, mostrando la mitad más cara de los productos.
-                // Ignora el 50% más barato.
                 int inicioEstandar = (int) (totalProductos * 0.50);
-                if (totalProductos <= 5) { // Si hay muy pocos, mostrarlos todos
+                if (totalProductos <= 5) {
                     return resultados;
                 }
                 return resultados.subList(inicioEstandar, totalProductos);
 
             default:
-                // Si la modalidad no es reconocida, devolver todo ordenado por precio.
                 return resultados;
         }
     }
 
-    /**
-     * Limpia la caché si ha pasado el tiempo límite
-     */
     private void limpiarCacheSiNecesario() {
         long tiempoActual = System.currentTimeMillis();
         if (tiempoActual - ultimaLimpiezaCache > TimeUnit.MINUTES.toMillis(10)) {
@@ -276,20 +217,14 @@ public class ProductoServicio {
         }
     }
 
-    /**
-     * Obtiene un producto por su ID con caché
-     * @param id ID del producto
-     * @return El producto si existe, null en caso contrario
-     */
     public Producto obtenerProductoPorId(Long id) {
-        // Verificar caché primero
+
         if (cacheProductos.containsKey(id)) {
             return cacheProductos.get(id);
         }
 
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             Producto producto = session.get(Producto.class, id);
-            // Actualizar caché si se encontró
             if (producto != null) {
                 cacheProductos.put(id, producto);
             }
@@ -300,11 +235,6 @@ public class ProductoServicio {
         }
     }
 
-    /**
-     * Busca productos por categoría
-     * @param categoria Categoría a buscar
-     * @return Lista de productos de la categoría especificada
-     */
     public List<Producto> buscarPorCategoria(String categoria) {
         if (categoria == null || categoria.trim().isEmpty()) {
             return obtenerTodosProductos();
@@ -312,7 +242,6 @@ public class ProductoServicio {
 
         List<Producto> resultados = new ArrayList<>();
 
-        // Buscar en base de datos
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             Query<Producto> query = session.createQuery(
                     "FROM Producto p WHERE p.disponible = true AND LOWER(p.categoria) = :categoria",
@@ -323,14 +252,11 @@ public class ProductoServicio {
             System.err.println("Error buscando por categoría en BD: " + e.getMessage());
         }
 
-        // Para Mercadona, usamos búsqueda por término ya que no tenemos categorías específicas
         if (isApiMercadonaDisponible()) {
             try {
-                // Usar el adaptador para transformar los resultados de Mercadona
                 CompletableFuture<List<Producto>> futureProductos = mercadonaApi.buscarProductos(categoria);
                 List<Producto> productosMercadona = futureProductos.get(5, TimeUnit.SECONDS);
 
-                // Filtrar solo productos de la categoría solicitada o similares
                 Set<Long> idsExistentes = resultados.stream()
                         .map(Producto::getId)
                         .filter(Objects::nonNull)
@@ -351,17 +277,11 @@ public class ProductoServicio {
         return resultados;
     }
 
-    /**
-     * Busca productos que cumplan con restricciones alimentarias
-     * @param restricciones Lista de restricciones alimentarias
-     * @return Lista de productos que cumplen con las restricciones
-     */
     public List<Producto> buscarProductosCompatibles(List<String> restricciones) {
         if (restricciones == null || restricciones.isEmpty()) {
             return obtenerTodosProductos();
         }
 
-        // Obtener todos los productos y filtrar
         List<Producto> todosProductos = obtenerTodosProductos();
 
         return todosProductos.stream()
@@ -369,12 +289,6 @@ public class ProductoServicio {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Verifica si un producto cumple con las restricciones alimentarias
-     * @param producto Producto a verificar
-     * @param restricciones Lista de restricciones
-     * @return true si cumple con todas las restricciones
-     */
     private boolean cumpleRestricciones(Producto producto, List<String> restricciones) {
         if (restricciones == null || restricciones.isEmpty()) {
             return true;
@@ -428,21 +342,14 @@ public class ProductoServicio {
         return true;
     }
 
-    /**
-     * Guarda un producto en la base de datos con manejo mejorado de Mercadona
-     * @param producto Producto a guardar
-     * @return Producto guardado con ID asignado
-     */
     public Producto guardarProducto(Producto producto) {
         Transaction transaction = null;
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
 
-            // Verificar si ya existe (por ID)
             if (producto.getId() != null) {
                 Producto existente = session.get(Producto.class, producto.getId());
                 if (existente != null) {
-                    // Actualizar campos del producto existente
                     existente.setNombre(producto.getNombre());
                     existente.setMarca(producto.getMarca());
                     existente.setCategoria(producto.getCategoria());
@@ -450,7 +357,6 @@ public class ProductoServicio {
                     existente.setSupermercado(producto.getSupermercado());
                     existente.setDisponible(producto.isDisponible());
 
-                    // Actualizar información nutricional si existe
                     if (producto.getInfoNutricional() != null) {
                         if (existente.getInfoNutricional() == null) {
                             existente.setInfoNutricional(new Producto.NutricionProducto());
@@ -468,17 +374,14 @@ public class ProductoServicio {
                     session.update(existente);
                     transaction.commit();
 
-                    // Actualizar caché
                     cacheProductos.put(existente.getId(), existente);
                     return existente;
                 }
             }
 
-            // Si no existe, guardar nuevo
             session.saveOrUpdate(producto);
             transaction.commit();
 
-            // Actualizar caché
             if (producto.getId() != null) {
                 cacheProductos.put(producto.getId(), producto);
             }
@@ -492,17 +395,10 @@ public class ProductoServicio {
         }
     }
 
-    /**
-     * Verifica si la API de Mercadona está disponible
-     * @return true si está disponible y habilitada
-     */
     public boolean isApiMercadonaDisponible() {
         return usarApiMercadona && mercadonaApi != null && mercadonaApi.isApiDisponible();
     }
 
-    /**
-     * Cierra recursos del servicio y limpia caché
-     */
     public void cerrar() {
         if (mercadonaApi != null) {
             mercadonaApi.cerrar();

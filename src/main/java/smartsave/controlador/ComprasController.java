@@ -96,12 +96,12 @@ public class ComprasController extends BaseController {
 
         activarBoton(shoppingButton);
         inicializarPantallaCompras();
-        cargarListasCompra(); // Usará usuarioIdActualLocal
+        cargarListasCompra(); 
         aplicarEstilosComponentes();
     }
 
     private void disableUIComponents() {
-        // Deshabilitar o limpiar componentes si no hay usuario
+        
         if (filtroListasComboBox != null) filtroListasComboBox.setDisable(true);
         if (listasCompraListView != null) listasCompraListView.setItems(FXCollections.observableArrayList());
         if (crearListaButton != null) crearListaButton.setDisable(true);
@@ -212,10 +212,10 @@ public class ComprasController extends BaseController {
                 if (empty || item == null) setGraphic(null); else { checkBox.setSelected(item); setGraphic(checkBox); }
             }
         });
-        nombreColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getProducto().getNombre())); //
+        nombreColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getProducto().getNombre()));
         cantidadColumn.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
-        precioColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getProducto().getPrecio()))); //
-        totalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getPrecioTotal()))); //
+        precioColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getProducto().getPrecio())));
+        totalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getPrecioTotal())));
         configurarColumnaAccionesProductos();
         configurarTablaResultadosBusqueda();
         EstilosApp.aplicarEstiloTabla(productosTableView);
@@ -289,7 +289,7 @@ public class ComprasController extends BaseController {
         productoNombreColumn.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         productoMarcaColumn.setCellValueFactory(new PropertyValueFactory<>("marca"));
         productoCategoriaColumn.setCellValueFactory(new PropertyValueFactory<>("categoria"));
-        productoPrecioColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getPrecio()))); //
+        productoPrecioColumn.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("€%.2f", cellData.getValue().getPrecio())));
         productoAccionesColumn.setCellFactory(param -> new TableCell<Producto, Void>() {
             private final Button btnAnadir = new Button("Añadir");
             {
@@ -297,7 +297,7 @@ public class ComprasController extends BaseController {
                 btnAnadir.setOnAction(event -> {
                     if (getTableView().getItems().size() > getIndex() && getIndex() >= 0) {
                         Producto producto = getTableView().getItems().get(getIndex());
-                        listaCompraServicio.agregarProductoALista(listaSeleccionada, producto.getId(), producto, 1); //
+                        listaCompraServicio.agregarProductoALista(listaSeleccionada, producto.getId(), producto, 1);
                         mostrarDetalleLista(listaSeleccionada);
                         navegacionServicio.mostrarAlertaInformacion("Producto añadido", "El producto ha sido añadido a la lista de compra.");
                     }
@@ -345,7 +345,7 @@ public class ComprasController extends BaseController {
         nombreListaLabel.setText(listaActualizada.getNombre());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         fechaCreacionLabel.setText(listaActualizada.getFechaCreacion().format(formatter));
-        fechaProgramadaLabel.setText(listaActualizada.getFechaPlanificada() != null ? listaActualizada.getFechaPlanificada().format(formatter) : "No programada"); //
+        fechaProgramadaLabel.setText(listaActualizada.getFechaPlanificada() != null ? listaActualizada.getFechaPlanificada().format(formatter) : "No programada");
         modalidadLabel.setText(listaActualizada.getModalidadAhorro());
         presupuestoLabel.setText(String.format("€%.2f", listaActualizada.getPresupuestoMaximoAsDouble()));
         ObservableList<ItemCompra> items = FXCollections.observableArrayList(listaActualizada.getItems());
@@ -385,8 +385,6 @@ public class ComprasController extends BaseController {
     }
 
     @FXML private void handleFiltroListas(ActionEvent event) { cargarListasCompra(); }
-
-    // Reemplaza el método en ComprasController.java con esta versión
 
     @FXML
     private void handleCrearLista(ActionEvent event) {
@@ -483,17 +481,17 @@ public class ComprasController extends BaseController {
     @FXML
     private void handleCompletadaChange(ActionEvent event) {
         if (listaSeleccionada == null || completadaCheckBox == null || usuarioIdActualLocal == null) {
-            return; // Salir si no hay nada que procesar
+            return;
         }
 
         boolean completada = completadaCheckBox.isSelected();
         listaSeleccionada.setCompletada(completada);
 
         if (completada) {
-            // --- LÓGICA PARA CREAR LA TRANSACCIÓN ---
-            // Verificar que no se haya creado ya una transacción para esta lista
+            
+            
             if (listaSeleccionada.getTransaccionIdAsociada() == null) {
-                // Crear el objeto Transacción
+                
                 Transaccion nuevaTransaccion = new Transaccion();
                 nuevaTransaccion.setFecha(LocalDate.now());
                 nuevaTransaccion.setDescripcion("Compra: " + listaSeleccionada.getNombre());
@@ -501,33 +499,33 @@ public class ComprasController extends BaseController {
                 nuevaTransaccion.setMonto(listaSeleccionada.getCosteTotal());
                 nuevaTransaccion.setTipo("Gasto");
 
-                // Guardar la transacción en la base de datos
+                
                 Transaccion transaccionGuardada = transaccionServicio.agregarTransaccion(nuevaTransaccion, usuarioIdActualLocal);
 
-                // Guardar el ID de la nueva transacción en la lista de compra
+                
                 listaSeleccionada.setTransaccionIdAsociada(transaccionGuardada.getId());
 
                 navegacionServicio.mostrarAlertaInformacion("Gasto Registrado", "La compra se ha añadido como un gasto en tus transacciones.");
             }
         } else {
-            // --- LÓGICA PARA ELIMINAR LA TRANSACCIÓN ---
-            // Verificar si hay una transacción asociada para eliminar
+            
+            
             Long transaccionId = listaSeleccionada.getTransaccionIdAsociada();
             if (transaccionId != null) {
-                // Eliminar la transacción
+                
                 boolean eliminada = transaccionServicio.eliminarTransaccion(transaccionId, usuarioIdActualLocal);
                 if (eliminada) {
-                    // Quitar la referencia de la lista de compra
+                    
                     listaSeleccionada.setTransaccionIdAsociada(null);
                     navegacionServicio.mostrarAlertaInformacion("Gasto Anulado", "El gasto asociado a esta compra ha sido eliminado de tus transacciones.");
                 }
             }
         }
 
-        // Finalmente, actualizar la lista de compra en la base de datos con los cambios
+        
         listaCompraServicio.actualizarListaCompra(listaSeleccionada);
 
-        // Recargar la vista para que todo se muestre correctamente
+        
         cargarListasCompra();
     }
 
@@ -544,7 +542,7 @@ public class ComprasController extends BaseController {
         if (buscarProductoField == null || buscarProductoButton == null || resultadosProductosTableView == null) return;
         String termino = buscarProductoField.getText().trim();
 
-        // --- LÓGICA MEJORADA PARA OBTENER LA MODALIDAD ---
+        
         if (listaSeleccionada == null) {
             navegacionServicio.mostrarAlertaError("Seleccione una Lista", "Por favor, selecciona primero una lista de compra para poder buscar productos.");
             return;
@@ -556,21 +554,21 @@ public class ComprasController extends BaseController {
         if (modalidadActual == null) {
             navegacionServicio.mostrarAlertaError("Error de Modalidad", "No se pudo cargar la modalidad de ahorro de la lista. Seleccionando 'Equilibrado' por defecto.");
             modalidadActual = modalidadServicio.obtenerModalidadPorNombre("Equilibrado");
-            if (modalidadActual == null) { // Fallback extremo
+            if (modalidadActual == null) { 
                 navegacionServicio.mostrarAlertaError("Error Crítico", "No se encontraron las modalidades de ahorro.");
                 return;
             }
         }
-        // --- FIN DE LA LÓGICA ---
+        
 
         buscarProductoButton.setDisable(true);
         buscarProductoButton.setText("Buscando...");
 
-        // Se pasa la modalidadActual a la tarea asíncrona
+        
         final ModalidadAhorro modalidadParaBusqueda = modalidadActual;
 
         CompletableFuture.supplyAsync(() -> {
-            // Llamada al servicio con la nueva firma
+            
             return productoServicio.buscarProductos(termino, modalidadParaBusqueda);
         }).thenAccept(resultados -> Platform.runLater(() -> {
             resultadosProductosTableView.setItems(FXCollections.observableArrayList(resultados));
@@ -611,7 +609,7 @@ public class ComprasController extends BaseController {
         if (resultadosProductosTableView != null) resultadosProductosTableView.setItems(FXCollections.observableArrayList());
         try {
             if (productoServicio != null) {
-                List<Producto> productosPopulares = productoServicio.obtenerTodosProductos().stream().limit(15).collect(Collectors.toList()); //
+                List<Producto> productosPopulares = productoServicio.obtenerTodosProductos().stream().limit(15).collect(Collectors.toList()); 
                 if (resultadosProductosTableView != null && !productosPopulares.isEmpty()) {
                     resultadosProductosTableView.setItems(FXCollections.observableArrayList(productosPopulares));
                     System.out.println("Cargados " + productosPopulares.size() + " productos populares");
@@ -625,7 +623,7 @@ public class ComprasController extends BaseController {
         if (agregarProductoPane != null) {
             agregarProductoPane.setVisible(true);
             agregarProductoPane.setManaged(true);
-            EstilosApp.aplicarEstiloTarjeta(agregarProductoPane); //
+            EstilosApp.aplicarEstiloTarjeta(agregarProductoPane); 
         }
     }
 

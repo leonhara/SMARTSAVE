@@ -8,23 +8,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Adaptador para transformar productos de Mercadona a la estructura de la aplicación
- * Incluye caché para mejorar rendimiento y transformación de datos
- */
 public class MercadonaAdapter {
 
-    // Caché de productos para evitar peticiones repetidas
+    
     private static final Map<String, Producto> CACHE_PRODUCTOS = new ConcurrentHashMap<>();
-    // Tiempo máximo de validez de la caché (1 hora)
+    
     private static final long CACHE_TTL_MS = TimeUnit.HOURS.toMillis(1);
-    // Timestamp de última limpieza de caché
+    
     private static volatile long ultimaLimpiezaCacheMs = System.currentTimeMillis();
 
-    // Mapeo de categorías de Mercadona a categorías de nuestra aplicación
+    
     private static final Map<String, String> MAPEO_CATEGORIAS = new HashMap<>();
     static {
-        // Categorías principales
+        
         MAPEO_CATEGORIAS.put("Frutas y verduras", "Frutas");
         MAPEO_CATEGORIAS.put("Fruta", "Frutas");
         MAPEO_CATEGORIAS.put("Verdura", "Verduras");
@@ -40,10 +36,10 @@ public class MercadonaAdapter {
         MAPEO_CATEGORIAS.put("Legumbres", "Legumbres");
         MAPEO_CATEGORIAS.put("Pasta", "Cereales");
         MAPEO_CATEGORIAS.put("Aceites", "Aceites");
-        // Añadir más mapeos según sea necesario
+        
     }
 
-    // Estructura para guardar información de caché
+    
     private static class ProductoCacheado {
         final Producto producto;
         final long timestamp;
@@ -54,14 +50,9 @@ public class MercadonaAdapter {
         }
     }
 
-    /**
-     * Convierte un nodo JSON de la API de Mercadona a un objeto Producto
-     * @param productNode Nodo JSON del producto
-     * @return Producto adaptado
-     */
     public static Producto convertirNodoAProducto(JsonNode productNode) {
         try {
-            // Verificar si tenemos el producto en caché
+            
             String idMercadona = productNode.has("id") ? productNode.get("id").asText() : null;
             if (idMercadona != null && CACHE_PRODUCTOS.containsKey(idMercadona)) {
                 return CACHE_PRODUCTOS.get(idMercadona);
@@ -84,7 +75,7 @@ public class MercadonaAdapter {
             producto.setSupermercado("Mercadona");
             producto.setDisponible(true);
 
-            // Usa el ID real de Mercadona como Long, truncando decimales si los hubiera
+            
             if (idMercadona != null) {
                 try {
                     Long idReal;
@@ -106,7 +97,7 @@ public class MercadonaAdapter {
                 CACHE_PRODUCTOS.put(idMercadona, producto);
             }
 
-            // Validación de campos obligatorios antes de devolver el producto
+            
             if (producto.getNombre().isEmpty() || producto.getMarca().isEmpty() ||
                     producto.getCategoria().isEmpty() || producto.getPrecioBD() == null ||
                     producto.getSupermercado().isEmpty()) {
@@ -121,21 +112,18 @@ public class MercadonaAdapter {
         }
     }
 
-    /**
-     * Mapea una categoría de Mercadona a nuestra estructura de categorías
-     */
     private static String mapearCategoria(String categoriaOriginal) {
         if (categoriaOriginal == null || categoriaOriginal.isEmpty()) {
             return "Otros";
         }
 
-        // Buscar por categoría exacta
+        
         String categoria = MAPEO_CATEGORIAS.get(categoriaOriginal);
         if (categoria != null) {
             return categoria;
         }
 
-        // Buscar por contiene
+        
         String categoriaLower = categoriaOriginal.toLowerCase();
         if (categoriaLower.contains("fruta")) return "Frutas";
         if (categoriaLower.contains("verdura")) return "Verduras";
@@ -151,9 +139,6 @@ public class MercadonaAdapter {
         return "Otros";
     }
 
-    /**
-     * Configura la información nutricional estimada para un producto basado en su categoría
-     */
     private static void configurarInfoNutricional(Producto producto, String categoria) {
         Producto.NutricionProducto infoNutricional = producto.getInfoNutricional();
         if (infoNutricional == null) {
@@ -239,13 +224,10 @@ public class MercadonaAdapter {
         }
     }
 
-    /**
-     * Limpia la caché de productos que han expirado
-     */
     private static void limpiarCacheAntigua() {
         long tiempoActual = System.currentTimeMillis();
 
-        // Limpiar caché solo cada cierto tiempo para evitar sobrecarga
+        
         if (tiempoActual - ultimaLimpiezaCacheMs > TimeUnit.MINUTES.toMillis(30)) {
             CACHE_PRODUCTOS.entrySet().removeIf(entry ->
                     tiempoActual - ultimaLimpiezaCacheMs > CACHE_TTL_MS);
@@ -254,17 +236,11 @@ public class MercadonaAdapter {
         }
     }
 
-    /**
-     * Limpia texto para evitar problemas de encoding
-     */
     private static String limpiarTexto(String texto) {
         if (texto == null) return "";
         return texto.trim();
     }
 
-    /**
-     * Vacía la caché de productos
-     */
     public static void limpiarCache() {
         CACHE_PRODUCTOS.clear();
         ultimaLimpiezaCacheMs = System.currentTimeMillis();

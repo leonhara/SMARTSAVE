@@ -35,14 +35,12 @@ public class ListaCompra {
     @Column(nullable = false)
     private boolean completada = false;
 
-    // Relación One-to-Many con items
     @OneToMany(mappedBy = "lista", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<ItemCompra> items = new ArrayList<>();
 
     @Column(name = "transaccion_id_asociada")
     private Long transaccionIdAsociada;
 
-    // Constructores
     public ListaCompra() {
         this.fechaCreacion = LocalDate.now();
         this.items = new ArrayList<>();
@@ -67,7 +65,6 @@ public class ListaCompra {
         this.completada = false;
     }
 
-    // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -86,7 +83,6 @@ public class ListaCompra {
     public String getModalidadAhorro() { return modalidadAhorro; }
     public void setModalidadAhorro(String modalidadAhorro) { this.modalidadAhorro = modalidadAhorro; }
 
-    // Métodos corregidos para BigDecimal
     public BigDecimal getPresupuestoMaximo() {
         return presupuestoMaximo;
     }
@@ -118,7 +114,7 @@ public class ListaCompra {
     }
 
     public void agregarItem(ItemCompra item) {
-        item.setLista(this);  // Establecer la relación bidireccional
+        item.setLista(this);
         if (items == null) {
             items = new ArrayList<>();
         }

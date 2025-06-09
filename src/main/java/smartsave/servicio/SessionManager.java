@@ -1,5 +1,4 @@
-package smartsave.servicio; // O el paquete que prefieras para esto
-
+package smartsave.servicio;
 import smartsave.modelo.Usuario;
 
 public class SessionManager {
@@ -8,7 +7,6 @@ public class SessionManager {
     private Usuario usuarioActual;
 
     private SessionManager() {
-        // Constructor privado para el patrón Singleton
     }
 
     public static synchronized SessionManager getInstancia() {
@@ -30,7 +28,7 @@ public class SessionManager {
         if (usuarioActual != null) {
             return usuarioActual.getId();
         }
-        return null; // O lanzar una excepción si prefieres que siempre haya un ID
+        return null;
     }
 
     public void cerrarSesion() {

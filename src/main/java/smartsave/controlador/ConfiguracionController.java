@@ -6,9 +6,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import smartsave.modelo.Usuario; // Importar Usuario
-import smartsave.servicio.SessionManager; // Importar SessionManager
-import smartsave.servicio.UsuarioServicio; // Para cambiar contraseña
+import smartsave.modelo.Usuario;
+import smartsave.servicio.SessionManager;
+import smartsave.servicio.UsuarioServicio;
 import smartsave.utilidad.EstilosApp;
 
 public class ConfiguracionController extends BaseController {
@@ -154,7 +154,6 @@ public class ConfiguracionController extends BaseController {
                 navegacionServicio.mostrarAlertaError("Error", "La nueva contraseña debe tener al menos 6 caracteres."); return;
             }
 
-            //Verificar contraseña actual
             if (!usuarioActualLocal.getContrasenaHash().equals(actual)) {
                 navegacionServicio.mostrarAlertaError("Error", "La contraseña actual es incorrecta."); return;
             }
@@ -172,7 +171,7 @@ public class ConfiguracionController extends BaseController {
     private void handleVerLicenciaAction(ActionEvent evento) {
         navegacionServicio.mostrarAlertaInformacion("Licencia de Software",
                 "SmartSave - Licencia MIT\n\n" +
-                        "Copyright © 2025 Leonel Yupanqui Serrano\n\n" + //
+                        "Copyright © 2025 Leonel Yupanqui Serrano\n\n" +
                         "Por la presente se concede permiso, libre de cargos, a cualquier persona " +
                         "que obtenga una copia de este software y de los archivos de documentación " +
                         "asociados (el \"Software\"), a utilizar el Software sin restricción, " +
@@ -208,7 +207,7 @@ public class ConfiguracionController extends BaseController {
 
     private void aplicarEstiloScrollBarNeon() {
         Platform.runLater(() -> {
-            if (mainPane != null && mainPane.getCenter() instanceof ScrollPane) { //Verificar que mainPane y su centro no sean null
+            if (mainPane != null && mainPane.getCenter() instanceof ScrollPane) {
                 ScrollPane scrollPane = (ScrollPane) mainPane.getCenter();
                 EstilosApp.aplicarEstiloScrollPane(scrollPane);
             }

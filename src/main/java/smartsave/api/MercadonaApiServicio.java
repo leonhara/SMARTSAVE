@@ -17,12 +17,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-//hola
+
 public class MercadonaApiServicio {
 
     private final ObjectMapper objectMapper;
     private final ExecutorService executorService;
-    private Path pythonScriptPath; // Cambiado a Path
+    private Path pythonScriptPath; 
     private final String codigoPostal;
     private boolean apiDisponible;
 
@@ -37,7 +37,7 @@ public class MercadonaApiServicio {
         this.codigoPostal = codigoPostal != null ? codigoPostal : "14010";
 
         try {
-            // Extraer el script y obtener su ruta temporal
+            
             this.pythonScriptPath = prepararScriptPython();
             this.apiDisponible = verificarDisponibilidadApi();
         } catch (IOException e) {
@@ -55,14 +55,14 @@ public class MercadonaApiServicio {
      * @throws IOException Si hay un error al leer o escribir el archivo.
      */
     private Path prepararScriptPython() throws IOException {
-        // El path dentro del JAR debe comenzar con '/'
+        
         try (InputStream scriptStream = MercadonaApiServicio.class.getResourceAsStream("/api/mercadona_bridge.py")) {
             if (scriptStream == null) {
                 throw new IOException("No se pudo encontrar el script 'mercadona_bridge.py' en el JAR. Verifica la ruta: /api/mercadona_bridge.py");
             }
-            // Crear un archivo temporal que se borrará al salir
+            
             Path tempScript = Files.createTempFile("mercadona_bridge_", ".py");
-            tempScript.toFile().deleteOnExit(); // Asegura que el archivo se borre cuando la JVM termine
+            tempScript.toFile().deleteOnExit(); 
 
             Files.copy(scriptStream, tempScript, StandardCopyOption.REPLACE_EXISTING);
             System.out.println("Script de Python extraído a: " + tempScript.toAbsolutePath().toString());
@@ -75,7 +75,7 @@ public class MercadonaApiServicio {
      * Clase interna para manejo de caché de búsquedas
      */
     private static class MercadonaSearchCache {
-        private static final long CACHE_EXPIRY_MS = TimeUnit.MINUTES.toMillis(15); // 15 minutos de validez
+        private static final long CACHE_EXPIRY_MS = TimeUnit.MINUTES.toMillis(15); 
         private static class CacheEntry {
             final List<Producto> productos;
             final long timestamp;
@@ -103,7 +103,7 @@ public class MercadonaApiServicio {
 
         void put(String cacheKey, List<Producto> productos) {
             cache.put(cacheKey, new CacheEntry(new ArrayList<>(productos)));
-            // Limitar tamaño de caché
+            
             if (cache.size() > 100) {
                 String oldestKey = cache.keySet().iterator().next();
                 cache.remove(oldestKey);
@@ -190,7 +190,7 @@ public class MercadonaApiServicio {
                 ProcessBuilder processBuilder = new ProcessBuilder(
                         "python", this.pythonScriptPath.toAbsolutePath().toString(),
                         "new", "--postcode", codigoPostal,
-                        "--limit", "30" // Aumentar un poco el límite para nuevos
+                        "--limit", "30" 
                 );
 
                 String resultado = ejecutarProcesoConBuilder(processBuilder);
@@ -250,8 +250,8 @@ public class MercadonaApiServicio {
                 }
             }
 
-            if (!process.waitFor(10, TimeUnit.SECONDS)) { // Aumentar timeout
-                process.destroyForcibly(); // Usar destroyForcibly
+            if (!process.waitFor(10, TimeUnit.SECONDS)) { 
+                process.destroyForcibly(); 
                 System.err.println("Timeout verificando mercapy. Proceso destruido.");
                 return false;
             }
@@ -260,7 +260,7 @@ public class MercadonaApiServicio {
 
             if (disponible) {
                 System.out.println("Mercapy parece estar disponible.");
-                // testScriptPython(); // Realizar un test más exhaustivo
+                
                 return true;
             } else {
                 System.err.println("Mercapy no disponible o no responde como se esperaba.");
@@ -283,7 +283,7 @@ public class MercadonaApiServicio {
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     "python", this.pythonScriptPath.toAbsolutePath().toString(),
-                    "search", "leche", // Un término común para testear
+                    "search", "leche", 
                     "--postcode", codigoPostal, "--limit", "1"
             );
             pb.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -298,25 +298,25 @@ public class MercadonaApiServicio {
                 }
             }
 
-            if (!process.waitFor(15, TimeUnit.SECONDS)) { // Aumentar timeout
+            if (!process.waitFor(15, TimeUnit.SECONDS)) { 
                 process.destroyForcibly();
                 System.err.println("Timeout en test del script Python. Proceso destruido.");
-                this.apiDisponible = false; // Marcar como no disponible
+                this.apiDisponible = false; 
                 return;
             }
 
             if (process.exitValue() == 0) {
                 System.out.println("Test de script Python con mercadona_bridge.py exitoso.");
-                // No cambiar apiDisponible aquí, eso se decide en verificarDisponibilidadApi
+                
             } else {
                 System.err.println("Test de script Python con mercadona_bridge.py falló, código: " + process.exitValue());
                 System.err.println("Salida del test: " + output.toString());
-                this.apiDisponible = false; // Marcar como no disponible
+                this.apiDisponible = false; 
             }
         } catch (Exception e) {
             System.err.println("Error en test de script Python con mercadona_bridge.py: " + e.getMessage());
             e.printStackTrace();
-            this.apiDisponible = false; // Marcar como no disponible
+            this.apiDisponible = false; 
         }
     }
 
@@ -324,7 +324,7 @@ public class MercadonaApiServicio {
     private String ejecutarProcesoConBuilder(ProcessBuilder processBuilder) throws IOException, InterruptedException {
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         processBuilder.environment().put("PYTHONIOENCODING", "utf-8");
-        processBuilder.environment().put("LANG", "C.UTF-8"); // O el locale que sepas que funciona
+        processBuilder.environment().put("LANG", "C.UTF-8"); 
 
         Process process = processBuilder.start();
         StringBuilder output = new StringBuilder();
@@ -344,7 +344,7 @@ public class MercadonaApiServicio {
         int exitCode = process.exitValue();
         if (exitCode != 0) {
             System.err.println("Salida del script Python (stdout): " + output.toString());
-            // Ya no leemos stderr aquí porque está redirigido
+            
             throw new IOException("Error ejecutando script Python. Exit code: " + exitCode + ". Revisa la consola para los errores de Python.");
         }
 
@@ -366,7 +366,7 @@ public class MercadonaApiServicio {
                 if (data != null && data.isArray()) {
                     for (JsonNode productNode : data) {
                         try {
-                            Producto producto = MercadonaAdapter.convertirNodoAProducto(productNode); //
+                            Producto producto = MercadonaAdapter.convertirNodoAProducto(productNode); 
                             if (producto != null) {
                                 productos.add(producto);
                             }
@@ -389,7 +389,7 @@ public class MercadonaApiServicio {
         } catch (Exception e) {
             System.err.println("Error crítico parseando la respuesta JSON de Mercadona: " + e.getMessage());
             e.printStackTrace();
-            System.err.println("JSON problemático: " + json.substring(0, Math.min(json.length(), 500)) + "..."); // Muestra una parte del JSON
+            System.err.println("JSON problemático: " + json.substring(0, Math.min(json.length(), 500)) + "..."); 
         }
         return productos;
     }
@@ -408,7 +408,7 @@ public class MercadonaApiServicio {
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
-        // Limpiar el archivo temporal del script si existe y no se borró
+        
         if (pythonScriptPath != null) {
             try {
                 Files.deleteIfExists(pythonScriptPath);

@@ -7,7 +7,6 @@ import logging
 import traceback
 import os
 
-# Configurar logging SOLO a stderr
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -15,14 +14,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger('mercadona_bridge')
 
-# Verificar si mercapy está instalado
+#Vamos a verificar si mercapy esta instalado
 try:
     import mercapy
     logger.info("Mercapy importado correctamente")
 except ImportError as e:
     error_msg = "mercapy no está instalado o no puede ser importado"
     logger.error(f"{error_msg}: {str(e)}")
-    # SOLO el JSON va a stdout
     print(json.dumps({"success": False, "error": error_msg}))
     sys.exit(1)
 
@@ -38,7 +36,7 @@ def search_products(query, postcode, limit=20):
             if product.not_found():
                 continue
 
-            # Obtener el valor del precio de forma segura
+            #Obtenemos el valor del precio de forma segura
             unit_price = 0.0
             try:
                 if hasattr(product, 'unit_price') and product.unit_price is not None:
@@ -47,9 +45,9 @@ def search_products(query, postcode, limit=20):
                 logger.warning(f"Error al procesar unit_price: {str(e)}")
                 unit_price = 0.0
 
-            # Obtener el nombre de la categoría de forma segura
+            #Aqui obtenemos el nombre de la categoría de forma segura
             category_name = 'Sin categoría'
-            # Mejorar el manejo de errores para category_name
+            #Aqui estan los manejos de errores de category_name
             try:
                 if hasattr(product, 'category') and product.category:
                     if isinstance(product.category, list) and len(product.category) > 0:
@@ -64,7 +62,7 @@ def search_products(query, postcode, limit=20):
                 logger.warning(f"Error al procesar category_name: {str(e)}")
                 category_name = 'Sin categoría'
 
-            # Limpiar el nombre del producto para evitar problemas de encoding
+            #Aqui limpiaremos el nombre del producto para evitar problemas
             product_name = product.name or ''
             if product_name:
                 try:
@@ -73,7 +71,7 @@ def search_products(query, postcode, limit=20):
                     logger.warning(f"Error al procesar product_name: {str(e)}")
                     product_name = 'Producto'
 
-            # ID seguro
+            #Cogeremos el ID
             product_id = 'unknown'
             try:
                 product_id = str(product.id)
@@ -113,7 +111,6 @@ def search_products(query, postcode, limit=20):
 def get_product_detail(product_id, postcode):
     try:
         logger.info(f"Obteniendo detalles del producto ID: {product_id} CP: {postcode}")
-        # Obtener el warehouse por código postal
         warehouse = get_warehouse_from_postcode(postcode)
         product = mercapy.Product(product_id, warehouse=warehouse)
 
@@ -121,7 +118,7 @@ def get_product_detail(product_id, postcode):
             logger.warning(f"Producto no encontrado: {product_id}")
             return {"success": False, "error": "Producto no encontrado"}
 
-        # Obtener valores de forma segura
+        #obtendremos los valores de forma segura
         unit_price = 0.0
         try:
             if hasattr(product, 'unit_price') and product.unit_price is not None:
@@ -139,7 +136,7 @@ def get_product_detail(product_id, postcode):
             logger.warning(f"Error al procesar category_name: {str(e)}")
             category_name = 'Sin categoría'
 
-        # Limpiar nombre del producto
+        # Aqui se limpia el nombre del producto
         product_name = product.name or ''
         if product_name:
             try:
@@ -195,7 +192,7 @@ def get_new_arrivals(postcode, limit=20):
             if product.not_found():
                 continue
 
-            # Obtener valores de forma segura
+            #Volvemos a obtener  valores de forma segura
             unit_price = 0.0
             try:
                 if hasattr(product, 'unit_price') and product.unit_price is not None:
@@ -213,7 +210,7 @@ def get_new_arrivals(postcode, limit=20):
                 logger.warning(f"Error al procesar category_name: {str(e)}")
                 category_name = 'Sin categoría'
 
-            # Limpiar nombre del producto
+            #volvemos a limpiar nombre del producto
             product_name = product.name or ''
             if product_name:
                 try:
@@ -222,7 +219,7 @@ def get_new_arrivals(postcode, limit=20):
                     logger.warning(f"Error al procesar product_name: {str(e)}")
                     product_name = 'Producto'
 
-            # ID seguro
+            #Cogemos el id seguro
             product_id = 'unknown'
             try:
                 product_id = str(product.id)
@@ -249,7 +246,6 @@ def get_new_arrivals(postcode, limit=20):
         return {"success": False, "error": str(e), "details": error_details}
 
 def get_warehouse_from_postcode(postcode):
-    """Obtiene el warehouse correspondiente al código postal"""
     try:
         logger.info(f"Obteniendo warehouse para CP: {postcode}")
         merca = mercapy.Mercadona(postcode)
@@ -262,7 +258,6 @@ def get_warehouse_from_postcode(postcode):
 
 def main():
     try:
-        # Registrar entorno para debugging
         logger.info(f"Python version: {sys.version}")
         logger.info(f"Current working directory: {os.getcwd()}")
         logger.info(f"Script directory: {os.path.dirname(os.path.abspath(__file__))}")
@@ -294,15 +289,13 @@ def main():
         elif args.action == 'new':
             result = get_new_arrivals(args.postcode, args.limit)
 
-        # Verificar que el resultado sea válido
+        #Vamos a verificar que el resultado sea válido
         if not isinstance(result, dict):
             logger.error(f"Resultado inválido, se esperaba un diccionario pero se obtuvo: {type(result)}")
             result = {"success": False, "error": "Resultado de procesamiento inválido"}
 
-        # SOLO ESTE print envía el JSON a stdout
         output = json.dumps(result, ensure_ascii=False, indent=2)
         print(output)
-        # logger.info(...) irá a stderr
     except Exception as e:
         error_details = traceback.format_exc()
         logger.error(f"Error en función main: {str(e)}\n{error_details}")
@@ -312,7 +305,6 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        # Capturar cualquier excepción no controlada
         error_details = traceback.format_exc()
         logger.critical(f"Error crítico no controlado: {str(e)}\n{error_details}")
         print(json.dumps({"success": False, "error": f"Error crítico: {str(e)}"}, ensure_ascii=False))

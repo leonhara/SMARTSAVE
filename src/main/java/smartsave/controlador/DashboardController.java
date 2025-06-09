@@ -15,10 +15,10 @@ import javafx.stage.Stage;
 import smartsave.modelo.PerfilNutricional;
 import smartsave.modelo.Transaccion;
 import smartsave.servicio.PerfilNutricionalServicio;
-import smartsave.servicio.SessionManager; // Importar SessionManager
+import smartsave.servicio.SessionManager;
 import smartsave.servicio.TransaccionServicio;
 import smartsave.utilidad.EstilosApp;
-import smartsave.modelo.Usuario; // Importar Usuario
+import smartsave.modelo.Usuario;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -48,8 +48,8 @@ public class DashboardController extends BaseController {
     private final TransaccionServicio transaccionServicio = new TransaccionServicio();
     private final PerfilNutricionalServicio perfilNutricionalServicio = new PerfilNutricionalServicio();
 
-    private Long usuarioIdActualLocal; // Variable para el ID del usuario en sesión
-    private Usuario usuarioActualLocal; // Variable para el objeto Usuario en sesión
+    private Long usuarioIdActualLocal;
+    private Usuario usuarioActualLocal;
 
     @Override
     protected void inicializarControlador() {
@@ -81,7 +81,7 @@ public class DashboardController extends BaseController {
     }
 
     private void disableUIComponents() {
-        // Limpiar etiquetas y deshabilitar interacciones si no hay usuario
+        
         if (balanceAmount != null) balanceAmount.setText("€0.00");
         if (balanceChange != null) balanceChange.setText("");
         if (expensesAmount != null) expensesAmount.setText("€0.00");
@@ -194,11 +194,11 @@ public class DashboardController extends BaseController {
         LocalDate inicioMesAnterior = fechaActual.minusMonths(1).withDayOfMonth(1);
         LocalDate finMesAnterior = inicioMesActual.minusDays(1);
 
-        double ingresosMesActual = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, inicioMesActual, fechaActual); //
-        double gastosMesActual = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, inicioMesActual, fechaActual); //
-        double balanceActual = transaccionServicio.obtenerBalance(usuarioIdActualLocal, null, fechaActual); //
-        double ingresosMesAnterior = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, inicioMesAnterior, finMesAnterior); //
-        double gastosMesAnterior = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, inicioMesAnterior, finMesAnterior); //
+        double ingresosMesActual = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, inicioMesActual, fechaActual);
+        double gastosMesActual = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, inicioMesActual, fechaActual);
+        double balanceActual = transaccionServicio.obtenerBalance(usuarioIdActualLocal, null, fechaActual);
+        double ingresosMesAnterior = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, inicioMesAnterior, finMesAnterior);
+        double gastosMesAnterior = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, inicioMesAnterior, finMesAnterior);
         double cambioIngresos = calcularPorcentajeCambio(ingresosMesActual, ingresosMesAnterior);
         double cambioGastos = calcularPorcentajeCambio(gastosMesActual, gastosMesAnterior);
         double ahorros = balanceActual * 0.3;
@@ -212,7 +212,7 @@ public class DashboardController extends BaseController {
             balanceChange.setTextFill((cambioIngresos - cambioGastos) >= 0 ? Color.rgb(100, 220, 100) : Color.rgb(220, 100, 100));
         }
         if (expensesChange != null) {
-            expensesChange.setText(formatearCambio(-cambioGastos)); // Negativo porque un aumento de gastos es "malo"
+            expensesChange.setText(formatearCambio(-cambioGastos));
             expensesChange.setTextFill(-cambioGastos >= 0 ? Color.rgb(100, 220, 100) : Color.rgb(220, 100, 100));
         }
         if (savingsChange != null) {
@@ -262,7 +262,7 @@ public class DashboardController extends BaseController {
     private void cargarGraficosGastos() {
         LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
         LocalDate hoy = LocalDate.now();
-        Map<String, Double> gastosPorCategoria = transaccionServicio.obtenerGastosPorCategoria(usuarioIdActualLocal, inicioMes, hoy); //
+        Map<String, Double> gastosPorCategoria = transaccionServicio.obtenerGastosPorCategoria(usuarioIdActualLocal, inicioMes, hoy);
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
         for (Map.Entry<String, Double> entry : gastosPorCategoria.entrySet()) {
             pieChartData.add(new PieChart.Data(entry.getKey() + " - €" + String.format("%.2f", entry.getValue()), entry.getValue()));
@@ -337,7 +337,7 @@ public class DashboardController extends BaseController {
 
     @Override
     public void handleDashboardAction(ActionEvent evento) {
-        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual(); // Refrescar usuario
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual();
         if (this.usuarioActualLocal == null) {
             System.err.println("Error crítico: No hay usuario en sesión al re-navegar al Dashboard.");
             if (navegacionServicio != null) {
@@ -360,7 +360,7 @@ public class DashboardController extends BaseController {
     @FXML
     private void handleViewAllTransactionsAction(ActionEvent evento) {
         if (mainPane != null && mainPane.getScene() != null) {
-            navegacionServicio.navegarATransacciones((Stage) mainPane.getScene().getWindow()); //
+            navegacionServicio.navegarATransacciones((Stage) mainPane.getScene().getWindow());
         }
     }
 }

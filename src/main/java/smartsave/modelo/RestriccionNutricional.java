@@ -2,7 +2,6 @@ package smartsave.modelo;
 
 import jakarta.persistence.*;
 
-// Entidad separada para las restricciones nutricionales
 @Entity
 @Table(name = "restricciones_nutricionales")
 public class RestriccionNutricional {
@@ -17,10 +16,8 @@ public class RestriccionNutricional {
     @Column(nullable = false)
     private String restriccion;
 
-    // Constructores
     public RestriccionNutricional() {}
 
-    // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

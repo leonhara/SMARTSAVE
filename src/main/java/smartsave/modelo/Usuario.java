@@ -28,26 +28,23 @@ public class Usuario {
     @Column(name = "ultimo_login")
     private LocalDate ultimoLogin;
 
-    // Nueva columna para la modalidad de ahorro
     @Column(name = "modalidad_ahorro")
-    private String modalidadAhorroSeleccionada; // "Máximo", "Equilibrado" o "Estándar"
+    private String modalidadAhorroSeleccionada;
 
-    // Constructor sin argumentos para JPA
     public Usuario() {
-        this.modalidadAhorroSeleccionada = "Equilibrado"; // Valor por defecto
+        this.modalidadAhorroSeleccionada = "Equilibrado";
     }
 
-    // Constructor con argumentos
+
     public Usuario(String email, String nombre, String apellidos, String contrasenaHash) {
         this.email = email;
         this.nombre = nombre;
         this.apellidos = apellidos;
         this.contrasenaHash = contrasenaHash;
         this.fechaRegistro = LocalDate.now();
-        this.modalidadAhorroSeleccionada = "Equilibrado"; // Valor por defecto
+        this.modalidadAhorroSeleccionada = "Equilibrado";
     }
 
-    // Constructor completo
     public Usuario(String email, String nombre, String apellidos, String contrasenaHash, String modalidadAhorro) {
         this.email = email;
         this.nombre = nombre;
@@ -57,7 +54,6 @@ public class Usuario {
         this.modalidadAhorroSeleccionada = modalidadAhorro;
     }
 
-    // Getters y setters
     public Long getId() {
         return id;
     }
@@ -122,7 +118,6 @@ public class Usuario {
         this.modalidadAhorroSeleccionada = modalidadAhorroSeleccionada;
     }
 
-    // Métodos de utilidad
     public String getNombreCompleto() {
         return nombre + " " + apellidos;
     }
@@ -131,12 +126,10 @@ public class Usuario {
         this.ultimoLogin = LocalDate.now();
     }
 
-    // Método para verificar si ha seleccionado una modalidad de ahorro
     public boolean tieneModalidadAhorro() {
         return modalidadAhorroSeleccionada != null && !modalidadAhorroSeleccionada.isEmpty();
     }
 
-    // Método para obtener el factor de presupuesto según la modalidad
     public double getFactorPresupuesto() {
         switch (modalidadAhorroSeleccionada) {
             case "Máximo":
@@ -146,7 +139,7 @@ public class Usuario {
             case "Estándar":
                 return 1.0;
             default:
-                return 0.85; // Equilibrado por defecto
+                return 0.85;
         }
     }
 }

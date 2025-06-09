@@ -1,7 +1,7 @@
 package smartsave.app;
 
 import javafx.application.Application;
-import javafx.application.Platform; // Necesario para Platform.exit()
+import javafx.application.Platform; 
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -9,8 +9,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import smartsave.config.HibernateConfig; // Asegúrate de importar HibernateConfig
-import smartsave.servicio.ModalidadAhorroServicio; // Importa el servicio
+import smartsave.config.HibernateConfig; 
+import smartsave.servicio.ModalidadAhorroServicio; 
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,7 +47,6 @@ public class SmartSaveApp extends Application {
             System.err.println("Error crítico durante la inicialización de datos base (modalidades de ahorro): " + e.getMessage());
             e.printStackTrace();
 
-            // Mostrar una alerta al usuario sobre el error crítico
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error de Inicialización Crítico");
             alert.setHeaderText("No se pudieron inicializar los datos base de la aplicación (modalidades de ahorro).");
@@ -75,9 +74,6 @@ public class SmartSaveApp extends Application {
         escenarioPrincipal.show();
     }
 
-    /**
-     * Configura los manejadores de eventos para permitir arrastrar la ventana
-     */
     private void configurarVentanaArrastrable(Scene escena, Stage escenario) {
         escena.setOnMousePressed(evento -> {
             offsetX = evento.getSceneX();
@@ -90,10 +86,6 @@ public class SmartSaveApp extends Application {
         });
     }
 
-    /**
-     * Verifica si pip está disponible en el sistema.
-     * @return true si pip está disponible, false en caso contrario.
-     */
     private static boolean isPipAvailable() {
         try {
             ProcessBuilder pb = new ProcessBuilder("pip", "--version");
@@ -115,17 +107,11 @@ public class SmartSaveApp extends Application {
         }
     }
 
-    /**
-     * Intenta instalar las dependencias de Python listadas en requirements.txt.
-     * Asume que Python y pip están instalados y en el PATH.
-     * El archivo requirements.txt debe estar en los recursos del JAR (ej. /api/requirements.txt).
-     * @return true si las dependencias se instalaron/verificaron correctamente o ya estaban presentes, false si hubo un error.
-     */
     private static boolean checkAndInstallPythonDependencies() {
         System.out.println("Verificando e instalando dependencias de Python...");
 
         if (!isPipAvailable()) {
-            // Ya se mostró un mensaje de error en isPipAvailable()
+            
             return false;
         }
 
@@ -137,7 +123,7 @@ public class SmartSaveApp extends Application {
                     return false;
                 }
                 tempRequirementsPath = Files.createTempFile("smartsave_req_", ".txt");
-                tempRequirementsPath.toFile().deleteOnExit(); // Asegura que se borre
+                tempRequirementsPath.toFile().deleteOnExit(); 
 
                 Files.copy(reqStream, tempRequirementsPath, StandardCopyOption.REPLACE_EXISTING);
                 System.out.println("requirements.txt extraído a: " + tempRequirementsPath.toAbsolutePath().toString());
@@ -156,7 +142,7 @@ public class SmartSaveApp extends Application {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.append(line).append(System.lineSeparator());
-                    System.out.println("Salida de pip: " + line); // Loguea cada línea
+                    System.out.println("Salida de pip: " + line); 
                 }
             }
 

@@ -36,10 +36,8 @@ public class HibernateConfig {
      */
     private static void createSessionFactory() {
         try {
-            // Crear la configuración
             Configuration configuration = new Configuration();
 
-            // Configuración de base de datos
             configuration.setProperty("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver");
             configuration.setProperty("hibernate.connection.url",
                     "jdbc:mysql://127.0.0.1:3306/smartsave?useTimezone=true&serverTimezone=Europe/Madrid&useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8");
@@ -48,30 +46,25 @@ public class HibernateConfig {
             configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
             configuration.setProperty("hibernate.connection.provider_class", "com.zaxxer.hikari.hibernate.HikariConnectionProvider");
 
-            // Configuración del esquema
             configuration.setProperty("hibernate.hbm2ddl.auto", "validate");
 
-            // Configuración de logging
             configuration.setProperty("hibernate.show_sql", "true");
             configuration.setProperty("hibernate.format_sql", "true");
             configuration.setProperty("hibernate.use_sql_comments", "true");
 
-            // Configuración de naming strategy
             configuration.setProperty("hibernate.physical_naming_strategy",
                     "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
 
-            // Configuración de performance
             configuration.setProperty("hibernate.jdbc.batch_size", "25");
             configuration.setProperty("hibernate.jdbc.fetch_size", "50");
 
-            // Configuración de pool de conexiones HikariCP
+            //Aqui estan la configuración de pool de conexiones HikariCP
             configuration.setProperty("hibernate.hikari.minimumIdle", "5");
             configuration.setProperty("hibernate.hikari.maximumPoolSize", "20");
             configuration.setProperty("hibernate.hikari.connectionTimeout", "30000");
             configuration.setProperty("hibernate.hikari.idleTimeout", "600000");
             configuration.setProperty("hibernate.hikari.maxLifetime", "1800000");
 
-            // Agregar clases anotadas
             configuration.addAnnotatedClass(Usuario.class);
             configuration.addAnnotatedClass(ModalidadAhorro.class);
             configuration.addAnnotatedClass(Producto.class);
@@ -81,12 +74,10 @@ public class HibernateConfig {
             configuration.addAnnotatedClass(ListaCompra.class);
             configuration.addAnnotatedClass(ItemCompra.class);
 
-            // Crear ServiceRegistry
             StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
                     .applySettings(configuration.getProperties())
                     .build();
 
-            // Crear SessionFactory
             sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
             System.out.println("SessionFactory creada exitosamente");
@@ -98,9 +89,6 @@ public class HibernateConfig {
         }
     }
 
-    /**
-     * Cierra la SessionFactory y libera los recursos
-     */
     public static void shutdown() {
         if (sessionFactory != null && !sessionFactory.isClosed()) {
             try {
@@ -112,17 +100,10 @@ public class HibernateConfig {
         }
     }
 
-    /**
-     * Verifica si la SessionFactory está activa
-     * @return true si está activa, false en caso contrario
-     */
     public static boolean isActive() {
         return sessionFactory != null && !sessionFactory.isClosed();
     }
 
-    /**
-     * Reinicia la SessionFactory (útil para cambios de configuración)
-     */
     public static void restart() {
         shutdown();
         sessionFactory = null;

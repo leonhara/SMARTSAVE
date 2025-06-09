@@ -15,13 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Servicio centralizado para gestionar la navegación entre pantallas de la aplicación.
- * Reduce la duplicación de código en los controladores y centraliza la lógica de navegación.
- */
 public class NavegacionServicio {
 
-    // Constantes para las rutas de los archivos FXML
     private static final String RUTA_DASHBOARD = "/fxml/dashboard.fxml";
     private static final String RUTA_TRANSACCIONES = "/fxml/transacciones.fxml";
     private static final String RUTA_NUTRICION = "/fxml/nutricion.fxml";
@@ -31,10 +26,8 @@ public class NavegacionServicio {
     private static final String RUTA_PERFIL = "/fxml/perfil.fxml";
     private static final String RUTA_LOGIN = "/fxml/login.fxml";
 
-    // Caché para los controladores (opcional, para mantener estado entre navegaciones)
     private final Map<String, Object> controladoresCache = new HashMap<>();
 
-    // Singleton (opcional)
     private static NavegacionServicio instancia;
 
     public static NavegacionServicio getInstancia() {
@@ -45,21 +38,12 @@ public class NavegacionServicio {
     }
 
     private NavegacionServicio() {
-        // Constructor privado para singleton
     }
 
-    /**
-     * Navega a la pantalla especificada y aplica configuraciones opcionales al controlador.
-     *
-     * @param rutaFXML Ruta del archivo FXML
-     * @param titulo Título para la ventana
-     * @param escenarioActual Stage actual
-     * @param configuracionControlador Función para configurar el controlador (opcional)
-     */
     public <T> void navegarA(String rutaFXML, String titulo, Stage escenarioActual,
                              Consumer<T> configuracionControlador) {
         try {
-            // --- PASO 1: Guardar el estado y tamaño actual de la ventana ---
+
             boolean eraMaximizado = escenarioActual.isMaximized();
             double anchoActual = escenarioActual.getWidth();
             double altoActual = escenarioActual.getHeight();
@@ -73,33 +57,23 @@ public class NavegacionServicio {
             }
 
             Scene escena = new Scene(raiz);
-            escena.setFill(Color.TRANSPARENT); // Mantener para ventana personalizada
+            escena.setFill(Color.TRANSPARENT);
 
-            // --- PASO 2: Establecer la nueva escena ---
             escenarioActual.setScene(escena);
             escenarioActual.setTitle("SmartSave - " + titulo);
 
-            // --- PASO 3: Restaurar el estado y tamaño de la ventana ---
             if (eraMaximizado) {
                 escenarioActual.setMaximized(true);
             } else {
-                // Solo restaurar dimensiones si no estaba maximizada
-                // Esto preserva el tamaño si el usuario lo ajustó manualmente
                 escenarioActual.setWidth(anchoActual);
                 escenarioActual.setHeight(altoActual);
             }
-            // Es importante NO llamar a escenarioActual.sizeToScene() si quieres
-            // mantener el tamaño anterior elegido por el usuario.
-
-            // controladoresCache.put(rutaFXML, cargador.getController()); // Si usas caché
 
         } catch (IOException e) {
             mostrarAlertaError("Error de navegación",
                     "Error al cargar la pantalla de " + titulo + ": " + e.getMessage());
         }
     }
-
-    // Métodos específicos de navegación
 
     public void navegarADashboard(Stage escenarioActual) {
         navegarA(RUTA_DASHBOARD, "Dashboard", escenarioActual, null);
@@ -134,11 +108,6 @@ public class NavegacionServicio {
         escenarioActual.centerOnScreen();
     }
 
-    /**
-     * Muestra una alerta con una característica "no implementada".
-     *
-     * @param caracteristica Nombre de la característica
-     */
     public void mostrarAlertaNoImplementado(String caracteristica) {
         Alert alerta = new Alert(Alert.AlertType.INFORMATION);
         alerta.setTitle(caracteristica + " - En desarrollo");
@@ -149,12 +118,6 @@ public class NavegacionServicio {
         alerta.showAndWait();
     }
 
-    /**
-     * Muestra una alerta de error.
-     *
-     * @param titulo Título de la alerta
-     * @param mensaje Mensaje de la alerta
-     */
     public void mostrarAlertaError(String titulo, String mensaje) {
         Alert alerta = new Alert(Alert.AlertType.ERROR);
         alerta.setTitle(titulo);
@@ -165,12 +128,6 @@ public class NavegacionServicio {
         alerta.showAndWait();
     }
 
-    /**
-     * Muestra un diálogo de confirmación para cerrar sesión.
-     *
-     * @param escenarioActual Stage actual
-     * @return true si el usuario confirmó, false en caso contrario
-     */
     public boolean confirmarCerrarSesion(Stage escenarioActual) {
         Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
         alerta.setTitle("Cerrar Sesión");
@@ -190,11 +147,7 @@ public class NavegacionServicio {
         return confirmado;
     }
 
-    /**
-     * Muestra un diálogo de confirmación para eliminar una transacción.
-     *
-     * @return true si el usuario confirmó, false en caso contrario
-     */
+
     public boolean confirmarEliminarTransaccion() {
         Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
         alerta.setTitle("Confirmar eliminación");
@@ -208,12 +161,6 @@ public class NavegacionServicio {
                 .isPresent();
     }
 
-    /**
-     * Muestra una alerta de información.
-     *
-     * @param titulo Título de la alerta
-     * @param mensaje Mensaje de la alerta
-     */
     public void mostrarAlertaInformacion(String titulo, String mensaje) {
         Alert alerta = new Alert(Alert.AlertType.INFORMATION);
         alerta.setTitle(titulo);
@@ -224,11 +171,6 @@ public class NavegacionServicio {
         alerta.showAndWait();
     }
 
-    /**
-     * Aplica estilos de la aplicación a una alerta.
-     *
-     * @param alerta Alerta a estilizar
-     */
     private void estilizarAlerta(Alert alerta) {
         DialogPane dialogPane = alerta.getDialogPane();
         dialogPane.setStyle(
@@ -250,7 +192,6 @@ public class NavegacionServicio {
                             "-fx-border-width: 1px;"
             );
 
-            // Efectos de hover
             node.setOnMouseEntered(e ->
                     node.setStyle(
                             "-fx-background-color: #35354A; " +
@@ -271,12 +212,6 @@ public class NavegacionServicio {
         });
     }
 
-    /**
-     * Muestra un diálogo de confirmación genérico
-     * @param titulo Título del diálogo
-     * @param mensaje Mensaje a mostrar
-     * @return true si el usuario confirmó, false en caso contrario
-     */
     public boolean confirmarAccion(String titulo, String mensaje) {
         Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
         alerta.setTitle(titulo);
@@ -290,20 +225,11 @@ public class NavegacionServicio {
                 .isPresent();
     }
 
-    /**
-     * Muestra un diálogo de confirmación para eliminar una lista
-     * @return true si el usuario confirmó, false en caso contrario
-     */
     public boolean confirmarEliminarLista() {
         return confirmarAccion("Eliminar Lista",
                 "¿Estás seguro de que deseas eliminar esta lista de compra?");
     }
 
-    // Agregar al NavegacionServicio
-
-    /**
-     * Estiliza un diálogo general (para usarse con cualquier tipo de diálogo)
-     */
     public void estilizarDialog(Dialog<?> dialog) {
         DialogPane dialogPane = dialog.getDialogPane();
         dialogPane.setStyle(
@@ -325,7 +251,6 @@ public class NavegacionServicio {
                             "-fx-border-width: 1px;"
             );
 
-            // Efectos de hover
             node.setOnMouseEntered(e ->
                     node.setStyle(
                             "-fx-background-color: #35354A; " +

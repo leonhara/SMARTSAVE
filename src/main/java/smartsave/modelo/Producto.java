@@ -21,7 +21,7 @@ public class Producto {
     private String categoria;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal precio; // Cambiado a BigDecimal
+    private BigDecimal precio;
 
     @Column(nullable = false)
     private String supermercado;
@@ -32,31 +32,29 @@ public class Producto {
     @Embedded
     private NutricionProducto infoNutricional;
 
-    // Clase anidada embebida para la información nutricional - ACTUALIZADA
     @Embeddable
     public static class NutricionProducto {
         @Column(precision = 8, scale = 2)
-        private BigDecimal calorias = BigDecimal.ZERO; // Kcal por 100g/ml
+        private BigDecimal calorias = BigDecimal.ZERO;
 
         @Column(precision = 8, scale = 2)
-        private BigDecimal proteinas = BigDecimal.ZERO; // g por 100g/ml
+        private BigDecimal proteinas = BigDecimal.ZERO;
 
         @Column(precision = 8, scale = 2)
-        private BigDecimal carbohidratos = BigDecimal.ZERO; // g por 100g/ml
+        private BigDecimal carbohidratos = BigDecimal.ZERO;
 
         @Column(precision = 8, scale = 2)
-        private BigDecimal grasas = BigDecimal.ZERO; // g por 100g/ml
+        private BigDecimal grasas = BigDecimal.ZERO;
 
         @Column(precision = 8, scale = 2)
-        private BigDecimal fibra = BigDecimal.ZERO; // g por 100g/ml
+        private BigDecimal fibra = BigDecimal.ZERO;
 
         @Column(precision = 8, scale = 2)
-        private BigDecimal sodio = BigDecimal.ZERO; // mg por 100g/ml
+        private BigDecimal sodio = BigDecimal.ZERO;
 
         @Column(precision = 8, scale = 2)
-        private BigDecimal azucares = BigDecimal.ZERO; // g por 100g/ml
+        private BigDecimal azucares = BigDecimal.ZERO;
 
-        // Constructores
         public NutricionProducto() {}
 
         public NutricionProducto(double calorias, double proteinas, double carbohidratos, double grasas) {
@@ -77,7 +75,6 @@ public class Producto {
             this.azucares = BigDecimal.valueOf(azucares);
         }
 
-        // Getters y setters para BigDecimal (internos)
         public BigDecimal getCaloriasBD() { return calorias; }
         public void setCaloriasBD(BigDecimal calorias) { this.calorias = calorias; }
         public BigDecimal getProteinasBD() { return proteinas; }
@@ -93,7 +90,6 @@ public class Producto {
         public BigDecimal getAzucaresBD() { return azucares; }
         public void setAzucaresBD(BigDecimal azucares) { this.azucares = azucares; }
 
-        // Getters y setters para compatibilidad con double
         public double getCalorias() { return calorias != null ? calorias.doubleValue() : 0.0; }
         public void setCalorias(double calorias) { this.calorias = BigDecimal.valueOf(calorias); }
         public double getProteinas() { return proteinas != null ? proteinas.doubleValue() : 0.0; }
@@ -110,7 +106,6 @@ public class Producto {
         public void setAzucares(double azucares) { this.azucares = BigDecimal.valueOf(azucares); }
     }
 
-    // Constructores
     public Producto() {
         this.infoNutricional = new NutricionProducto();
         this.disponible = true;
@@ -138,7 +133,6 @@ public class Producto {
         this.infoNutricional = new NutricionProducto(calorias, proteinas, carbohidratos, grasas);
     }
 
-    // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNombre() { return nombre; }
@@ -148,7 +142,6 @@ public class Producto {
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
 
-    // Métodos para precio (BigDecimal + compatibilidad con double)
     public BigDecimal getPrecioBD() { return precio; }
     public void setPrecioBD(BigDecimal precio) { this.precio = precio; }
     public double getPrecio() { return precio != null ? precio.doubleValue() : 0.0; }
@@ -161,7 +154,6 @@ public class Producto {
     public NutricionProducto getInfoNutricional() { return infoNutricional; }
     public void setInfoNutricional(NutricionProducto infoNutricional) { this.infoNutricional = infoNutricional; }
 
-    // Métodos adicionales - actualizados para compatibilidad
     public double getRelacionProteinaPrecio() {
         double precioValue = getPrecio();
         if (precioValue <= 0) return 0;

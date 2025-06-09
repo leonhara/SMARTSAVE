@@ -13,10 +13,10 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import smartsave.modelo.Transaccion;
-import smartsave.servicio.SessionManager; // Importar SessionManager
+import smartsave.servicio.SessionManager; 
 import smartsave.servicio.TransaccionServicio;
 import smartsave.utilidad.EstilosApp;
-import smartsave.modelo.Usuario; // Importar Usuario
+import smartsave.modelo.Usuario; 
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -54,8 +54,8 @@ public class TransaccionesController extends BaseController {
 
     private final TransaccionServicio transaccionServicio = new TransaccionServicio();
 
-    private Long usuarioIdActualLocal; // Variable para el ID del usuario en sesión
-    private Usuario usuarioActualLocal; // Variable para el objeto Usuario en sesión
+    private Long usuarioIdActualLocal; 
+    private Usuario usuarioActualLocal; 
     private Transaccion transaccionEnEdicion = null;
     private boolean modoEdicion = false;
 
@@ -89,7 +89,7 @@ public class TransaccionesController extends BaseController {
     }
 
     private void disableUIComponents() {
-        // Deshabilitar componentes principales si no hay usuario
+        
         if (periodoComboBox != null) periodoComboBox.setDisable(true);
         if (tipoFiltroComboBox != null) tipoFiltroComboBox.setDisable(true);
         if (categoriaFiltroComboBox != null) categoriaFiltroComboBox.setDisable(true);
@@ -102,22 +102,22 @@ public class TransaccionesController extends BaseController {
     }
 
     private void aplicarEstilosComponentes() {
-        if (ingresosTotalLabel != null && ingresosTotalLabel.getParent() instanceof Pane) EstilosApp.aplicarEstiloTarjeta((Pane)ingresosTotalLabel.getParent()); //
-        if (gastosTotalLabel != null && gastosTotalLabel.getParent() instanceof Pane) EstilosApp.aplicarEstiloTarjeta((Pane)gastosTotalLabel.getParent()); //
-        if (balanceLabel != null && balanceLabel.getParent() instanceof Pane) EstilosApp.aplicarEstiloTarjeta((Pane)balanceLabel.getParent()); //
-        if (periodoComboBox != null) EstilosApp.aplicarEstiloComboBox(periodoComboBox); //
-        if (tipoFiltroComboBox != null) EstilosApp.aplicarEstiloComboBox(tipoFiltroComboBox); //
-        if (categoriaFiltroComboBox != null) EstilosApp.aplicarEstiloComboBox(categoriaFiltroComboBox); //
-        if (tipoComboBox != null) EstilosApp.aplicarEstiloComboBox(tipoComboBox); //
-        if (categoriaComboBox != null) EstilosApp.aplicarEstiloComboBox(categoriaComboBox); //
-        if (descripcionField != null) EstilosApp.aplicarEstiloCampoTexto(descripcionField); //
-        if (montoField != null) EstilosApp.aplicarEstiloCampoTexto(montoField); //
-        if (fechaPicker != null) EstilosApp.aplicarEstiloDatePicker(fechaPicker); //
-        if (nuevaTransaccionButton != null) EstilosApp.aplicarEstiloBotonPrimario(nuevaTransaccionButton); //
-        if (guardarButton != null) EstilosApp.aplicarEstiloBotonPrimario(guardarButton); //
-        if (gastosPorCategoriaChart != null) EstilosApp.aplicarEstiloGrafico(gastosPorCategoriaChart); //
+        if (ingresosTotalLabel != null && ingresosTotalLabel.getParent() instanceof Pane) EstilosApp.aplicarEstiloTarjeta((Pane)ingresosTotalLabel.getParent()); 
+        if (gastosTotalLabel != null && gastosTotalLabel.getParent() instanceof Pane) EstilosApp.aplicarEstiloTarjeta((Pane)gastosTotalLabel.getParent()); 
+        if (balanceLabel != null && balanceLabel.getParent() instanceof Pane) EstilosApp.aplicarEstiloTarjeta((Pane)balanceLabel.getParent()); 
+        if (periodoComboBox != null) EstilosApp.aplicarEstiloComboBox(periodoComboBox); 
+        if (tipoFiltroComboBox != null) EstilosApp.aplicarEstiloComboBox(tipoFiltroComboBox); 
+        if (categoriaFiltroComboBox != null) EstilosApp.aplicarEstiloComboBox(categoriaFiltroComboBox); 
+        if (tipoComboBox != null) EstilosApp.aplicarEstiloComboBox(tipoComboBox); 
+        if (categoriaComboBox != null) EstilosApp.aplicarEstiloComboBox(categoriaComboBox); 
+        if (descripcionField != null) EstilosApp.aplicarEstiloCampoTexto(descripcionField); 
+        if (montoField != null) EstilosApp.aplicarEstiloCampoTexto(montoField); 
+        if (fechaPicker != null) EstilosApp.aplicarEstiloDatePicker(fechaPicker); 
+        if (nuevaTransaccionButton != null) EstilosApp.aplicarEstiloBotonPrimario(nuevaTransaccionButton); 
+        if (guardarButton != null) EstilosApp.aplicarEstiloBotonPrimario(guardarButton); 
+        if (gastosPorCategoriaChart != null) EstilosApp.aplicarEstiloGrafico(gastosPorCategoriaChart); 
         if (transaccionFormPanel != null && transaccionFormPanel.isVisible()) {
-            EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel); //
+            EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel); 
         }
     }
 
@@ -132,8 +132,8 @@ public class TransaccionesController extends BaseController {
         }
         if (categoriaFiltroComboBox != null) {
             categoriaFiltroComboBox.setItems(FXCollections.observableArrayList("Todas"));
-            categoriaFiltroComboBox.getItems().addAll(transaccionServicio.obtenerCategoriasGastos()); //
-            categoriaFiltroComboBox.getItems().addAll(transaccionServicio.obtenerCategoriasIngresos()); //
+            categoriaFiltroComboBox.getItems().addAll(transaccionServicio.obtenerCategoriasGastos()); 
+            categoriaFiltroComboBox.getItems().addAll(transaccionServicio.obtenerCategoriasIngresos()); 
             categoriaFiltroComboBox.getSelectionModel().selectFirst();
         }
     }
@@ -189,8 +189,8 @@ public class TransaccionesController extends BaseController {
                 } else {
                     setText(String.format("€%.2f", item));
                     Transaccion transaccion = getTableRow() != null ? getTableRow().getItem() : null;
-                    if (transaccion == null && getIndex() >= 0 && getIndex() < getTableView().getItems().size()) { //
-                        transaccion = getTableView().getItems().get(getIndex()); //
+                    if (transaccion == null && getIndex() >= 0 && getIndex() < getTableView().getItems().size()) { 
+                        transaccion = getTableView().getItems().get(getIndex()); 
                     }
                     if (transaccion != null) {
                         setStyle("Ingreso".equals(transaccion.getTipo()) ? colorIngreso : ("Gasto".equals(transaccion.getTipo()) ? colorGasto : colorDefecto));
@@ -223,8 +223,8 @@ public class TransaccionesController extends BaseController {
         if (transaccionesTable == null) return;
         configurarColumnasBasicas();
         configurarColumnaAcciones();
-        EstilosApp.aplicarEstiloTabla(transaccionesTable); //
-        EstilosApp.aplicarEstiloCabecerasTabla(transaccionesTable); //
+        EstilosApp.aplicarEstiloTabla(transaccionesTable); 
+        EstilosApp.aplicarEstiloCabecerasTabla(transaccionesTable); 
     }
 
     private void configurarColumnaAcciones() {
@@ -264,7 +264,7 @@ public class TransaccionesController extends BaseController {
             tipoComboBox.getSelectionModel().selectFirst();
         }
         if (categoriaComboBox != null && transaccionServicio != null) {
-            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasGastos())); //
+            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasGastos())); 
         }
         if (montoField != null) {
             montoField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -281,16 +281,16 @@ public class TransaccionesController extends BaseController {
         if (tipoComboBox == null || categoriaComboBox == null || transaccionServicio == null) return;
         String tipoSeleccionado = tipoComboBox.getValue();
         if ("Ingreso".equals(tipoSeleccionado)) {
-            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasIngresos())); //
+            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasIngresos())); 
         } else {
-            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasGastos())); //
+            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasGastos())); 
         }
         categoriaComboBox.getSelectionModel().selectFirst();
     }
 
     private void cargarDatos() {
-        if (usuarioIdActualLocal == null) { // Verificar si el ID es nulo
-            disableUIComponents(); // Deshabilitar/limpiar UI si no hay usuario
+        if (usuarioIdActualLocal == null) { 
+            disableUIComponents(); 
             return;
         }
         if (periodoComboBox == null || tipoFiltroComboBox == null || categoriaFiltroComboBox == null || transaccionesTable == null) return;
@@ -322,14 +322,14 @@ public class TransaccionesController extends BaseController {
         List<Transaccion> transacciones;
         if ("Todas".equals(categoriaSeleccionada)) {
             if ("Todos".equals(tipoSeleccionado)) {
-                transacciones = transaccionServicio.obtenerTransaccionesPorPeriodo(usuarioIdActualLocal, fechaInicio, fechaFin); //
+                transacciones = transaccionServicio.obtenerTransaccionesPorPeriodo(usuarioIdActualLocal, fechaInicio, fechaFin); 
             } else {
                 String tipo = "Ingresos".equals(tipoSeleccionado) ? "Ingreso" : "Gasto";
-                transacciones = transaccionServicio.obtenerTransaccionesPorTipo(usuarioIdActualLocal, tipo); //
+                transacciones = transaccionServicio.obtenerTransaccionesPorTipo(usuarioIdActualLocal, tipo); 
                 transacciones = transacciones.stream().filter(t -> !t.getFecha().isBefore(fechaInicio) && !t.getFecha().isAfter(fechaFin)).toList();
             }
         } else {
-            transacciones = transaccionServicio.obtenerTransaccionesPorCategoria(usuarioIdActualLocal, categoriaSeleccionada); //
+            transacciones = transaccionServicio.obtenerTransaccionesPorCategoria(usuarioIdActualLocal, categoriaSeleccionada); 
             final String tipoFiltro = determinarTipoFiltro(tipoSeleccionado);
             transacciones = transacciones.stream().filter(t -> !t.getFecha().isBefore(fechaInicio) && !t.getFecha().isAfter(fechaFin))
                     .filter(t -> tipoFiltro == null || t.getTipo().equals(tipoFiltro)).toList();
@@ -345,8 +345,8 @@ public class TransaccionesController extends BaseController {
 
     private void actualizarResumenFinanciero(LocalDate fechaInicio, LocalDate fechaFin) {
         if (ingresosTotalLabel == null || gastosTotalLabel == null || balanceLabel == null) return;
-        double totalIngresos = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, fechaInicio, fechaFin); //
-        double totalGastos = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, fechaInicio, fechaFin); //
+        double totalIngresos = transaccionServicio.obtenerTotalIngresos(usuarioIdActualLocal, fechaInicio, fechaFin); 
+        double totalGastos = transaccionServicio.obtenerTotalGastos(usuarioIdActualLocal, fechaInicio, fechaFin); 
         double balance = totalIngresos - totalGastos;
         ingresosTotalLabel.setText(String.format("€%.2f", totalIngresos));
         gastosTotalLabel.setText(String.format("€%.2f", totalGastos));
@@ -356,7 +356,7 @@ public class TransaccionesController extends BaseController {
 
     private void actualizarGraficoDistribucion(LocalDate fechaInicio, LocalDate fechaFin) {
         if (gastosPorCategoriaChart == null) return;
-        Map<String, Double> gastosPorCategoria = transaccionServicio.obtenerGastosPorCategoria(usuarioIdActualLocal, fechaInicio, fechaFin); //
+        Map<String, Double> gastosPorCategoria = transaccionServicio.obtenerGastosPorCategoria(usuarioIdActualLocal, fechaInicio, fechaFin); 
         ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
         for (Map.Entry<String, Double> entry : gastosPorCategoria.entrySet()) {
             pieChartData.add(new PieChart.Data(entry.getKey() + " - €" + String.format("%.2f", entry.getValue()), entry.getValue()));
@@ -384,7 +384,7 @@ public class TransaccionesController extends BaseController {
         categoriaComboBox.getSelectionModel().selectFirst();
         montoField.clear();
         mostrarFormularioTransaccion(true);
-        EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel); //
+        EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel); 
     }
 
     private void editarTransaccion(Transaccion transaccion) {
@@ -396,24 +396,24 @@ public class TransaccionesController extends BaseController {
         fechaPicker.setValue(transaccion.getFecha());
         descripcionField.setText(transaccion.getDescripcion());
         if ("Ingreso".equals(transaccion.getTipo())) {
-            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasIngresos())); //
+            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasIngresos())); 
         } else {
-            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasGastos())); //
+            categoriaComboBox.setItems(FXCollections.observableArrayList(transaccionServicio.obtenerCategoriasGastos())); 
         }
         categoriaComboBox.setValue(transaccion.getCategoria());
         montoField.setText(String.format("%.2f", transaccion.getMonto()));
         mostrarFormularioTransaccion(true);
-        EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel); //
+        EstilosApp.aplicarEstiloTarjeta(transaccionFormPanel); 
     }
 
     private void eliminarTransaccion(Transaccion transaccion) {
-        if (navegacionServicio.confirmarEliminarTransaccion()) { //
-            boolean eliminada = transaccionServicio.eliminarTransaccion(transaccion.getId(), usuarioIdActualLocal); //
+        if (navegacionServicio.confirmarEliminarTransaccion()) { 
+            boolean eliminada = transaccionServicio.eliminarTransaccion(transaccion.getId(), usuarioIdActualLocal); 
             if (eliminada) {
                 cargarDatos();
-                navegacionServicio.mostrarAlertaInformacion("Transacción eliminada", "La transacción ha sido eliminada correctamente."); //
+                navegacionServicio.mostrarAlertaInformacion("Transacción eliminada", "La transacción ha sido eliminada correctamente."); 
             } else {
-                navegacionServicio.mostrarAlertaError("Error al eliminar", "No se pudo eliminar la transacción. Inténtalo de nuevo."); //
+                navegacionServicio.mostrarAlertaError("Error al eliminar", "No se pudo eliminar la transacción. Inténtalo de nuevo."); 
             }
         }
     }
@@ -428,21 +428,21 @@ public class TransaccionesController extends BaseController {
         double monto = Double.parseDouble(montoField.getText().trim());
 
         if (modoEdicion && transaccionEnEdicion != null) {
-            transaccionEnEdicion.setTipo(tipo); //
-            transaccionEnEdicion.setFecha(fecha); //
-            transaccionEnEdicion.setDescripcion(descripcion); //
-            transaccionEnEdicion.setCategoria(categoria); //
-            transaccionEnEdicion.setMonto(monto); //
-            boolean actualizada = transaccionServicio.actualizarTransaccion(transaccionEnEdicion); //
+            transaccionEnEdicion.setTipo(tipo); 
+            transaccionEnEdicion.setFecha(fecha); 
+            transaccionEnEdicion.setDescripcion(descripcion); 
+            transaccionEnEdicion.setCategoria(categoria); 
+            transaccionEnEdicion.setMonto(monto); 
+            boolean actualizada = transaccionServicio.actualizarTransaccion(transaccionEnEdicion); 
             if (actualizada) {
-                navegacionServicio.mostrarAlertaInformacion("Transacción actualizada", "La transacción ha sido actualizada correctamente."); //
+                navegacionServicio.mostrarAlertaInformacion("Transacción actualizada", "La transacción ha sido actualizada correctamente."); 
             } else {
-                navegacionServicio.mostrarAlertaError("Error al actualizar", "No se pudo actualizar la transacción. Inténtalo de nuevo."); //
+                navegacionServicio.mostrarAlertaError("Error al actualizar", "No se pudo actualizar la transacción. Inténtalo de nuevo."); 
             }
         } else {
-            Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, categoria, monto, tipo); //
-            transaccionServicio.agregarTransaccion(nuevaTransaccion, usuarioIdActualLocal); //
-            navegacionServicio.mostrarAlertaInformacion("Transacción registrada", "La transacción ha sido registrada correctamente."); //
+            Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, categoria, monto, tipo); 
+            transaccionServicio.agregarTransaccion(nuevaTransaccion, usuarioIdActualLocal); 
+            navegacionServicio.mostrarAlertaInformacion("Transacción registrada", "La transacción ha sido registrada correctamente."); 
         }
         mostrarFormularioTransaccion(false);
         cargarDatos();
@@ -452,17 +452,17 @@ public class TransaccionesController extends BaseController {
         if (tipoComboBox == null || fechaPicker == null || descripcionField == null || categoriaComboBox == null || montoField == null ||
                 tipoComboBox.getValue() == null || fechaPicker.getValue() == null || descripcionField.getText().trim().isEmpty() ||
                 categoriaComboBox.getValue() == null || montoField.getText().trim().isEmpty()) {
-            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos."); //
+            navegacionServicio.mostrarAlertaError("Campos incompletos", "Por favor, completa todos los campos."); 
             return false;
         }
         try {
             double monto = Double.parseDouble(montoField.getText().trim());
             if (monto <= 0) {
-                navegacionServicio.mostrarAlertaError("Monto inválido", "El monto debe ser mayor que cero."); //
+                navegacionServicio.mostrarAlertaError("Monto inválido", "El monto debe ser mayor que cero."); 
                 return false;
             }
         } catch (NumberFormatException e) {
-            navegacionServicio.mostrarAlertaError("Monto inválido", "Por favor, ingresa un valor numérico válido."); //
+            navegacionServicio.mostrarAlertaError("Monto inválido", "Por favor, ingresa un valor numérico válido."); 
             return false;
         }
         return true;
@@ -479,7 +479,7 @@ public class TransaccionesController extends BaseController {
 
     @Override
     public void handleTransactionsAction(ActionEvent evento) {
-        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual(); // Refrescar usuario
+        this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual(); 
         if (this.usuarioActualLocal == null) {
             System.err.println("Error crítico: No hay usuario en sesión al re-navegar a Transacciones.");
             if (navegacionServicio != null) {

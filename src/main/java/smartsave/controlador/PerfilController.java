@@ -17,7 +17,7 @@ import javafx.stage.Stage;
 import smartsave.modelo.ListaCompra;
 import smartsave.modelo.PerfilNutricional;
 import smartsave.modelo.Usuario;
-import smartsave.servicio.*; // Asegúrate que SessionManager está aquí o importa específicamente
+import smartsave.servicio.*;
 import smartsave.utilidad.EstilosApp;
 import smartsave.utilidad.ValidacionUtil;
 
@@ -29,20 +29,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-// Eliminada la importación de Optional ya que no se usa explícitamente su tipo en el código.
-// La funcionalidad de dialog.showAndWait().ifPresent() no requiere la importación directa de Optional.
+
+
 import java.util.stream.Collectors;
 
-/**
- * Controlador para la vista de Perfil de Usuario.
- * Gestiona la presentación y modificación de los datos del perfil del usuario,
- * incluyendo información personal, modalidad de ahorro, resumen financiero y acciones como
- * exportar datos o eliminar la cuenta.
- * Extiende BaseController para heredar funcionalidad común de navegación y estilos.
- */
+
 public class PerfilController extends BaseController {
 
-    //Estos son los componentes que se sacan del fxml asociado
+
     @FXML private Circle profilePhotoCircle;
     @FXML private ImageView profilePhoto;
     @FXML private Button cambiarFotoButton;
@@ -53,43 +47,43 @@ public class PerfilController extends BaseController {
     @FXML private Label ultimoAccesoLabel;
     @FXML private Button editarDatosButton;
 
-    // Componentes FXML para la modalidad de ahorro
+
     @FXML private Label modalidadActualLabel;
     @FXML private Button cambiarModalidadButton;
     @FXML private Label descripcionModalidadLabel;
 
-    // Componentes FXML para el resumen financiero
+
     @FXML private Label balanceActualLabel;
     @FXML private Label totalAhorradoLabel;
     @FXML private Label gastosMesLabel;
     @FXML private Label ingresosMesLabel;
     @FXML private Label diasUsandoAppLabel;
 
-    // Componentes FXML para acciones del perfil
+
     @FXML private Button configurarPerfilButton;
     @FXML private Button exportarDatosButton;
     @FXML private Button eliminarCuentaButton;
 
-    // Servicios necesarios para la lógica del controlador
+
     private final UsuarioServicio usuarioServicio = new UsuarioServicio();
     private final TransaccionServicio transaccionServicio = new TransaccionServicio();
     private final PerfilNutricionalServicio perfilNutricionalServicio = new PerfilNutricionalServicio();
     private final ListaCompraServicio listaCompraServicio = new ListaCompraServicio();
 
-    // Variables de estado para el usuario actual (obtenidas de SessionManager)
+
     private Long usuarioIdActualLocal;
     private Usuario usuarioActualLocal;
 
     @Override
     protected void inicializarControlador() {
-        // Obtener el usuario de la sesión actual
+
         this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual();
 
         if (this.usuarioActualLocal == null) {
             System.err.println("Error crítico: No hay usuario en sesión en PerfilController.");
             if (navegacionServicio != null) {
                 navegacionServicio.mostrarAlertaError("Error de Sesión", "No se pudo identificar al usuario. Por favor, inicie sesión de nuevo.");
-                // Opcional: Redirigir a login
+
                 if (mainPane != null && mainPane.getScene() != null && mainPane.getScene().getWindow() instanceof Stage) {
                     Stage stage = (Stage) mainPane.getScene().getWindow();
                     if (stage != null) {
@@ -97,7 +91,7 @@ public class PerfilController extends BaseController {
                     }
                 }
             }
-            disableUIComponents(); // Deshabilitar componentes si no hay usuario
+            disableUIComponents();
             return;
         }
 
@@ -113,7 +107,7 @@ public class PerfilController extends BaseController {
     }
 
     private void disableUIComponents() {
-        // Deshabilitar botones y limpiar etiquetas si no hay usuario
+
         if(cambiarFotoButton != null) cambiarFotoButton.setDisable(true);
         if(editarDatosButton != null) editarDatosButton.setDisable(true);
         if(cambiarModalidadButton != null) cambiarModalidadButton.setDisable(true);
@@ -190,21 +184,21 @@ public class PerfilController extends BaseController {
 
     private void cargarDatosUsuario() {
         if (usuarioActualLocal != null) {
-            if (nombreCompletoLabel != null) nombreCompletoLabel.setText(usuarioActualLocal.getNombreCompleto()); //
-            if (emailLabel != null) emailLabel.setText(usuarioActualLocal.getEmail()); //
+            if (nombreCompletoLabel != null) nombreCompletoLabel.setText(usuarioActualLocal.getNombreCompleto());
+            if (emailLabel != null) emailLabel.setText(usuarioActualLocal.getEmail());
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            if (fechaRegistroLabel != null) fechaRegistroLabel.setText(usuarioActualLocal.getFechaRegistro() != null ? usuarioActualLocal.getFechaRegistro().format(formatter) : "N/A"); //
+            if (fechaRegistroLabel != null) fechaRegistroLabel.setText(usuarioActualLocal.getFechaRegistro() != null ? usuarioActualLocal.getFechaRegistro().format(formatter) : "N/A");
 
             if (ultimoAccesoLabel != null) {
-                ultimoAccesoLabel.setText(usuarioActualLocal.getUltimoLogin() != null ? usuarioActualLocal.getUltimoLogin().format(formatter) : "Nunca"); //
+                ultimoAccesoLabel.setText(usuarioActualLocal.getUltimoLogin() != null ? usuarioActualLocal.getUltimoLogin().format(formatter) : "Nunca");
             }
 
-            if (modalidadActualLabel != null) modalidadActualLabel.setText(usuarioActualLocal.getModalidadAhorroSeleccionada() != null ? usuarioActualLocal.getModalidadAhorroSeleccionada() : "No definida"); //
+            if (modalidadActualLabel != null) modalidadActualLabel.setText(usuarioActualLocal.getModalidadAhorroSeleccionada() != null ? usuarioActualLocal.getModalidadAhorroSeleccionada() : "No definida");
 
             String descModalidad = "Modalidad no definida.";
-            if (usuarioActualLocal.getModalidadAhorroSeleccionada() != null) { //
-                switch (usuarioActualLocal.getModalidadAhorroSeleccionada()) { //
+            if (usuarioActualLocal.getModalidadAhorroSeleccionada() != null) {
+                switch (usuarioActualLocal.getModalidadAhorroSeleccionada()) {
                     case "Máximo": descModalidad = "Maximiza tu ahorro priorizando los precios más bajos."; break;
                     case "Equilibrado": descModalidad = "Balance perfecto entre ahorro y calidad nutricional."; break;
                     case "Estándar": descModalidad = "Prioriza la calidad nutricional manteniendo un presupuesto razonable."; break;
@@ -212,7 +206,7 @@ public class PerfilController extends BaseController {
             }
             if (descripcionModalidadLabel != null) descripcionModalidadLabel.setText(descModalidad);
         } else {
-            // Si usuarioActualLocal es null, llama a disableUIComponents para limpiar y deshabilitar la UI.
+
             disableUIComponents();
         }
     }
@@ -227,14 +221,14 @@ public class PerfilController extends BaseController {
             return;
         }
 
-        long diasUsando = LocalDate.now().toEpochDay() - usuarioActualLocal.getFechaRegistro().toEpochDay(); //
+        long diasUsando = LocalDate.now().toEpochDay() - usuarioActualLocal.getFechaRegistro().toEpochDay();
         if (diasUsandoAppLabel != null) diasUsandoAppLabel.setText(diasUsando + " días");
 
         LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
-        double ingresosMes = transaccionServicio.obtenerTotalIngresos(this.usuarioIdActualLocal, inicioMes, LocalDate.now()); //
-        double gastosMes = transaccionServicio.obtenerTotalGastos(this.usuarioIdActualLocal, inicioMes, LocalDate.now()); //
-        double balance = transaccionServicio.obtenerBalance(this.usuarioIdActualLocal, null, LocalDate.now()); //
-        double totalAhorrado = balance * 0.3; // Simulación
+        double ingresosMes = transaccionServicio.obtenerTotalIngresos(this.usuarioIdActualLocal, inicioMes, LocalDate.now());
+        double gastosMes = transaccionServicio.obtenerTotalGastos(this.usuarioIdActualLocal, inicioMes, LocalDate.now());
+        double balance = transaccionServicio.obtenerBalance(this.usuarioIdActualLocal, null, LocalDate.now());
+        double totalAhorrado = balance * 0.3;
 
         if (balanceActualLabel != null) balanceActualLabel.setText(String.format("€%.2f", balance));
         if (totalAhorradoLabel != null) totalAhorradoLabel.setText(String.format("€%.2f", totalAhorrado));
@@ -292,16 +286,16 @@ public class PerfilController extends BaseController {
         grid.setVgap(10);
         grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
 
-        TextField nombreField = new TextField(usuarioActualLocal.getNombre()); //
+        TextField nombreField = new TextField(usuarioActualLocal.getNombre());
         nombreField.setPromptText("Nombre");
-        TextField apellidosField = new TextField(usuarioActualLocal.getApellidos()); //
+        TextField apellidosField = new TextField(usuarioActualLocal.getApellidos());
         apellidosField.setPromptText("Apellidos");
-        TextField emailFieldDialog = new TextField(usuarioActualLocal.getEmail()); //
+        TextField emailFieldDialog = new TextField(usuarioActualLocal.getEmail());
         emailFieldDialog.setPromptText("Email");
 
-        EstilosApp.aplicarEstiloCampoTexto(nombreField); //
-        EstilosApp.aplicarEstiloCampoTexto(apellidosField); //
-        EstilosApp.aplicarEstiloCampoTexto(emailFieldDialog); //
+        EstilosApp.aplicarEstiloCampoTexto(nombreField);
+        EstilosApp.aplicarEstiloCampoTexto(apellidosField);
+        EstilosApp.aplicarEstiloCampoTexto(emailFieldDialog);
 
         grid.add(new Label("Nombre:"), 0, 0);
         grid.add(nombreField, 1, 0);
@@ -313,7 +307,7 @@ public class PerfilController extends BaseController {
         dialog.getDialogPane().setContent(grid);
         Platform.runLater(nombreField::requestFocus);
 
-        navegacionServicio.estilizarDialog(dialog); //
+        navegacionServicio.estilizarDialog(dialog);
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == guardarButtonType) {
@@ -331,16 +325,16 @@ public class PerfilController extends BaseController {
                 navegacionServicio.mostrarAlertaError("Campos Vacíos", "Todos los campos son obligatorios.");
                 return;
             }
-            if (!ValidacionUtil.esEmailValido(email)) { //
+            if (!ValidacionUtil.esEmailValido(email)) {
                 navegacionServicio.mostrarAlertaError("Email Inválido", "El email no tiene un formato válido.");
                 return;
             }
 
-            usuarioActualLocal.setNombre(nombre); //
-            usuarioActualLocal.setApellidos(apellidos); //
-            usuarioActualLocal.setEmail(email); //
+            usuarioActualLocal.setNombre(nombre);
+            usuarioActualLocal.setApellidos(apellidos);
+            usuarioActualLocal.setEmail(email);
 
-            if (usuarioServicio.actualizarUsuario(usuarioActualLocal)) { //
+            if (usuarioServicio.actualizarUsuario(usuarioActualLocal)) {
                 cargarDatosUsuario();
                 navegacionServicio.mostrarAlertaInformacion("Datos Actualizados",
                         "Tus datos personales han sido actualizados correctamente.");
@@ -357,17 +351,16 @@ public class PerfilController extends BaseController {
             return;
         }
         ChoiceDialog<String> dialog = new ChoiceDialog<>(
-                usuarioActualLocal.getModalidadAhorroSeleccionada() != null ? usuarioActualLocal.getModalidadAhorroSeleccionada() : "Equilibrado", //
+                usuarioActualLocal.getModalidadAhorroSeleccionada() != null ? usuarioActualLocal.getModalidadAhorroSeleccionada() : "Equilibrado",
                 "Máximo", "Equilibrado", "Estándar");
         dialog.setTitle("Cambiar Modalidad de Ahorro");
         dialog.setHeaderText("Selecciona tu modalidad de ahorro preferida");
         dialog.setContentText("Modalidad:");
 
-        navegacionServicio.estilizarDialog(dialog); //
-
+        navegacionServicio.estilizarDialog(dialog);
         dialog.showAndWait().ifPresent(modalidad -> {
-            usuarioActualLocal.setModalidadAhorroSeleccionada(modalidad); //
-            if (usuarioServicio.actualizarUsuario(usuarioActualLocal)) { //
+            usuarioActualLocal.setModalidadAhorroSeleccionada(modalidad);
+            if (usuarioServicio.actualizarUsuario(usuarioActualLocal)) {
                 cargarDatosUsuario();
                 navegacionServicio.mostrarAlertaInformacion("Modalidad Actualizada",
                         "Tu modalidad de ahorro ha sido cambiada a: " + modalidad);
@@ -381,7 +374,7 @@ public class PerfilController extends BaseController {
     private void handleConfigurarPerfilAction(ActionEvent evento) {
         Stage stage = obtenerEscenarioActual();
         if (stage != null) {
-            navegacionServicio.navegarAConfiguracion(stage); //
+            navegacionServicio.navegarAConfiguracion(stage);
         } else {
             navegacionServicio.mostrarAlertaError("Error de Navegación", "No se pudo obtener la ventana actual para navegar a configuración.");
         }
@@ -393,14 +386,13 @@ public class PerfilController extends BaseController {
             navegacionServicio.mostrarAlertaError("Exportación Fallida", "No hay datos de usuario cargados para exportar.");
             return;
         }
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Exportar Datos del Perfil");
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Archivo JSON", "*.json")
         );
-        String nombreBase = (usuarioActualLocal.getNombre() != null && !usuarioActualLocal.getNombre().isEmpty()) ? //
-                usuarioActualLocal.getNombre().toLowerCase() : "usuario"; //
+        String nombreBase = (usuarioActualLocal.getNombre() != null && !usuarioActualLocal.getNombre().isEmpty()) ?
+                usuarioActualLocal.getNombre().toLowerCase() : "usuario";
         String nombreArchivoSugerido = "datos_perfil_" + nombreBase.replace(" ", "_") + ".json";
         fileChooser.setInitialFileName(nombreArchivoSugerido);
 
@@ -414,36 +406,35 @@ public class PerfilController extends BaseController {
         if (file != null) {
             try {
                 Map<String, Object> datosExportar = new HashMap<>();
-
                 Map<String, Object> infoUsuario = new HashMap<>();
-                infoUsuario.put("idUsuario", usuarioActualLocal.getId()); //
-                infoUsuario.put("nombreCompleto", usuarioActualLocal.getNombreCompleto()); //
-                infoUsuario.put("email", usuarioActualLocal.getEmail()); //
-                infoUsuario.put("fechaRegistro", usuarioActualLocal.getFechaRegistro() != null ? usuarioActualLocal.getFechaRegistro().toString() : "N/A"); //
-                infoUsuario.put("ultimoLogin", usuarioActualLocal.getUltimoLogin() != null ? usuarioActualLocal.getUltimoLogin().toString() : "N/A"); //
-                infoUsuario.put("modalidadAhorroSeleccionada", usuarioActualLocal.getModalidadAhorroSeleccionada() != null ? usuarioActualLocal.getModalidadAhorroSeleccionada() : "No definida"); //
+                infoUsuario.put("idUsuario", usuarioActualLocal.getId());
+                infoUsuario.put("nombreCompleto", usuarioActualLocal.getNombreCompleto());
+                infoUsuario.put("email", usuarioActualLocal.getEmail());
+                infoUsuario.put("fechaRegistro", usuarioActualLocal.getFechaRegistro() != null ? usuarioActualLocal.getFechaRegistro().toString() : "N/A");
+                infoUsuario.put("ultimoLogin", usuarioActualLocal.getUltimoLogin() != null ? usuarioActualLocal.getUltimoLogin().toString() : "N/A");
+                infoUsuario.put("modalidadAhorroSeleccionada", usuarioActualLocal.getModalidadAhorroSeleccionada() != null ? usuarioActualLocal.getModalidadAhorroSeleccionada() : "No definida");
                 datosExportar.put("informacionUsuario", infoUsuario);
 
                 Map<String, Object> resumenFinanciero = new HashMap<>();
                 LocalDate hoy = LocalDate.now();
-                resumenFinanciero.put("totalTransacciones", transaccionServicio.obtenerTransaccionesPorUsuario(this.usuarioIdActualLocal).size()); //
-                resumenFinanciero.put("totalIngresosGenerales", String.format("%.2f", transaccionServicio.obtenerTotalIngresos(this.usuarioIdActualLocal, null, hoy))); //
-                resumenFinanciero.put("totalGastosGenerales", String.format("%.2f", transaccionServicio.obtenerTotalGastos(this.usuarioIdActualLocal, null, hoy))); //
-                resumenFinanciero.put("balanceActualGeneral", String.format("%.2f", transaccionServicio.obtenerBalance(this.usuarioIdActualLocal, null, hoy))); //
+                resumenFinanciero.put("totalTransacciones", transaccionServicio.obtenerTransaccionesPorUsuario(this.usuarioIdActualLocal).size());
+                resumenFinanciero.put("totalIngresosGenerales", String.format("%.2f", transaccionServicio.obtenerTotalIngresos(this.usuarioIdActualLocal, null, hoy)));
+                resumenFinanciero.put("totalGastosGenerales", String.format("%.2f", transaccionServicio.obtenerTotalGastos(this.usuarioIdActualLocal, null, hoy)));
+                resumenFinanciero.put("balanceActualGeneral", String.format("%.2f", transaccionServicio.obtenerBalance(this.usuarioIdActualLocal, null, hoy)));
                 datosExportar.put("resumenFinanciero", resumenFinanciero);
 
-                if (perfilNutricionalServicio.tienePerfil(this.usuarioIdActualLocal)) { //
-                    PerfilNutricional perfil = perfilNutricionalServicio.obtenerPerfilPorUsuario(this.usuarioIdActualLocal); //
+                if (perfilNutricionalServicio.tienePerfil(this.usuarioIdActualLocal)) {
+                    PerfilNutricional perfil = perfilNutricionalServicio.obtenerPerfilPorUsuario(this.usuarioIdActualLocal);
                     if (perfil != null) {
                         Map<String, Object> resumenNutricional = new HashMap<>();
-                        resumenNutricional.put("imc", String.format("%.1f", perfil.getImc())); //
-                        resumenNutricional.put("categoriaImc", perfil.getCategoriaIMC()); //
-                        resumenNutricional.put("caloriasDiariasRecomendadas", perfil.getCaloriasDiarias()); //
-                        PerfilNutricional.MacronutrientesDiarios macros = perfil.getMacronutrientesDiarios(); //
+                        resumenNutricional.put("imc", String.format("%.1f", perfil.getImc()));
+                        resumenNutricional.put("categoriaImc", perfil.getCategoriaIMC());
+                        resumenNutricional.put("caloriasDiariasRecomendadas", perfil.getCaloriasDiarias());
+                        PerfilNutricional.MacronutrientesDiarios macros = perfil.getMacronutrientesDiarios();
                         resumenNutricional.put("proteinasRecomendadasGramos", macros.getProteinas());
                         resumenNutricional.put("carbohidratosRecomendadosGramos", macros.getCarbohidratos());
                         resumenNutricional.put("grasasRecomendadasGramos", macros.getGrasas());
-                        resumenNutricional.put("restricciones", perfil.getRestricciones().isEmpty() ? "Ninguna" : String.join(", ", perfil.getRestricciones())); //
+                        resumenNutricional.put("restricciones", perfil.getRestricciones().isEmpty() ? "Ninguna" : String.join(", ", perfil.getRestricciones()));
                         datosExportar.put("resumenNutricional", resumenNutricional);
                     } else {
                         datosExportar.put("resumenNutricional", "El perfil nutricional existe pero no se pudo cargar para la exportación.");
@@ -452,19 +443,17 @@ public class PerfilController extends BaseController {
                     datosExportar.put("resumenNutricional", "No existe perfil nutricional creado para este usuario.");
                 }
 
-                List<ListaCompra> listasActivas = listaCompraServicio.obtenerListasActivas(this.usuarioIdActualLocal); //
+                List<ListaCompra> listasActivas = listaCompraServicio.obtenerListasActivas(this.usuarioIdActualLocal);
                 datosExportar.put("numeroListasCompraActivas", listasActivas.size());
                 if (!listasActivas.isEmpty()) {
-                    datosExportar.put("nombresListasActivas", listasActivas.stream().map(ListaCompra::getNombre).collect(Collectors.toList())); //
+                    datosExportar.put("nombresListasActivas", listasActivas.stream().map(ListaCompra::getNombre).collect(Collectors.toList()));
                 }
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
                 try (FileWriter fileWriter = new FileWriter(file)) {
                     objectMapper.writeValue(fileWriter, datosExportar);
                 }
-
                 navegacionServicio.mostrarAlertaInformacion("Datos Exportados",
                         "Los datos de tu perfil han sido exportados correctamente a:\n" + file.getAbsolutePath());
 
@@ -495,7 +484,7 @@ public class PerfilController extends BaseController {
                 "¿Deseas continuar con la eliminación?");
 
         DialogPane dialogPane = confirmacion.getDialogPane();
-        EstilosApp.aplicarEstiloDialogPane(dialogPane); //
+        EstilosApp.aplicarEstiloDialogPane(dialogPane);
 
         confirmacion.showAndWait().ifPresent(respuesta -> {
             if (respuesta == ButtonType.OK) {
@@ -504,19 +493,19 @@ public class PerfilController extends BaseController {
                 dialog.setHeaderText("Para confirmar la eliminación PERMANENTE de tu cuenta, escribe la palabra 'ELIMINAR' en el campo de abajo.");
                 dialog.setContentText("Texto de confirmación:");
 
-                navegacionServicio.estilizarDialog(dialog); //
+                navegacionServicio.estilizarDialog(dialog);
 
                 dialog.showAndWait().ifPresent(texto -> {
                     if ("ELIMINAR".equals(texto.trim())) {
-                        boolean eliminado = usuarioServicio.eliminarUsuario(usuarioActualLocal.getEmail()); //
+                        boolean eliminado = usuarioServicio.eliminarUsuario(usuarioActualLocal.getEmail());
                         if (eliminado) {
                             navegacionServicio.mostrarAlertaInformacion("Cuenta Eliminada",
                                     "Tu cuenta ha sido eliminada permanentemente.\n" +
                                             "Gracias por usar SmartSave. Esperamos verte de nuevo.");
                             Stage stageActual = obtenerEscenarioActual();
                             if (stageActual != null) {
-                                SessionManager.getInstancia().cerrarSesion(); // Cerrar sesión antes de navegar
-                                navegacionServicio.navegarALogin(stageActual); //
+                                SessionManager.getInstancia().cerrarSesion();
+                                navegacionServicio.navegarALogin(stageActual);
                             }
                         } else {
                             navegacionServicio.mostrarAlertaError("Error al Eliminar", "No se pudo eliminar la cuenta. Es posible que el usuario ya no exista o haya ocurrido un problema con la base de datos. Por favor, contacta a soporte si el problema persiste.");
@@ -534,17 +523,16 @@ public class PerfilController extends BaseController {
 
     @Override
     public void handleProfileAction(ActionEvent evento) {
-        // Refrescar el usuario desde SessionManager por si hubo cambios en otra parte
+
         this.usuarioActualLocal = SessionManager.getInstancia().getUsuarioActual();
         if (this.usuarioActualLocal != null) {
             this.usuarioIdActualLocal = this.usuarioActualLocal.getId();
-            // Recargar los datos que dependen del usuario
+
             cargarDatosUsuario();
             cargarDatosFinancieros();
         } else {
-            // Si por alguna razón el usuario ya no está en sesión, manejarlo.
             System.err.println("PerfilController: Se intentó recargar el perfil, pero el usuario en sesión era null. Reintentando inicialización completa.");
-            inicializarControlador(); // Esto podría re-redirigir a login si es necesario.
+            inicializarControlador();
         }
         if (profileButton != null) {
             activarBoton(profileButton);
@@ -555,7 +543,6 @@ public class PerfilController extends BaseController {
         if (mainPane != null && mainPane.getScene() != null && mainPane.getScene().getWindow() instanceof Stage) {
             return (Stage) mainPane.getScene().getWindow();
         }
-        // Fallback a través de un botón si mainPane no está disponible o no tiene escena aún
         Node[] nodosPotenciales = {exportarDatosButton, cambiarFotoButton, editarDatosButton, cambiarModalidadButton, configurarPerfilButton, eliminarCuentaButton};
         for (Node nodo : nodosPotenciales) {
             if (nodo != null && nodo.getScene() != null && nodo.getScene().getWindow() instanceof Stage) {

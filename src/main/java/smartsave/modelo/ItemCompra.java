@@ -26,7 +26,6 @@ public class ItemCompra {
     @Column(columnDefinition = "TEXT")
     private String notas;
 
-    // Constructores
     public ItemCompra() {
         this.cantidad = 1;
         this.comprado = false;
@@ -44,7 +43,6 @@ public class ItemCompra {
         this.comprado = false;
     }
 
-    // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -63,58 +61,32 @@ public class ItemCompra {
     public String getNotas() { return notas; }
     public void setNotas(String notas) { this.notas = notas; }
 
-    // Métodos adicionales
-
-    /**
-     * Calcula el precio total del item (precio * cantidad)
-     * @return Precio total
-     */
     public double getPrecioTotal() {
         return producto.getPrecio() * cantidad;
     }
 
-    /**
-     * Calcula las calorías totales del item (calorías * cantidad)
-     * @return Calorías totales
-     */
+
     public double getCaloriasTotales() {
         return producto.getInfoNutricional().getCalorias() * cantidad;
     }
 
-    /**
-     * Calcula las proteínas totales del item (proteínas * cantidad)
-     * @return Proteínas totales
-     */
+
     public double getProteinasTotales() {
         return producto.getInfoNutricional().getProteinas() * cantidad;
     }
 
-    /**
-     * Calcula los carbohidratos totales del item (carbohidratos * cantidad)
-     * @return Carbohidratos totales
-     */
     public double getCarbohidratosTotales() {
         return producto.getInfoNutricional().getCarbohidratos() * cantidad;
     }
 
-    /**
-     * Calcula las grasas totales del item (grasas * cantidad)
-     * @return Grasas totales
-     */
     public double getGrasasTotales() {
         return producto.getInfoNutricional().getGrasas() * cantidad;
     }
 
-    /**
-     * Incrementa la cantidad en 1
-     */
     public void incrementarCantidad() {
         this.cantidad++;
     }
 
-    /**
-     * Decrementa la cantidad en 1, asegurando que no sea menor que 1
-     */
     public void decrementarCantidad() {
         if (this.cantidad > 1) {
             this.cantidad--;
