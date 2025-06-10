@@ -1,15 +1,14 @@
 SmartSave - Guía de Inicio Rápido
-¡Hola! Soy Leonel Yupanqui, y te doy la bienvenida a SmartSave. Gracias por interesarte en mi proyecto de fin de grado.
-Para ejecutar la aplicación deberás precionar doble click en el "SmartSave.bat" en la carpeta target.
+Soy Leonel y te doy la bienvenida a SmartSave. Para ejecutar la aplicación deberás presionar doble click en el "SmartSave.bat" en la carpeta target.
 
-Para que la aplicación funcione perfectamente, solo tienes que asegurarte de cumplir un par de requisitos. ¡Del resto se encarga la propia app!
+Para que la aplicación funcione perfectamente, solo tienes que asegurarte de cumplir un par de requisitos. Del resto se encarga la propia app.
 
 Requisitos Previos (¡Muy importante!)
 Para que la instalación automática funcione, tu sistema necesita:
 
 Java 21 o superior: La aplicación está construida sobre la plataforma Java.
-Python 3.12 o superior: Necesitas tener Python instalado y añadido al PATH de tu sistema.
-SmartSave necesita esta versión para una función de su script que se conecta a la API de Mercadona. Además, necesita poder ejecutar el comando pip.
+Python 3.13 o superior: Necesitas tener Python instalado y añadido al PATH de tu sistema.
+SmartSave necesita esta versión para una función de su script que se conecta a la API de Mercadona. Además necesita poder ejecutar el comando pip.
 Instalación de Dependencias se hacen al arrancar
 
 Al arrancar, SmartSave intentará instalar automáticamente las librerías de Python (mercapy y requests) que necesita. Si tienes Python y una conexión a internet, la aplicación se configurará sola.
