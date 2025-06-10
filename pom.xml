@@ -16,7 +16,6 @@
         <hibernate.version>6.4.2.Final</hibernate.version>
     </properties>
 
-    <!-- Repositorios adicionales para MaterialFX -->
     <repositories>
         <repository>
             <id>jitpack.io</id>
@@ -25,7 +24,6 @@
     </repositories>
 
     <dependencies>
-        <!-- JavaFX dependencies -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -42,49 +40,42 @@
             <version>${javafx.version}</version>
         </dependency>
 
-        <!-- MaterialFX - Usando versión estable confirmada -->
         <dependency>
             <groupId>io.github.palexdev</groupId>
             <artifactId>materialfx</artifactId>
             <version>11.13.5</version>
         </dependency>
 
-        <!-- Hibernate ORM para persistencia -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
         </dependency>
 
-        <!-- MySQL Connector para conexión a MySQL -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.2.0</version>
         </dependency>
 
-        <!-- JFreeChart para gráficos y visualizaciones -->
         <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreechart</artifactId>
             <version>1.5.4</version>
         </dependency>
 
-        <!-- Apache Commons para utilidades -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.14.0</version>
         </dependency>
 
-        <!-- Jackson para manejo de JSON (APIs) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.16.1</version>
         </dependency>
 
-        <!-- SLF4J para logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -96,28 +87,24 @@
             <version>2.0.9</version>
         </dependency>
 
-        <!-- JUnit 5 para pruebas -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>5.10.1</version>
             <scope>test</scope>
         </dependency>
-        <!-- OkHttp para llamadas HTTP -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <version>4.12.0</version>
         </dependency>
 
-        <!-- JavaFX JSON support opcional -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20230618</version>
         </dependency>
 
-        <!-- HIKAI support opcional -->
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
@@ -138,23 +125,25 @@
                 </configuration>
             </plugin>
 
-            <!-- Plugin para copiar dependencias -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.6.1</version>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
+                        <id>copy-javafx-libs</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeGroupIds>org.openjfx</includeGroupIds>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Maven Exec Plugin para ejecutar JavaFX (SIN WARNING) -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -164,8 +153,6 @@
                     <commandlineArgs>--add-modules javafx.controls,javafx.fxml,javafx.graphics --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</commandlineArgs>
                 </configuration>
             </plugin>
-
-            <!-- JavaFX Plugin como alternativa (comentado) -->
 
             <plugin>
                 <groupId>org.openjfx</groupId>

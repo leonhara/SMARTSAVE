@@ -19,11 +19,15 @@
         <version>3.6.1</version>
         <executions>
           <execution>
-            <id>copy-dependencies</id>
-            <phase>prepare-package</phase>
+            <id>copy-javafx-libs</id>
+            <phase>package</phase>
             <goals>
               <goal>copy-dependencies</goal>
             </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <includeGroupIds>org.openjfx</includeGroupIds>
+            </configuration>
           </execution>
         </executions>
       </plugin>

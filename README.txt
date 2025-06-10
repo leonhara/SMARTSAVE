@@ -1,23 +1,19 @@
-# SmartSave - Instrucciones de Instalación y Ejecución
+SmartSave - Guía de Inicio Rápido
+¡Hola! Soy Leonel Yupanqui, y te doy la bienvenida a SmartSave. Gracias por interesarte en mi proyecto de fin de grado.
 
-Gracias por usar SmartSave! Para que la aplicación funcione correctamente hay que seguir estos pasos.
+Para que la aplicación funcione perfectamente, solo tienes que asegurarte de cumplir un par de requisitos. ¡Del resto se encarga la propia app!
 
-## Requisitos Previos
+Requisitos Previos (¡Muy importante!)
+Para que la instalación automática funcione, tu sistema necesita:
 
-1.  Java: Necesitas tener Java (JDK) 21 o superior instalado.
+Java 21 o superior: La aplicación está construida sobre la plataforma Java.
+Python 3.12 o superior: Necesitas tener Python instalado y añadido al PATH de tu sistema.
+¿Por qué? SmartSave necesita esta versión para una función de su script que se conecta a la API de Mercadona. Además, necesita poder ejecutar el comando pip.
+Instalación de Dependencias
+¡No tienes que hacer nada!
 
-2.  Python: Necesitas Python 3.13 o superior. Para que la api funcione bien es totalmente necesario este paso. 
-    ```
+Al arrancar, SmartSave intentará instalar automáticamente las librerías de Python (mercapy y requests) que necesita. Si tienes Python y una conexión a internet, la aplicación se configurará sola.
 
-## Pasos de Instalación de Dependencias de Python
+Si por algún motivo la instalación automática falla, la aplicación te mostrará una advertencia. En ese caso, puedes instalar las dependencias manualmente abriendo una terminal en la carpeta de la aplicación y ejecutando:
 
-1.  **Navega a la carpeta de distribución**: Una vez que hayas construido y descomprimido el paquete de SmartSave (o si estás ejecutando desde el JAR directamente y tienes el archivo `requirements.txt` al lado), abre una terminal o `cmd` en esa carpeta.
-2.  **Instalar librerías de Python**: Ejecuta el siguiente comando para instalar las dependencias necesarias:
-    ```
-    pip install -r requirements.txt
-    ```
-    Este comando instalará `mercapy==1.0.3` y `requests>=2.25.0`.
-
-## Ejecución de la Aplicación
-
-Una vez completados los pasos anteriores, puedes ejecutar la aplicación con el siguiente comando desde la carpeta donde se encuentra el archivo JAR:
+pip install -r requirements.txt
