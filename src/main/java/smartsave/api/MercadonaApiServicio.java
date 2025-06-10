@@ -49,11 +49,6 @@ public class MercadonaApiServicio {
         iniciarLimpiadorCache();
     }
 
-    /**
-     * Extrae el script Python del JAR a un archivo temporal.
-     * @return La ruta al script extraído.
-     * @throws IOException Si hay un error al leer o escribir el archivo.
-     */
     private Path prepararScriptPython() throws IOException {
         
         try (InputStream scriptStream = MercadonaApiServicio.class.getResourceAsStream("/api/mercadona_bridge.py")) {
@@ -70,10 +65,6 @@ public class MercadonaApiServicio {
         }
     }
 
-
-    /**
-     * Clase interna para manejo de caché de búsquedas
-     */
     private static class MercadonaSearchCache {
         private static final long CACHE_EXPIRY_MS = TimeUnit.MINUTES.toMillis(15); 
         private static class CacheEntry {
@@ -115,9 +106,6 @@ public class MercadonaApiServicio {
         }
     }
 
-    /**
-     * Inicia un limpiador de caché periódico
-     */
     private void iniciarLimpiadorCache() {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
                 searchCache::clean,
@@ -127,9 +115,6 @@ public class MercadonaApiServicio {
         );
     }
 
-    /**
-     * Busca productos en Mercadona con caché y control de tasa
-     */
     public CompletableFuture<List<Producto>> buscarProductos(String termino) {
         return CompletableFuture.supplyAsync(() -> {
             if (!apiDisponible || this.pythonScriptPath == null) {
@@ -167,9 +152,6 @@ public class MercadonaApiServicio {
         }, executorService);
     }
 
-    /**
-     * Obtiene productos nuevos de Mercadona con caché
-     */
     public CompletableFuture<List<Producto>> obtenerProductosNuevos() {
         return CompletableFuture.supplyAsync(() -> {
             if (!apiDisponible || this.pythonScriptPath == null) {
@@ -205,9 +187,6 @@ public class MercadonaApiServicio {
         }, executorService);
     }
 
-    /**
-     * Espera si es necesario para controlar la tasa de peticiones
-     */
     private synchronized void esperarControlTasa() {
         long tiempoActual = System.currentTimeMillis();
         long tiempoDesdeUltimaPeticion = tiempoActual - ultimaPeticionTimestamp;
