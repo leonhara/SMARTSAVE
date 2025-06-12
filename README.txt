@@ -306,3 +306,83 @@ INSERT INTO modalidades_ahorro (nombre, descripcion, factor_presupuesto, priorid
 ('Equilibrado', 'Busca un balance entre ahorro y nutrición. Recomendado para la mayoría de usuarios.', 0.85, 6, 7),
 ('Estándar', 'Enfocado en la calidad nutricional manteniendo un presupuesto razonable.', 1.00, 3, 9)
 ON DUPLICATE KEY UPDATE nombre=nombre;
+
+
+-- Inserción de datos de respaldo para la tabla 'productos'
+-- Supermercado por defecto: Mercadona
+-- Disponibilidad por defecto: 1 (true)
+
+-- =====================================================
+-- CATEGORÍA: Lácteos (Leche)
+-- =====================================================
+INSERT INTO `productos` (`nombre`, `marca`, `categoria`, `precio`, `supermercado`, `disponible`, `calorias`, `proteinas`, `carbohidratos`, `grasas`, `fibra`, `sodio`, `azucares`) VALUES
+('Leche entera UHT', 'Hacendado', 'Lácteos', 0.90, 'Mercadona', 1, 61.00, 3.1, 4.7, 3.6, 0.0, 0.12, 4.7),
+('Leche semidesnatada', 'Pascual', 'Lácteos', 1.25, 'Mercadona', 1, 47.00, 3.2, 4.8, 1.6, 0.0, 0.13, 4.8),
+('Leche desnatada', 'Central Lechera Asturiana', 'Lácteos', 1.35, 'Mercadona', 1, 35.00, 3.4, 4.9, 0.1, 0.0, 0.13, 4.9),
+('Leche sin lactosa semidesnatada', 'Hacendado', 'Lácteos', 1.10, 'Mercadona', 1, 46.00, 3.1, 4.7, 1.5, 0.0, 0.12, 4.7),
+('Leche entera fresca pasteurizada', 'Hacendado', 'Lácteos', 1.05, 'Mercadona', 1, 64.00, 3.2, 4.8, 3.7, 0.0, 0.11, 4.8),
+('Bebida de avena', 'Alitey', 'Lácteos', 1.40, 'Mercadona', 1, 45.00, 1.0, 8.1, 0.8, 0.4, 0.10, 3.8),
+('Bebida de almendras zero azúcares', 'Hacendado', 'Lácteos', 1.55, 'Mercadona', 1, 13.00, 0.5, 0.0, 1.1, 0.4, 0.11, 0.0),
+('Leche evaporada', 'Hacendado', 'Lácteos', 1.50, 'Mercadona', 1, 137.00, 6.7, 9.8, 8.1, 0.0, 0.30, 9.8),
+('Leche en polvo desnatada', 'Hacendado', 'Lácteos', 3.50, 'Mercadona', 1, 358.00, 35.0, 52.0, 1.0, 0.0, 1.20, 52.0),
+('Leche fresca semidesnatada', 'Priégola', 'Lácteos', 1.80, 'Mercadona', 1, 47.00, 3.3, 4.9, 1.7, 0.0, 0.12, 4.9);
+
+-- =====================================================
+-- CATEGORÍA: Carnes
+-- =====================================================
+INSERT INTO `productos` (`nombre`, `marca`, `categoria`, `precio`, `supermercado`, `disponible`, `calorias`, `proteinas`, `carbohidratos`, `grasas`, `fibra`, `sodio`, `azucares`) VALUES
+('Pechuga de pollo fileteada', 'Hacendado', 'Carnes', 4.50, 'Mercadona', 1, 110.00, 23.0, 0.0, 1.5, 0.0, 0.1, 0.0),
+('Carne picada de vacuno', 'Hacendado', 'Carnes', 5.25, 'Mercadona', 1, 250.00, 18.0, 0.0, 20.0, 0.0, 0.2, 0.0),
+('Solomillo de cerdo', 'ElPozo', 'Carnes', 6.95, 'Mercadona', 1, 143.00, 22.0, 0.0, 6.0, 0.0, 0.1, 0.0),
+('Costillas de cerdo adobadas', 'Hacendado', 'Carnes', 5.50, 'Mercadona', 1, 290.00, 16.0, 1.0, 25.0, 0.5, 1.5, 1.0),
+('Contramuslos de pollo sin piel', 'Hacendado', 'Carnes', 4.10, 'Mercadona', 1, 175.00, 20.0, 0.0, 10.0, 0.0, 0.1, 0.0),
+('Cinta de lomo de cerdo adobada', 'Incarlopsa', 'Carnes', 5.80, 'Mercadona', 1, 150.00, 21.0, 0.8, 7.0, 0.2, 1.3, 0.5),
+('Hamburguesa de ternera', 'Hacendado', 'Carnes', 3.90, 'Mercadona', 1, 220.00, 17.0, 2.0, 16.0, 1.0, 1.2, 1.0),
+('Salchichas frescas de pavo', 'Hacendado', 'Carnes', 2.80, 'Mercadona', 1, 180.00, 15.0, 3.0, 12.0, 1.0, 1.8, 1.0),
+('Bistec de ternera primera A', 'Covap', 'Carnes', 9.50, 'Mercadona', 1, 131.00, 21.0, 0.0, 5.0, 0.0, 0.1, 0.0),
+('Secreto de cerdo ibérico', 'Hacendado', 'Carnes', 8.50, 'Mercadona', 1, 350.00, 15.0, 0.0, 32.0, 0.0, 0.1, 0.0);
+
+-- =====================================================
+-- CATEGORÍA: Huevos
+-- =====================================================
+INSERT INTO `productos` (`nombre`, `marca`, `categoria`, `precio`, `supermercado`, `disponible`, `calorias`, `proteinas`, `carbohidratos`, `grasas`, `fibra`, `sodio`, `azucares`) VALUES
+('Huevos frescos clase M (12 uds)', 'Hacendado', 'Huevos', 2.10, 'Mercadona', 1, 155.00, 13.0, 1.1, 11.0, 0.0, 0.12, 1.1),
+('Huevos camperos clase L (6 uds)', 'Hacendado', 'Huevos', 1.95, 'Mercadona', 1, 160.00, 13.0, 1.2, 12.0, 0.0, 0.13, 1.2),
+('Huevos ecológicos clase M (6 uds)', 'Pazo de Vilane', 'Huevos', 2.95, 'Mercadona', 1, 158.00, 12.8, 1.0, 11.5, 0.0, 0.14, 1.0),
+('Claras de huevo pasteurizadas', 'Hacendado', 'Huevos', 2.50, 'Mercadona', 1, 49.00, 11.0, 1.1, 0.0, 0.0, 0.35, 1.1),
+('Huevos de codorniz (12 uds)', 'Hacendado', 'Huevos', 1.85, 'Mercadona', 1, 158.00, 13.1, 0.4, 11.1, 0.0, 0.14, 0.4),
+('Huevos frescos clase L (12 uds)', 'Hacendado', 'Huevos', 2.50, 'Mercadona', 1, 155.00, 13.0, 1.1, 11.0, 0.0, 0.12, 1.1),
+('Huevos camperos clase M (12 uds)', 'Dagu', 'Huevos', 3.80, 'Mercadona', 1, 160.00, 13.0, 1.2, 12.0, 0.0, 0.13, 1.2),
+('Yemas de huevo pasteurizadas', 'Hacendado', 'Huevos', 2.20, 'Mercadona', 1, 322.00, 16.0, 3.6, 27.0, 0.0, 0.15, 0.3),
+('Huevos de corral XL (6 uds)', 'Hacendado', 'Huevos', 2.15, 'Mercadona', 1, 156.00, 12.9, 1.1, 11.2, 0.0, 0.13, 1.1),
+('Huevo líquido pasteurizado', 'Hacendado', 'Huevos', 3.10, 'Mercadona', 1, 149.00, 12.0, 2.0, 10.0, 0.0, 0.30, 1.0);
+
+-- =====================================================
+-- CATEGORÍA: Panadería
+-- =====================================================
+INSERT INTO `productos` (`nombre`, `marca`, `categoria`, `precio`, `supermercado`, `disponible`, `calorias`, `proteinas`, `carbohidratos`, `grasas`, `fibra`, `sodio`, `azucares`) VALUES
+('Pan de molde blanco', 'Hacendado', 'Panadería', 1.10, 'Mercadona', 1, 265.00, 9.0, 49.0, 3.0, 2.5, 1.1, 3.5),
+('Pan de molde integral', 'Bimbo', 'Panadería', 2.50, 'Mercadona', 1, 250.00, 10.0, 43.0, 4.0, 7.0, 1.0, 3.8),
+('Pan de pueblo hogaza', 'Hacendado', 'Panadería', 1.80, 'Mercadona', 1, 258.00, 8.5, 52.0, 1.5, 3.0, 1.2, 2.0),
+('Panecillos de leche', 'Hacendado', 'Panadería', 1.50, 'Mercadona', 1, 320.00, 9.5, 55.0, 6.0, 2.8, 0.9, 8.0),
+('Pan de centeno 50%', 'Hacendado', 'Panadería', 1.90, 'Mercadona', 1, 259.00, 8.0, 48.0, 1.7, 6.0, 1.1, 2.5),
+('Biscotes integrales', 'Hacendado', 'Panadería', 1.45, 'Mercadona', 1, 390.00, 13.0, 70.0, 5.0, 10.0, 1.3, 5.0),
+('Pan de molde sin corteza', 'Panrico', 'Panadería', 2.10, 'Mercadona', 1, 270.00, 8.5, 52.0, 3.5, 2.0, 1.1, 4.0),
+('Pan de hamburguesa brioche', 'Hacendado', 'Panadería', 1.60, 'Mercadona', 1, 310.00, 9.0, 50.0, 8.0, 2.5, 1.0, 7.0),
+('Pan de pita', 'Hacendado', 'Panadería', 1.35, 'Mercadona', 1, 275.00, 9.0, 56.0, 1.5, 2.5, 1.2, 2.0),
+('Pan de molde con semillas', 'Hacendado', 'Panadería', 1.85, 'Mercadona', 1, 280.00, 11.0, 45.0, 6.0, 8.0, 1.0, 4.0);
+
+-- =====================================================
+-- CATEGORÍA: Cuidado personal (Crema de manos)
+-- =====================================================
+INSERT INTO `productos` (`nombre`, `marca`, `categoria`, `precio`, `supermercado`, `disponible`, `calorias`, `proteinas`, `carbohidratos`, `grasas`, `fibra`, `sodio`, `azucares`) VALUES
+('Crema de manos hidratante', 'Deliplus', 'Cuidado personal', 1.50, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos reparadora', 'Neutrogena', 'Cuidado personal', 5.95, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos anti-manchas Q10', 'Nivea', 'Cuidado personal', 4.50, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos con aceite de oliva', 'Deliplus', 'Cuidado personal', 2.10, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos y uñas', 'Cien', 'Cuidado personal', 1.99, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos nutritiva karité', 'Deliplus', 'Cuidado personal', 1.80, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos absorción rápida', 'Dove', 'Cuidado personal', 3.25, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos con aloe vera', 'Deliplus', 'Cuidado personal', 1.75, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos anti-edad', 'Deliplus', 'Cuidado personal', 2.50, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+('Crema de manos concentrada', 'La Toja', 'Cuidado personal', 3.95, 'Mercadona', 1, 0.00, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
