@@ -14,6 +14,7 @@ import smartsave.servicio.NavegacionServicio;
 import smartsave.servicio.UsuarioServicio;
 import smartsave.utilidad.EstilosApp;
 import smartsave.utilidad.ValidacionUtil;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -269,10 +270,10 @@ public class RegistroController implements Initializable {
         }
 
         try {
-            
-            Usuario nuevoUsuario = new Usuario(email, nombre, apellidos, contrasena);
+            String contrasenaCifrada = BCrypt.hashpw(contrasena, BCrypt.gensalt());
 
-            
+            Usuario nuevoUsuario = new Usuario(email, nombre, apellidos, contrasenaCifrada);
+
             boolean registroExitoso = usuarioServicio.registrarUsuario(nuevoUsuario);
 
             if (registroExitoso) {

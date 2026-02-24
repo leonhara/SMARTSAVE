@@ -5,6 +5,7 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import smartsave.config.HibernateConfig;
 import smartsave.modelo.Usuario;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
 
@@ -35,18 +36,20 @@ public class UsuarioServicio {
     public Usuario verificarCredenciales(String email, String contrasena) {
         try (Session session = HibernateConfig.getSessionFactory().openSession()) {
             Query<Usuario> query = session.createQuery(
-                    "FROM Usuario u WHERE u.email = :email AND u.contrasenaHash = :contrasena",
+                    "FROM Usuario u WHERE u.email = :email",
                     Usuario.class);
             query.setParameter("email", email);
-            query.setParameter("contrasena", contrasena);
 
             List<Usuario> usuarios = query.getResultList();
 
             if (!usuarios.isEmpty()) {
                 Usuario usuario = usuarios.get(0);
-                usuario.actualizarUltimoLogin();
-                actualizarUsuario(usuario);
-                return usuario;
+
+                if (BCrypt.checkpw(contrasena, usuario.getContrasenaHash())) {
+                    usuario.actualizarUltimoLogin();
+                    actualizarUsuario(usuario);
+                    return usuario;
+                }
             }
 
             return null;
