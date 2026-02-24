@@ -36,3 +36,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Base de datos local H2 ###
+*.mv.db
+*.trace.db
+smartsave_db*
