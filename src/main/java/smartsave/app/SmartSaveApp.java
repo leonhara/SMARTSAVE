@@ -74,6 +74,17 @@ public class SmartSaveApp extends Application {
         escenarioPrincipal.show();
     }
 
+    @Override
+    public void stop() throws Exception {
+        System.out.println("Cerrando SmartSave, limpiando recursos...");
+
+        HibernateConfig.shutdown();
+        System.out.println("Recursos de base de datos liberados.");
+
+        System.out.println("Apagando la Máquina Virtual. Adiós.");
+        System.exit(0);
+    }
+
     private void configurarVentanaArrastrable(Scene escena, Stage escenario) {
         escena.setOnMousePressed(evento -> {
             offsetX = evento.getSceneX();

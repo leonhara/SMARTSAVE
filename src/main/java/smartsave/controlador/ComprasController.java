@@ -355,9 +355,6 @@ public class ComprasController extends BaseController {
         actualizarResumenLista();
         Platform.runLater(() -> {
             productosTableView.refresh();
-            if (productosTableView.getScene() != null && productosTableView.getScene().getWindow() != null) {
-                productosTableView.getScene().getWindow().sizeToScene();
-            }
         });
     }
 

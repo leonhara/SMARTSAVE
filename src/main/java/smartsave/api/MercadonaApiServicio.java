@@ -55,6 +55,8 @@ public class MercadonaApiServicio {
         }
 
         iniciarLimpiadorCache();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::cerrar));
     }
 
     private Path prepararScriptPython() throws IOException {

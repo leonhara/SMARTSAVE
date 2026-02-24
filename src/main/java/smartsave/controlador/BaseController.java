@@ -157,6 +157,8 @@ public abstract class BaseController implements Initializable {
     public void handleCloseAction(ActionEvent evento) {
         Stage escenario = (Stage) ((Button) evento.getSource()).getScene().getWindow();
         escenario.close();
+
+        Platform.exit();
     }
 
     @FXML
