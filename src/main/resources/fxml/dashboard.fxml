@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controlador.DashboardController">
+    <top>
+        <HBox fx:id="titleBar" alignment="CENTER_RIGHT" spacing="5">
+            <padding>
+                <Insets bottom="5" left="10" right="10" top="5" />
+            </padding>
+            <children>
+                <Label style="-fx-text-fill: white; -fx-font-weight: bold;" text="SmartSave - Dashboard" HBox.hgrow="ALWAYS" />
+                <HBox alignment="CENTER_RIGHT" spacing="2">
+                    <Button fx:id="minimizeButton" onAction="#handleMinimizeAction" text="—" />
+                    <Button fx:id="maximizeButton" onAction="#handleMaximizeAction" text="□" />
+                    <Button fx:id="closeButton" onAction="#handleCloseAction" text="✕" />
+                </HBox>
+            </children>
+        </HBox>
+    </top>
+
+    <left>
+        <!-- Menú de navegación lateral -->
+        <VBox fx:id="sideMenu" prefWidth="200" spacing="5">
+            <padding>
+                <Insets top="20" right="10" bottom="20" left="10" />
+            </padding>
+
+            <!-- Logo y título -->
+            <HBox alignment="CENTER" spacing="10" prefHeight="60">
+                <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../imagenes/.png"/>
+                </ImageView>
+                <Label fx:id="appTitleLabel" text="SmartSave" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- Opciones del menú -->
+            <Button fx:id="dashboardButton" text="Página Principal" maxWidth="Infinity" onAction="#handleDashboardAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="transactionsButton" text="Ingresos/Gastos" maxWidth="Infinity" onAction="#handleTransactionsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="nutritionButton" text="Perfil Nutricional" maxWidth="Infinity" onAction="#handleNutritionAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="shoppingButton" text="Plan de Compras" maxWidth="Infinity" onAction="#handleShoppingAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="savingsButton" text="Modalidades Ahorro" maxWidth="Infinity" onAction="#handleSavingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="reportsButton" text="Informes" maxWidth="Infinity" onAction="#handleReportsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Separator />
+
+            <Region VBox.vgrow="ALWAYS" /> <!-- Espaciador flexible -->
+
+            <Button fx:id="settingsButton" text="Configuración" maxWidth="Infinity" onAction="#handleSettingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="profileButton" text="Mi Perfil" maxWidth="Infinity" onAction="#handleProfileAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="logoutButton" text="Cerrar Sesión" maxWidth="Infinity" onAction="#handleLogoutAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </VBox>
+    </left>
+
+    <center>
+        <!-- Contenido principal del dashboard -->
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background: transparent; -fx-background-color: transparent;">
+            <VBox spacing="20" style="-fx-background-color: transparent;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20" />
+                </padding>
+
+                <!-- Indicadores financieros -->
+                <HBox spacing="15" alignment="CENTER">
+                    <!-- Tarjeta: Balance Actual -->
+                    <VBox fx:id="balanceCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Balance Actual" styleClass="card-title" />
+                        <Label fx:id="balanceAmount" text="€0.00" styleClass="card-amount" />
+                        <Label fx:id="balanceChange" text="+€0.00 (0.0%)" styleClass="card-change-positive" />
+                    </VBox>
+
+                    <!-- Tarjeta: Gastos Mensuales -->
+                    <VBox fx:id="expensesCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Gastos Mensuales" styleClass="card-title" />
+                        <Label fx:id="expensesAmount" text="€0.00" styleClass="card-amount" />
+                        <Label fx:id="expensesChange" text="-€0.00 (0.0%)" styleClass="card-change-negative" />
+                    </VBox>
+
+                    <!-- Tarjeta: Ahorros -->
+                    <VBox fx:id="savingsCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Ahorros" styleClass="card-title" />
+                        <Label fx:id="savingsAmount" text="€0.00" styleClass="card-amount" />
+                        <Label fx:id="savingsChange" text="+€0.00 (0.0%)" styleClass="card-change-positive" />
+                    </VBox>
+
+                    <!-- Tarjeta: Nutrición -->
+                    <VBox fx:id="nutritionCard" styleClass="dashboard-card" prefWidth="200" prefHeight="120" alignment="CENTER">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Balance Nutricional" styleClass="card-title" />
+                        <Label fx:id="nutritionScore" text="--/100" styleClass="card-amount" />
+                        <Label fx:id="nutritionStatus" text="No definido" styleClass="card-status-good" />
+                    </VBox>
+                </HBox>
+
+                <!-- Gráficos -->
+                <HBox spacing="15">
+                    <!-- Gráfico de distribución de gastos -->
+                    <VBox fx:id="expensesChartContainer" styleClass="chart-container" HBox.hgrow="ALWAYS">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Distribución de Gastos" styleClass="section-title" />
+                        <PieChart fx:id="expensesPieChart" prefHeight="300" legendVisible="true" labelsVisible="true" />
+                    </VBox>
+
+                    <!-- Gráfico de evolución mensual -->
+                    <VBox fx:id="evolutionChartContainer" styleClass="chart-container" HBox.hgrow="ALWAYS">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Evolución Mensual" styleClass="section-title" />
+                        <LineChart fx:id="evolutionLineChart" prefHeight="300" legendVisible="true" createSymbols="false">
+                            <xAxis>
+                                <CategoryAxis label="Mes" />
+                            </xAxis>
+                            <yAxis>
+                                <NumberAxis label="Euros" />
+                            </yAxis>
+                        </LineChart>
+                    </VBox>
+                </HBox>
+
+                <!-- Transacciones Recientes -->
+                <VBox fx:id="recentTransactionsContainer" styleClass="content-container">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15" />
+                    </padding>
+                    <BorderPane>
+                        <left>
+                            <Label text="Transacciones Recientes" styleClass="section-title" />
+                        </left>
+                        <right>
+                            <Button fx:id="viewAllTransactionsButton" text="Ver Todas" onAction="#handleViewAllTransactionsAction" />
+                        </right>
+                    </BorderPane>
+
+                    <TableView fx:id="transactionsTable" prefHeight="200">
+                        <columns>
+                            <TableColumn fx:id="dateColumn" text="Fecha" prefWidth="100" />
+                            <TableColumn fx:id="descriptionColumn" text="Descripción" prefWidth="250" />
+                            <TableColumn fx:id="categoryColumn" text="Categoría" prefWidth="120" />
+                            <TableColumn fx:id="amountColumn" text="Monto" prefWidth="100" />
+                            <TableColumn fx:id="typeColumn" text="Tipo" prefWidth="80" />
+                        </columns>
+                    </TableView>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

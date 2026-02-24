@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controlador.AhorroController">
+    <top>
+        <HBox fx:id="titleBar" alignment="CENTER_RIGHT" spacing="5">
+            <padding>
+                <Insets bottom="5" left="10" right="10" top="5" />
+            </padding>
+            <children>
+                <Label style="-fx-text-fill: white; -fx-font-weight: bold;" text="SmartSave - Modalidades de Ahorro" HBox.hgrow="ALWAYS" />
+                <HBox alignment="CENTER_RIGHT" spacing="2">
+                    <Button fx:id="minimizeButton" onAction="#handleMinimizeAction" text="—" />
+                    <Button fx:id="maximizeButton" onAction="#handleMaximizeAction" text="□" />
+                    <Button fx:id="closeButton" onAction="#handleCloseAction" text="✕" />
+                </HBox>
+            </children>
+        </HBox>
+    </top>
+
+    <left>
+        <!--El menu de navegación lateral  -->
+        <VBox fx:id="sideMenu" prefWidth="200" spacing="5">
+            <padding>
+                <Insets top="20" right="10" bottom="20" left="10" />
+            </padding>
+
+            <!--aqui esta el logo y titulo -->
+            <HBox alignment="CENTER" spacing="10" prefHeight="60">
+                <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../imagenes/eltitulo.png"/>
+                </ImageView>
+                <Label fx:id="appTitleLabel" text="SmartSave" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- las opciones del menu-->
+            <Button fx:id="dashboardButton" text="Dashboard" maxWidth="Infinity" onAction="#handleDashboardAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/iconodashboard.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="transactionsButton" text="Ingresos/Gastos" maxWidth="Infinity" onAction="#handleTransactionsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/trasacciones.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="nutritionButton" text="Perfil Nutricional" maxWidth="Infinity" onAction="#handleNutritionAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/nutricion.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="shoppingButton" text="Plan de Compras" maxWidth="Infinity" onAction="#handleShoppingAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/tiendacompras.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="savingsButton" text="Modalidades Ahorro" maxWidth="Infinity" onAction="#handleSavingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/modalidades.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="reportsButton" text="Informes" maxWidth="Infinity" onAction="#handleReportsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/informes.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Separator />
+
+            <Region VBox.vgrow="ALWAYS" /> <!--el espaciador es flexible -->
+
+            <Button fx:id="settingsButton" text="Configuración" maxWidth="Infinity" onAction="#handleSettingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/configuracion.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="profileButton" text="Mi Perfil" maxWidth="Infinity" onAction="#handleProfileAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/elperfil.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="logoutButton" text="Cerrar Sesión" maxWidth="Infinity" onAction="#handleLogoutAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/irse.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </VBox>
+    </left>
+
+    <center>
+        <BorderPane>
+            <top>
+                <VBox spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15" />
+                    </padding>
+                    <Label text="Modalidades de Ahorro" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                    <Label text="Selecciona la modalidad de ahorro que mejor se adapte a tus necesidades. Esta configuración afectará cómo se generan las listas de compra y recomendaciones." style="-fx-font-size: 14; -fx-text-fill: rgb(200, 200, 220);" wrapText="true" />
+                </VBox>
+            </top>
+
+            <center>
+                <SplitPane dividerPositions="0.3" style="-fx-background-color: transparent;">
+                    <VBox spacing="10" style="-fx-background-color: transparent;">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10" />
+                        </padding>
+
+                        <Label text="Elige una modalidad:" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                        <ListView fx:id="modalidadesListView" VBox.vgrow="ALWAYS" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;" />
+                    </VBox>
+
+                    <VBox spacing="15" style="-fx-background-color: transparent;">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10" />
+                        </padding>
+
+                        <!-- Detalles de la modalidad seleccionada -->
+                        <Label fx:id="tituloModalidadLabel" text="Detalles de la Modalidad" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+
+                        <TextArea fx:id="descripcionModalidadTextArea" wrapText="true" editable="false" prefHeight="80" />
+
+                        <!-- Caracteristicas de la modalidad -->
+                        <VBox spacing="5" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Características" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label text="Factor de presupuesto:" />
+                                <Label fx:id="factorPresupuestoLabel" text="--%" style="-fx-font-weight: bold; -fx-text-fill: rgb(255, 200, 0);" />
+                            </HBox>
+
+                            <Label text="Prioridad al precio:" />
+                            <HBox spacing="10" alignment="CENTER">
+                                <ProgressBar fx:id="prioridadPrecioProgress" progress="0.0" prefWidth="200" />
+                                <Label fx:id="prioridadPrecioLabel" text="0/10" minWidth="40" />
+                            </HBox>
+
+                            <Label text="Prioridad a la nutrición:" />
+                            <HBox spacing="10" alignment="CENTER">
+                                <ProgressBar fx:id="prioridadNutricionProgress" progress="0.0" prefWidth="200" />
+                                <Label fx:id="prioridadNutricionLabel" text="0/10" minWidth="40" />
+                            </HBox>
+                        </VBox>
+
+                        <!--aqui consejos de ahorro -->
+                        <VBox spacing="5" VBox.vgrow="ALWAYS" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Consejos de Ahorro" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                            <ListView fx:id="consejosListView" VBox.vgrow="ALWAYS" />
+                        </VBox>
+
+                        <!--ejemplo de ahorro -->
+                        <VBox spacing="5" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Ejemplo de Ahorro" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+
+                            <GridPane hgap="10" vgap="5">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="150.0" prefWidth="180.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" minWidth="100.0" prefWidth="120.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+
+                                <Label text="Presupuesto original:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="presupuestoOriginalLabel" text="€0.00" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                <Label text="Presupuesto ajustado:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="presupuestoAjustadoLabel" text="€0.00" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                <Label text="Ahorro estimado:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="ahorroEstimadoLabel" text="€0.00" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-weight: bold; -fx-text-fill: rgb(100, 220, 100);" />
+                            </GridPane>
+                        </VBox>
+
+                        <!--calculadoora de ahorro -->
+                        <VBox fx:id="ejemploCalculoPane" spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Calculadora de Ahorro" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label text="Tu presupuesto (€):" />
+                                <TextField fx:id="presupuestoEjemploField" promptText="Ingresa tu presupuesto" prefWidth="150" />
+                                <Button fx:id="calcularButton" text="Calcular" onAction="#handleCalcularEjemplo" />
+                            </HBox>
+                        </VBox>
+
+                        <!--los reesultados del calculo -->
+                        <VBox fx:id="resultadoCalculoPane" spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Resultado" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+
+                            <HBox spacing="20">
+                                <VBox spacing="5">
+                                    <GridPane hgap="10" vgap="5">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="150.0" prefWidth="180.0" />
+                                            <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" minWidth="100.0" prefWidth="120.0" />
+                                        </columnConstraints>
+                                        <rowConstraints>
+                                            <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                            <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                            <RowConstraints minHeight="25.0" prefHeight="25.0" vgrow="SOMETIMES" />
+                                        </rowConstraints>
+
+                                        <Label text="Presupuesto original:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                        <Label fx:id="presupuestoOriginalResultadoLabel" text="€0.00" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                        <Label text="Presupuesto ajustado:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                        <Label fx:id="presupuestoAjustadoResultadoLabel" text="€0.00" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                        <Label text="Ahorro estimado:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                        <Label fx:id="ahorroEstimadoResultadoLabel" text="€0.00" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-weight: bold; -fx-text-fill: rgb(100, 220, 100);" />
+                                    </GridPane>
+                                </VBox>
+
+                                <PieChart fx:id="distribucionGastosChart" prefHeight="150" prefWidth="150" legendVisible="true" labelsVisible="true" />
+                            </HBox>
+                        </VBox>
+
+                        <!--Boton para aplicar modalidad -->
+                        <Button fx:id="aplicarModalidadButton" text="Aplicar Modalidad" onAction="#handleAplicarModalidad" maxWidth="Infinity" />
+                    </VBox>
+                </SplitPane>
+            </center>
+        </BorderPane>
+    </center>
+</BorderPane>

@@ -1,0 +1,3 @@
+#Dependencias para la integración con Mercadona API
+mercapy==1.0.3
+requests>=2.25.0

@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controlador.PerfilController">
+    <top>
+        <HBox fx:id="titleBar" alignment="CENTER_RIGHT" spacing="5">
+            <padding>
+                <Insets bottom="5" left="10" right="10" top="5" />
+            </padding>
+            <children>
+                <Label style="-fx-text-fill: white; -fx-font-weight: bold;" text="SmartSave - Mi Perfil" HBox.hgrow="ALWAYS" />
+                <HBox alignment="CENTER_RIGHT" spacing="2">
+                    <Button fx:id="minimizeButton" onAction="#handleMinimizeAction" text="—" />
+                    <Button fx:id="maximizeButton" onAction="#handleMaximizeAction" text="□" />
+                    <Button fx:id="closeButton" onAction="#handleCloseAction" text="✕" />
+                </HBox>
+            </children>
+        </HBox>
+    </top>
+
+    <left>
+        <!-- Menú de navegación lateral -->
+        <VBox fx:id="sideMenu" prefWidth="200" spacing="5">
+            <padding>
+                <Insets top="20" right="10" bottom="20" left="10" />
+            </padding>
+
+            <!-- Logo y título -->
+            <HBox alignment="CENTER" spacing="10" prefHeight="60">
+                <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../imagenes/.png"/>
+                </ImageView>
+                <Label fx:id="appTitleLabel" text="SmartSave" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- Opciones del menú -->
+            <Button fx:id="dashboardButton" text="Dashboard" maxWidth="Infinity" onAction="#handleDashboardAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="transactionsButton" text="Ingresos/Gastos" maxWidth="Infinity" onAction="#handleTransactionsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="nutritionButton" text="Perfil Nutricional" maxWidth="Infinity" onAction="#handleNutritionAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="shoppingButton" text="Plan de Compras" maxWidth="Infinity" onAction="#handleShoppingAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="savingsButton" text="Modalidades Ahorro" maxWidth="Infinity" onAction="#handleSavingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="reportsButton" text="Informes" maxWidth="Infinity" onAction="#handleReportsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Separator />
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <Button fx:id="settingsButton" text="Configuración" maxWidth="Infinity" onAction="#handleSettingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="profileButton" text="Mi Perfil" maxWidth="Infinity" onAction="#handleProfileAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="logoutButton" text="Cerrar Sesión" maxWidth="Infinity" onAction="#handleLogoutAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </VBox>
+    </left>
+
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background: transparent; -fx-background-color: transparent;">
+            <VBox spacing="20" style="-fx-background-color: transparent;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20" />
+                </padding>
+
+                <!-- Título de la página -->
+                <VBox spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15" />
+                    </padding>
+                    <Label text="Mi Perfil de Usuario" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                    <Label text="Información personal y progreso en tus finanzas." style="-fx-font-size: 14; -fx-text-fill: rgb(200, 200, 220);" wrapText="true" />
+                </VBox>
+
+                <!-- Información del Usuario -->
+                <HBox spacing="20">
+                    <!-- Foto y datos básicos -->
+                    <VBox spacing="15" prefWidth="350" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20" />
+                        </padding>
+
+                        <!-- Foto de perfil -->
+                        <VBox alignment="CENTER" spacing="10">
+                            <StackPane>
+                                <Circle fx:id="profilePhotoCircle" radius="60" fill="rgba(120, 80, 200, 0.3)" stroke="rgb(255, 0, 255)" strokeWidth="3"/>
+                                <ImageView fx:id="profilePhoto" fitHeight="110" fitWidth="110" pickOnBounds="true" preserveRatio="true">
+                                    <Image url="@../imagenes/.png"/>
+                                </ImageView>
+                            </StackPane>
+                            <Button fx:id="cambiarFotoButton" text="Cambiar Foto" onAction="#handleCambiarFotoAction" />
+                        </VBox>
+
+                        <!-- Datos personales -->
+                        <VBox spacing="10">
+                            <Label text="Datos Personales" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250); -fx-font-size: 16;" />
+
+                            <GridPane hgap="10" vgap="10">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="80.0" minWidth="80.0" prefWidth="80.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="200.0" minWidth="150.0" prefWidth="180.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+
+                                <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="nombreCompletoLabel" text="--" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-weight: bold;" />
+
+                                <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="emailLabel" text="--" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                <Label text="Miembro desde:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="fechaRegistroLabel" text="--" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                                <Label text="Último acceso:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                <Label fx:id="ultimoAccesoLabel" text="--" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                            </GridPane>
+
+                            <Button fx:id="editarDatosButton" text="Editar Datos Personales" onAction="#handleEditarDatosAction" maxWidth="Infinity" />
+                        </VBox>
+                    </VBox>
+
+                    <!-- Modalidad y Estadísticas Financieras -->
+                    <VBox spacing="15" HBox.hgrow="ALWAYS" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                        <padding>
+                            <Insets top="20" right="20" bottom="20" left="20" />
+                        </padding>
+
+                        <!-- Modalidad de ahorro actual -->
+                        <VBox spacing="10">
+                            <Label text="Modalidad de Ahorro Actual" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250); -fx-font-size: 16;" />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label fx:id="modalidadActualLabel" text="Equilibrado" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(255, 0, 255);" />
+                                <Button fx:id="cambiarModalidadButton" text="Cambiar" onAction="#handleCambiarModalidadAction" />
+                            </HBox>
+                            <Label fx:id="descripcionModalidadLabel" text="Balance perfecto entre ahorro y calidad nutricional." style="-fx-text-fill: rgb(200, 200, 220);" wrapText="true" />
+                        </VBox>
+
+                        <Separator />
+
+                        <!-- Estadísticas financieras -->
+                        <VBox spacing="10">
+                            <Label text="Resumen Financiero" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250); -fx-font-size: 16;" />
+
+                            <GridPane hgap="15" vgap="10">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="120.0" minWidth="100.0" prefWidth="120.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" minWidth="100.0" prefWidth="130.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+
+                                <Label text="Balance actual:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="balanceActualLabel" text="€1,250.75" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-weight: bold; -fx-text-fill: rgb(100, 220, 100);" />
+
+                                <Label text="Total ahorrado:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="totalAhorradoLabel" text="€2,500.00" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-weight: bold; -fx-text-fill: rgb(100, 200, 255);" />
+
+                                <Label text="Gastos este mes:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="gastosMesLabel" text="€750.25" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-text-fill: rgb(255, 200, 100);" />
+
+                                <Label text="Ingresos este mes:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                <Label fx:id="ingresosMesLabel" text="€2,200.00" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-text-fill: rgb(100, 255, 200);" />
+
+                                <Label text="Días usando la app:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                                <Label fx:id="diasUsandoAppLabel" text="47 días" GridPane.columnIndex="1" GridPane.rowIndex="4" style="-fx-text-fill: rgb(200, 200, 220);" />
+                            </GridPane>
+                        </VBox>
+                    </VBox>
+                </HBox>
+
+                <!-- Configuracipn del perfil -->
+                <HBox spacing="15" alignment="CENTER">
+                    <Button fx:id="configurarPerfilButton" text="Configurar Perfil" onAction="#handleConfigurarPerfilAction" prefWidth="180" />
+                    <Button fx:id="exportarDatosButton" text="Exportar Datos del Perfil" onAction="#handleExportarDatosAction" prefWidth="180" />
+                    <Button fx:id="eliminarCuentaButton" text="Eliminar Cuenta" onAction="#handleEliminarCuentaAction" prefWidth="180" style="-fx-text-fill: rgb(255, 100, 100);" />
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

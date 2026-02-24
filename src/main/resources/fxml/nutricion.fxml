@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="smartsave.controlador.NutricionController">
+    <top>
+        <HBox fx:id="titleBar" alignment="CENTER_RIGHT" spacing="5">
+            <padding>
+                <Insets bottom="5" left="10" right="10" top="5" />
+            </padding>
+            <children>
+                <Label style="-fx-text-fill: white; -fx-font-weight: bold;" text="SmartSave - Perfil Nutricional" HBox.hgrow="ALWAYS" />
+                <HBox alignment="CENTER_RIGHT" spacing="2">
+                    <Button fx:id="minimizeButton" onAction="#handleMinimizeAction" text="—" />
+                    <Button fx:id="maximizeButton" onAction="#handleMaximizeAction" text="□" />
+                    <Button fx:id="closeButton" onAction="#handleCloseAction" text="✕" />
+                </HBox>
+            </children>
+        </HBox>
+    </top>
+
+    <left>
+        <!-- Menú de navegación lateral (igual que en dashboard.fxml) -->
+        <VBox fx:id="sideMenu" prefWidth="200" spacing="5">
+            <padding>
+                <Insets top="20" right="10" bottom="20" left="10" />
+            </padding>
+
+            <!-- Logo y título -->
+            <HBox alignment="CENTER" spacing="10" prefHeight="60">
+                <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../imagenes/.png"/>
+                </ImageView>
+                <Label fx:id="appTitleLabel" text="SmartSave" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            </HBox>
+
+            <Separator />
+
+            <!-- Opciones del menú -->
+            <Button fx:id="dashboardButton" text="Dashboard" maxWidth="Infinity" onAction="#handleDashboardAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="transactionsButton" text="Ingresos/Gastos" maxWidth="Infinity" onAction="#handleTransactionsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="nutritionButton" text="Perfil Nutricional" maxWidth="Infinity" onAction="#handleNutritionAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="shoppingButton" text="Plan de Compras" maxWidth="Infinity" onAction="#handleShoppingAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="savingsButton" text="Modalidades Ahorro" maxWidth="Infinity" onAction="#handleSavingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="reportsButton" text="Informes" maxWidth="Infinity" onAction="#handleReportsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Separator />
+
+            <Region VBox.vgrow="ALWAYS" /> <!--Espaciador flexible-->
+
+            <Button fx:id="settingsButton" text="Configuración" maxWidth="Infinity" onAction="#handleSettingsAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="profileButton" text="Mi Perfil" maxWidth="Infinity" onAction="#handleProfileAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+
+            <Button fx:id="logoutButton" text="Cerrar Sesión" maxWidth="Infinity" onAction="#handleLogoutAction">
+                <graphic>
+                    <ImageView fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+                        <Image url="@../imagenes/.png"/>
+                    </ImageView>
+                </graphic>
+            </Button>
+        </VBox>
+    </left>
+
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background: transparent; -fx-background-color: transparent;">
+            <VBox spacing="20" style="-fx-background-color: transparent;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20" />
+                </padding>
+
+                <!--Titulo y descripcion -->
+                <VBox spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15" />
+                    </padding>
+                    <Label text="Perfil Nutricional" style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                    <Label text="Completa tu perfil nutricional para recibir recomendaciones personalizadas que se adapten a tu presupuesto." style="-fx-font-size: 14; -fx-text-fill: rgb(200, 200, 220);" wrapText="true" />
+                </VBox>
+
+                <!--Informacion del perfil -->
+                <HBox spacing="20">
+                    <!-- Formulario del perfil -->
+                    <VBox fx:id="formularioPane" spacing="15" HBox.hgrow="ALWAYS" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Datos Biométricos" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+
+                        <GridPane hgap="15" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" minWidth="100.0" prefWidth="120.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="300.0" minWidth="200.0" prefWidth="250.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                                <RowConstraints minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                            </rowConstraints>
+
+                            <Label text="Edad:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <TextField fx:id="edadField" promptText="Ingresa tu edad" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                            <Label text="Peso (kg):" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <TextField fx:id="pesoField" promptText="Ingresa tu peso en kg" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                            <Label text="Altura (cm):" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <TextField fx:id="alturaField" promptText="Ingresa tu altura en cm" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                            <Label text="Sexo:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <HBox spacing="20" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                <RadioButton fx:id="sexoMRadio" text="Masculino" selected="true">
+                                    <toggleGroup>
+                                        <ToggleGroup fx:id="sexoGroup" />
+                                    </toggleGroup>
+                                </RadioButton>
+                                <RadioButton fx:id="sexoFRadio" text="Femenino" toggleGroup="$sexoGroup" />
+                            </HBox>
+
+                            <Label text="Nivel de actividad:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <ComboBox fx:id="actividadComboBox" prefWidth="250" promptText="Selecciona tu nivel de actividad" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                        </GridPane>
+
+                        <Separator />
+
+                        <Label text="Restricciones Alimentarias" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                        <VBox fx:id="restriccionesPane" spacing="10" />
+
+                        <HBox spacing="15" alignment="CENTER" prefHeight="50">
+                            <Button fx:id="guardarPerfilButton" text="Guardar Perfil" onAction="#handleGuardarPerfil" prefWidth="150" />
+                        </HBox>
+                    </VBox>
+
+                    <!-- Resumen del perfil -->
+                    <VBox fx:id="resumenPane" spacing="15" prefWidth="350" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="15" />
+                        </padding>
+                        <Label text="Resumen Nutricional" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+
+                        <!--IMC-->
+                        <VBox spacing="5" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Índice de Masa Corporal (IMC)" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label fx:id="imcValueLabel" text="--" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: rgb(100, 220, 255);" />
+                                <Label fx:id="imcCategoryLabel" text="--" style="-fx-font-size: 16; -fx-text-fill: rgb(200, 200, 220);" />
+                            </HBox>
+                        </VBox>
+
+                        <!--Calorias-->
+                        <VBox spacing="5" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Calorías Diarias Recomendadas" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                            <Label fx:id="caloriasLabel" text="-- kcal" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: rgb(255, 100, 255);" />
+                        </VBox>
+
+                        <!-- Macronutrientes -->
+                        <VBox spacing="5" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Distribución de Macronutrientes" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                            <GridPane hgap="10" vgap="5">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="120.0" minWidth="100.0" prefWidth="120.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="80.0" minWidth="80.0" prefWidth="80.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="80.0" minWidth="80.0" prefWidth="80.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+
+                                <Label text="Proteínas:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="proteinasLabel" text="-- g" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label text="30%" GridPane.columnIndex="2" GridPane.rowIndex="0" style="-fx-text-fill: rgb(100, 220, 100);" />
+
+                                <Label text="Carbohidratos:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="carbosLabel" text="-- g" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="40%" GridPane.columnIndex="2" GridPane.rowIndex="1" style="-fx-text-fill: rgb(100, 170, 255);" />
+
+                                <Label text="Grasas:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="grasasLabel" text="-- g" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Label text="30%" GridPane.columnIndex="2" GridPane.rowIndex="2" style="-fx-text-fill: rgb(255, 170, 100);" />
+                            </GridPane>
+                        </VBox>
+
+                        <!-- Puntuación -->
+                        <VBox spacing="5" style="-fx-background-color: rgba(40, 40, 50, 0.7); -fx-background-radius: 5px; -fx-border-color: rgba(80, 80, 120, 0.5); -fx-border-radius: 5px;">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10" />
+                            </padding>
+                            <Label text="Puntuación Nutricional" style="-fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label fx:id="puntuacionLabel" text="--/100" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: rgb(100, 220, 100);" />
+                                <ProgressBar fx:id="puntuacionProgress" progress="0.0" prefWidth="150" />
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </HBox>
+
+                <!-- Recomendaciones -->
+                <VBox spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15" />
+                    </padding>
+                    <Label text="Recomendaciones Nutricionales" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                    <TextArea fx:id="recomendacionesArea" wrapText="true" editable="false" prefHeight="150" style="-fx-control-inner-background: rgba(40, 40, 50, 0.7); -fx-text-fill: white;" />
+                </VBox>
+
+                <!-- Gráfico de macronutrientes -->
+                <VBox spacing="10" style="-fx-background-color: rgba(30, 30, 40, 0.7); -fx-background-radius: 10px; -fx-border-color: rgba(100, 100, 200, 0.5); -fx-border-radius: 10px;">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15" />
+                    </padding>
+                    <Label text="Distribución de Macronutrientes" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: rgb(230, 230, 250);" />
+                    <PieChart fx:id="macrosPieChart" prefHeight="250" legendVisible="true" labelsVisible="true" />
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>
