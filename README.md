@@ -70,4 +70,4 @@ src/main/java/smartsave/
 ---
 
 **Leonel** - Desarrollador de Aplicaciones Multiplataforma  
-[LinkedIn](www.linkedin.com/in/leonelyupanquiserrano) | [GitHub](https://github.com/leonhara)
+[LinkedIn](https://www.linkedin.com/in/leonelyupanquiserrano/) | [GitHub](https://github.com/leonhara)
