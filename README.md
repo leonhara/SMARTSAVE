@@ -7,7 +7,6 @@
 ---
 
 ## 📸 Capturas de Pantalla
-*(Para que las imágenes se vean, crea una carpeta llamada `screenshots` en tu repositorio, sube tus capturas y asegúrate de que los nombres coincidan con los de abajo)*
 
 | Dashboard Financiero | Generación de Listas |
 | :---: | :---: |
